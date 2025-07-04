@@ -20,6 +20,11 @@ export function registerNavigationGuard(router: Router) {
     NProgress.start()
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
+    if (permissionStore.routes.length === 0) {
+      permissionStore.setAllRoutes()
+      permissionStore.addRoutes.forEach(route => router.addRoute(route))
+    }
+    return true
     // 如果没有登录
     if (!getToken()) {
       // 如果在免登录的白名单中，则直接进入

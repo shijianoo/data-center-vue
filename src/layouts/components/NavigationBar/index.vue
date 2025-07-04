@@ -52,7 +52,7 @@ function logout() {
       <Screenfull v-if="showScreenfull" class="right-menu-item" />
       <ThemeSwitch v-if="showThemeSwitch" class="right-menu-item" />
       <Notify v-if="showNotify" class="right-menu-item" />
-      <el-dropdown>
+      <el-dropdown v-if="false">
         <div class="right-menu-item user">
           <el-avatar :icon="UserFilled" :size="30" />
           <span>{{ userStore.username }}</span>
