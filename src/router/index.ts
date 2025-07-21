@@ -46,137 +46,108 @@ export const constantRoutes: RouteRecordRaw[] = [
       hidden: true
     }
   },
+  // {
+  //   path: "/",
+  //   component: Layouts,
+  //   redirect: "/data-center",
+  //   children: [
+  //     {
+  //       path: "dashboard",
+  //       component: () => import("@/pages/dashboard/index.vue"),
+  //       name: "Dashboard",
+  //       meta: {
+  //         title: "首页",
+  //         svgIcon: "dashboard",
+  //         affix: true
+  //       }
+  //     }
+  //   ]
+  // },
   {
-    path: "/",
+    path: "/data-center",
     component: Layouts,
-    redirect: "/dashboard",
+    name: "DataCenter",
+    meta: {
+      title: "数据中心",
+      svgIcon: "data-center",
+      alwaysShow: true
+    },
     children: [
       {
-        path: "dashboard",
-        component: () => import("@/pages/dashboard/index.vue"),
-        name: "Dashboard",
+        path: "wave-buoy",
+        name: "WaveBuoy",
+        component: () => import("@/pages/data-center/wave-buoy/index.vue"),
         meta: {
-          title: "首页",
-          svgIcon: "dashboard",
-          affix: true
-        }
+          title: "波浪浮标"
+        },
+        props: true
+      },
+      {
+        path: "weather-buoy",
+        name: "WeatherBuoy",
+        component: () => import("@/pages/data-center/weather-buoy/index.vue"),
+        meta: {
+          title: "气象浮标"
+        },
+        props: true
       }
     ]
   },
   {
-    path: "/demo",
+    path: "/raw-data",
     component: Layouts,
-    redirect: "/demo/unocss",
-    name: "Demo",
+    name: "RawData",
     meta: {
-      title: "示例集合",
-      elIcon: "DataBoard"
+      title: "原始数据",
+      svgIcon: "data-base"
     },
     children: [
       {
-        path: "unocss",
-        component: () => import("@/pages/demo/unocss/index.vue"),
-        name: "UnoCSS",
+        path: "bei-dou",
+        name: "BeiDou",
+        component: () => import("@/pages/raw-data/bei-dou/index.vue"),
         meta: {
-          title: "UnoCSS"
-        }
-      },
-      {
-        path: "element-plus",
-        component: () => import("@/pages/demo/element-plus/index.vue"),
-        name: "ElementPlus",
-        meta: {
-          title: "Element Plus",
-          keepAlive: true
-        }
-      },
-      {
-        path: "vxe-table",
-        component: () => import("@/pages/demo/vxe-table/index.vue"),
-        name: "VxeTable",
-        meta: {
-          title: "Vxe Table",
-          keepAlive: true
-        }
-      },
-      {
-        path: "level2",
-        component: () => import("@/pages/demo/level2/index.vue"),
-        redirect: "/demo/level2/level3",
-        name: "Level2",
-        meta: {
-          title: "二级路由",
-          alwaysShow: true
+          title: "北斗数据"
         },
-        children: [
-          {
-            path: "level3",
-            component: () => import("@/pages/demo/level2/level3/index.vue"),
-            name: "Level3",
-            meta: {
-              title: "三级路由",
-              keepAlive: true
-            }
-          }
-        ]
+        props: true
       },
       {
-        path: "composable-demo",
-        redirect: "/demo/composable-demo/use-fetch-select",
-        name: "ComposableDemo",
+        path: "iridium",
+        name: "Iridium",
+        component: () => import("@/pages/raw-data/iridium/index.vue"),
         meta: {
-          title: "组合式函数"
+          title: "铱星数据"
         },
-        children: [
-          {
-            path: "use-fetch-select",
-            component: () => import("@/pages/demo/composable-demo/use-fetch-select.vue"),
-            name: "UseFetchSelect",
-            meta: {
-              title: "useFetchSelect"
-            }
-          },
-          {
-            path: "use-fullscreen-loading",
-            component: () => import("@/pages/demo/composable-demo/use-fullscreen-loading.vue"),
-            name: "UseFullscreenLoading",
-            meta: {
-              title: "useFullscreenLoading"
-            }
-          },
-          {
-            path: "use-watermark",
-            component: () => import("@/pages/demo/composable-demo/use-watermark.vue"),
-            name: "UseWatermark",
-            meta: {
-              title: "useWatermark"
-            }
-          }
-        ]
+        props: true
       }
     ]
   },
   {
-    path: "/link",
+    path: "/device-center",
+    component: Layouts,
+    redirect: "/device-center/device-models",
+    name: "DeviceCenter",
     meta: {
-      title: "文档链接",
-      elIcon: "Link"
+      title: "设备中心",
+      alwaysShow: true,
+      svgIcon: "device-center",
+      hidden: true
     },
     children: [
       {
-        path: "https://juejin.cn/post/7445151895121543209",
-        component: () => {},
-        name: "Link1",
+        path: "device-models",
+        component: () => import("@/pages/device-center/device-models/index.vue"),
+        name: "DeviceModels",
         meta: {
-          title: "中文文档"
+          title: "设备型号"
         }
       },
       {
-        path: "https://juejin.cn/column/7207659644487139387",
-        component: () => {},
-        name: "Link2",
+        path: "devices",
+        component: () => import("@/pages/device-center/devices/index.vue"),
+        name: "Devices",
         meta: {
-          title: "新手教程"
+          title: "设备实例"
         }
       }
     ]
@@ -189,41 +160,41 @@ export const constantRoutes: RouteRecordRaw[] = [
  * @description 必须带有唯一的 Name 属性
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
-  {
-    path: "/permission",
-    component: Layouts,
-    redirect: "/permission/page-level",
-    name: "Permission",
-    meta: {
-      title: "权限演示",
-      elIcon: "Lock",
-      // 可以在根路由中设置角色
-      roles: ["admin", "editor"],
-      alwaysShow: true
-    },
-    children: [
-      {
-        path: "page-level",
-        component: () => import("@/pages/demo/permission/page-level.vue"),
-        name: "PermissionPageLevel",
-        meta: {
-          title: "页面级",
-          // 或者在子路由中设置角色
-          roles: ["admin"]
-        }
-      },
-      {
-        path: "button-level",
-        component: () => import("@/pages/demo/permission/button-level.vue"),
-        name: "PermissionButtonLevel",
-        meta: {
-          title: "按钮级",
-          // 如果未设置角色，则表示：该页面不需要权限，但会继承根路由的角色
-          roles: undefined
-        }
-      }
-    ]
-  }
+  // {
+  //   path: "/permission",
+  //   component: Layouts,
+  //   redirect: "/permission/page-level",
+  //   name: "Permission",
+  //   meta: {
+  //     title: "权限演示",
+  //     elIcon: "Lock",
+  //     // 可以在根路由中设置角色
+  //     roles: ["admin", "editor"],
+  //     alwaysShow: true
+  //   },
+  //   children: [
+  //     {
+  //       path: "page-level",
+  //       component: () => import("@/pages/demo/permission/page-level.vue"),
+  //       name: "PermissionPageLevel",
+  //       meta: {
+  //         title: "页面级",
+  //         // 或者在子路由中设置角色
+  //         roles: ["admin"]
+  //       }
+  //     },
+  //     {
+  //       path: "button-level",
+  //       component: () => import("@/pages/demo/permission/button-level.vue"),
+  //       name: "PermissionButtonLevel",
+  //       meta: {
+  //         title: "按钮级",
+  //         // 如果未设置角色，则表示：该页面不需要权限，但会继承根路由的角色
+  //         roles: undefined
+  //       }
+  //     }
+  //   ]
+  // }
 ]
 
 /** 路由实例 */

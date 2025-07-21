@@ -12,6 +12,7 @@ import "element-plus/theme-chalk/dark/css-vars.css"
 import "vxe-table/lib/style.css"
 import "@@/assets/styles/index.scss"
 import "virtual:uno.css"
+import { useDeviceModelStore } from "./pinia/stores/device-models"
 
 // 创建应用实例
 const app = createApp(App)
@@ -21,7 +22,7 @@ installPlugins(app)
 
 // 安装 pinia 和 router
 app.use(pinia).use(router)
-
+useDeviceModelStore().fetchDeviceModels()
 // router 准备就绪后挂载应用
 router.isReady().then(() => {
   app.mount("#app")
