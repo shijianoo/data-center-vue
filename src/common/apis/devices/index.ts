@@ -28,10 +28,10 @@ export function updateDeviceApi(data: CreateOrUpdateDeviceDto) {
 }
 
 /** 获取设备 */
-export function getDevicesApi(modelNumber?: string) {
+export function getDevicesApi(modelNumberId?: string) {
   return dataCenterRequest<DeviceListResponse>({
     url: "devices",
     method: "get",
-    params: { modelNumber }
+    params: { modelNumberId }
   })
 }

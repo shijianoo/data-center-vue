@@ -3,13 +3,13 @@ import type { DeviceCommand } from "@/common/apis/device-command/type"
 import type { Device } from "@/common/apis/devices/type"
 import axios from "axios"
 import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
+import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 import { formatDateTime } from "@/common/utils/datetime"
-import { useDeviceModelStore } from "@/pinia/stores/device-models"
 
-const deviceModelStore = useDeviceModelStore()
 const visible = defineModel<boolean>("visible") // v-model:visible
 const device = defineModel<Device>("device") // v-model:device
 
+const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const commandData = ref<DeviceCommand[]>([]) // 用于存储设备命令数据
 const firmwareList = ref<any[]>([])
 const selectedFirmware = ref("")
@@ -25,17 +25,14 @@ function handleDialogOpen() {
   }
 }
 
-function fetchCommandData() {
+async function fetchCommandData() {
+  await fetchDeviceModels()
   console.log("获取设备命令数据", device.value)
-  getDeviceCommandsApi(device.value!.id).then(({ data }) => {
-    commandData.value = data
-  }).catch((error) => {
-    console.error("获取设备命令失败:", error)
-  })
-  console.log(device.value!)
+  const { data } = await getDeviceCommandsApi(device.value!.id)
+  commandData.value = data
   let modelNumber = device.value?.deviceModel?.modelNumber
   if (!modelNumber && device.value?.deviceModelId) {
-    const model = deviceModelStore.findById(device.value!.deviceModelId)
+    const model = deviceModels.value.find(m => m.id === device.value!.deviceModelId)
     modelNumber = model?.modelNumber
   }
   if (modelNumber) {

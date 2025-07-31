@@ -1,8 +1,49 @@
 import type { AxiosInstance, AxiosRequestConfig } from "axios"
-import { getToken } from "@@/utils/cache/cookies"
+import { getRefreshToken, getToken } from "@@/utils/cache/cookies"
 import axios from "axios"
 import { get, merge } from "lodash-es"
 import { useUserStore } from "@/pinia/stores/user"
+
+async function refreshTokenAndRetry(config: AxiosRequestConfig) {
+  try {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+      console.log("本地不存在刷新 Token, 退出登录")
+      return logout()
+    }
+
+    console.log("开始刷新 AccessToken")
+    // 发起刷新请求
+    const response = await axios.post(
+      `${import.meta.env.VITE_AUTH_CENTER_BASE_URL}/auth/refresh`,
+      { refreshToken },
+      {
+        headers: {
+          "Authorization": `Bearer ${refreshToken}`,
+          "Content-Type": "application/json"
+        }
+      }
+    )
+
+    const { accessToken, refreshToken: newRefreshToken } = response.data.data
+    console.log("刷新 AccessToken 成功", accessToken)
+
+    const userStore = useUserStore()
+    userStore.setToken(accessToken)
+    userStore.setRefreshToken(newRefreshToken)
+
+    // 使用新 token 重试原始请求
+    if (config.headers) {
+      console.log("使用新 Token 重试原始请求", accessToken)
+      config.headers.Authorization = `Bearer ${accessToken}`
+    }
+    const retryResponse = await axios(config)
+    return retryResponse.data
+  } catch (error) {
+    console.log("刷新 AccessToken 失败, 退出登录:", error)
+    return logout()
+  }
+}
 
 /** 退出登录并强制刷新页面（会重定向到登录页） */
 function logout() {
@@ -59,8 +100,8 @@ function createInstance() {
           break
         case 401:
           // Token 过期时
-          error.message = message || "未授权"
-          logout()
+          console.error("Token 过期，需要重新获取 Token")
+          return refreshTokenAndRetry(error.config)
           break
         case 403:
           error.message = message || "拒绝访问"
@@ -150,14 +191,46 @@ function createDataCenterRequest(instance: AxiosInstance) {
   }
 }
 
+function createAuthCenterRequest(instance: AxiosInstance) {
+  return <T>(config: AxiosRequestConfig): Promise<T> => {
+    const token = getToken()
+    // 默认配置
+    const defaultConfig: AxiosRequestConfig = {
+      // 接口地址
+      baseURL: import.meta.env.VITE_AUTH_CENTER_BASE_URL,
+      // 请求头
+      headers: {
+        // 携带 Token
+        "Authorization": token ? `Bearer ${token}` : undefined,
+        "Content-Type": "application/json"
+      },
+      // 请求体
+      data: {},
+      // 请求超时
+      timeout: 5000,
+      // 跨域请求时是否携带 Cookies
+      withCredentials: false
+    }
+    // 将默认配置 defaultConfig 和传入的自定义配置 config 进行合并成为 mergeConfig
+    const mergeConfig = merge(defaultConfig, config)
+    return instance(mergeConfig)
+  }
+}
+
 /** 用于请求的实例 */
 const instance = createInstance()
 
 /** 用于数据中心请求的实例 */
 const dataCenterRequestInstance = createInstance()
 
+/** 用于认证中心请求的实例 */
+const authCenterRequestInstance = createInstance()
+
 /** 用于请求的方法 */
 export const request = createRequest(instance)
 
 /** 用于数据中心请求的方法 */
 export const dataCenterRequest = createDataCenterRequest(dataCenterRequestInstance)
+
+/** 用于认证中心请求的方法 */
+export const authCenterRequest = createAuthCenterRequest(authCenterRequestInstance)

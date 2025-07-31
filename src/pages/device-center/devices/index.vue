@@ -3,25 +3,17 @@ import type { FormRules } from "element-plus"
 import type { CreateOrUpdateDeviceDto, Device } from "@/common/apis/devices/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
-import { useDeviceModelStore } from "@/pinia/stores/device-models"
-import { useDeviceStore } from "@/pinia/stores/devices"
+import { createDeviceApi, deleteDeviceApi, getDevicesApi, updateDeviceApi } from "@/common/apis/devices"
+import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 
 defineOptions({
-  // 命名当前组件
-  name: "Devices"
+  name: "设备实例"
 })
 
 const loading = ref<boolean>(false)
-
-const modelStore = useDeviceModelStore()
-const deviceStore = useDeviceStore()
-onMounted(() => {
-  modelStore.fetchDeviceModels()
-})
-
-// 设备型号列表选项
+const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const modelOptions = computed(() =>
-  modelStore.deviceModels.map(m => ({
+  deviceModels.value.map(m => ({
     label: m.modelName ? `${m.modelNumber}-${m.modelName}(${m.devices.length})` : `${m.modelNumber}(${m.devices.length})`,
     value: m.id
   }))
@@ -30,26 +22,7 @@ const modelOptions = computed(() =>
 const searchData = ref({
   modelId: ""
 })
-
 const devices = ref<Device[]>([])
-
-async function fetchDevices() {
-  await modelStore.fetchDeviceModels(true)
-  const model = modelStore.findById(searchData.value.modelId)
-  return model?.devices ?? []
-}
-
-watch(
-  () => searchData.value.modelId,
-  async (modelId) => {
-    if (modelId) {
-      devices.value = await fetchDevices()
-    } else {
-      devices.value = []
-    }
-  },
-  { immediate: true }
-)
 
 // #region 增 + 改 表单逻辑
 const defaultForm: CreateOrUpdateDeviceDto = {
@@ -77,9 +50,9 @@ function handleCreateOrUpdate() {
     loading.value = true
     try {
       if (formData.value.id) {
-        await deviceStore.updateDevice(formData.value)
+        await updateDeviceApi(formData.value)
       } else {
-        await deviceStore.createDevice(formData.value)
+        await createDeviceApi(formData.value)
       }
       ElMessage.success("操作成功")
       dialogVisible.value = false
@@ -125,10 +98,43 @@ async function handleDelete(device: Device) {
     cancelButtonText: "取消",
     type: "warning"
   }).then(async () => {
-    await deviceStore.deleteDevice(device.id)
+    await deleteDeviceApi(device.id)
     ElMessage.success("删除成功")
   })
 }
+// #endregion
+
+// #region 查询
+async function fetchDevices() {
+  loading.value = true
+  try {
+    const { data } = await getDevicesApi(searchData.value.modelId)
+    devices.value = data
+    return data
+  } catch {
+    ElMessage.error("获取设备列表失败")
+    devices.value = []
+    return []
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  () => searchData.value.modelId,
+  async (modelId) => {
+    if (modelId) {
+      devices.value = await fetchDevices()
+    } else {
+      devices.value = []
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  fetchDeviceModels()
+})
 // #endregion
 </script>
 

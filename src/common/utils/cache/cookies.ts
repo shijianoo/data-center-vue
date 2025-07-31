@@ -14,3 +14,15 @@ export function setToken(token: string) {
 export function removeToken() {
   Cookies.remove(CacheKey.TOKEN)
 }
+
+export function getRefreshToken() {
+  return Cookies.get(CacheKey.REFRESH_TOKEN)
+}
+
+export function setRefreshToken(token: string) {
+  Cookies.set(CacheKey.REFRESH_TOKEN, token)
+}
+
+export function removeRefreshToken() {
+  Cookies.remove(CacheKey.REFRESH_TOKEN)
+}

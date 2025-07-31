@@ -3,14 +3,14 @@ import type { FormRules } from "element-plus"
 import type { CreateOrUpdateDeviceModelDto, DeviceModel } from "@/common/apis/device-models/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
-import { useDeviceModelStore } from "@/pinia/stores/device-models"
+import { createDeviceModelApi, deleteDeviceModelsApi, updateDeviceModelApi } from "@/common/apis/device-models"
+import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 
 defineOptions({
-  // 命名当前组件
-  name: "DeviceModels"
+  name: "设备型号"
 })
-const store = useDeviceModelStore()
 const loading = ref<boolean>(false)
+const { deviceModels, fetchDeviceModels } = useDeviceModels()
 
 // #region 增 + 改 表单逻辑
 const defaultForm: CreateOrUpdateDeviceModelDto = {
@@ -38,9 +38,9 @@ function handleCreateOrUpdate() {
     loading.value = true
     try {
       if (formData.value.id) {
-        await store.updateDeviceModel(formData.value)
+        await updateDeviceModelApi(formData.value)
       } else {
-        await store.createDeviceModel(formData.value)
+        await createDeviceModelApi(formData.value)
       }
       ElMessage.success("操作成功")
       dialogVisible.value = false
@@ -62,8 +62,9 @@ function handleDelete(row: DeviceModel) {
     cancelButtonText: "取消",
     type: "warning"
   }).then(async () => {
-    await store.deleteDeviceModel(row.id)
+    await deleteDeviceModelsApi(row.id)
     ElMessage.success("删除成功")
+    await fetchDeviceModels()
   })
 }
 // #endregion
@@ -80,9 +81,9 @@ function handleUpdate(row: DeviceModel) {
 }
 // #endregion
 
-// #region 页面加载
+// #region 查询
 onMounted(() => {
-  store.fetchDeviceModels()
+  fetchDeviceModels()
 })
 // #endregion
 </script>
@@ -98,12 +99,12 @@ onMounted(() => {
         </div>
         <div>
           <el-tooltip content="刷新当前页">
-            <el-button type="primary" :icon="RefreshRight" circle @click="store.fetchDeviceModels(true)" />
+            <el-button type="primary" :icon="RefreshRight" circle @click="fetchDeviceModels" />
           </el-tooltip>
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="store.deviceModels">
+        <el-table :data="deviceModels">
           <el-table-column prop="modelNumber" label="设备型号" align="center" />
           <el-table-column prop="modelName" label="设备名称" align="center" />
           <el-table-column prop="description" label="设备描述" align="center" />

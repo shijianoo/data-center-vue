@@ -46,6 +46,10 @@ export const constantRoutes: RouteRecordRaw[] = [
       hidden: true
     }
   },
+  {
+    path: "/",
+    component: Layouts
+  }
   // {
   //   path: "/",
   //   component: Layouts,
@@ -63,95 +67,36 @@ export const constantRoutes: RouteRecordRaw[] = [
   //     }
   //   ]
   // },
-  {
-    path: "/data-center",
-    component: Layouts,
-    name: "DataCenter",
-    meta: {
-      title: "数据中心",
-      svgIcon: "data-center",
-      alwaysShow: true
-    },
-    children: [
-      {
-        path: "wave-buoy",
-        name: "WaveBuoy",
-        component: () => import("@/pages/data-center/wave-buoy/index.vue"),
-        meta: {
-          title: "波浪浮标"
-        },
-        props: true
-      },
-      {
-        path: "weather-buoy",
-        name: "WeatherBuoy",
-        component: () => import("@/pages/data-center/weather-buoy/index.vue"),
-        meta: {
-          title: "气象浮标"
-        },
-        props: true
-      }
-    ]
-  },
-  {
-    path: "/raw-data",
-    component: Layouts,
-    name: "RawData",
-    meta: {
-      title: "原始数据",
-      svgIcon: "data-base"
-    },
-    children: [
-      {
-        path: "bei-dou",
-        name: "BeiDou",
-        component: () => import("@/pages/raw-data/bei-dou/index.vue"),
-        meta: {
-          title: "北斗数据"
-        },
-        props: true
-      },
-      {
-        path: "iridium",
-        name: "Iridium",
-        component: () => import("@/pages/raw-data/iridium/index.vue"),
-        meta: {
-          title: "铱星数据"
-        },
-        props: true
-      }
-    ]
-  },
-  {
-    path: "/device-center",
-    component: Layouts,
-    redirect: "/device-center/device-models",
-    name: "DeviceCenter",
-    meta: {
-      title: "设备中心",
-      alwaysShow: true,
-      svgIcon: "device-center",
-      hidden: true
-    },
-    children: [
-      {
-        path: "device-models",
-        component: () => import("@/pages/device-center/device-models/index.vue"),
-        name: "DeviceModels",
-        meta: {
-          title: "设备型号"
-        }
-      },
-      {
-        path: "devices",
-        component: () => import("@/pages/device-center/devices/index.vue"),
-        name: "Devices",
-        meta: {
-          title: "设备实例"
-        }
-      }
-    ]
-  }
+  // {
+  //   path: "/data-center",
+  //   component: Layouts,
+  //   name: "DataCenter",
+  //   meta: {
+  //     title: "数据中心",
+  //     svgIcon: "data-center",
+  //     alwaysShow: true
+  //   },
+  //   children: [
+  //     {
+  //       path: "wave-buoy",
+  //       name: "WaveBuoy",
+  //       component: () => import("@/pages/data-center/wave-buoy/index.vue"),
+  //       meta: {
+  //         title: "波浪浮标"
+  //       },
+  //       props: true
+  //     },
+  //     {
+  //       path: "weather-buoy",
+  //       name: "WeatherBuoy",
+  //       component: () => import("@/pages/data-center/weather-buoy/index.vue"),
+  //       meta: {
+  //         title: "气象浮标"
+  //       },
+  //       props: true
+  //     }
+  //   ]
+  // },
 ]
 
 /**
@@ -160,41 +105,43 @@ export const constantRoutes: RouteRecordRaw[] = [
  * @description 必须带有唯一的 Name 属性
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
-  // {
-  //   path: "/permission",
-  //   component: Layouts,
-  //   redirect: "/permission/page-level",
-  //   name: "Permission",
-  //   meta: {
-  //     title: "权限演示",
-  //     elIcon: "Lock",
-  //     // 可以在根路由中设置角色
-  //     roles: ["admin", "editor"],
-  //     alwaysShow: true
-  //   },
-  //   children: [
-  //     {
-  //       path: "page-level",
-  //       component: () => import("@/pages/demo/permission/page-level.vue"),
-  //       name: "PermissionPageLevel",
-  //       meta: {
-  //         title: "页面级",
-  //         // 或者在子路由中设置角色
-  //         roles: ["admin"]
-  //       }
-  //     },
-  //     {
-  //       path: "button-level",
-  //       component: () => import("@/pages/demo/permission/button-level.vue"),
-  //       name: "PermissionButtonLevel",
-  //       meta: {
-  //         title: "按钮级",
-  //         // 如果未设置角色，则表示：该页面不需要权限，但会继承根路由的角色
-  //         roles: undefined
-  //       }
-  //     }
-  //   ]
-  // }
+  {
+    path: "/system",
+    component: Layouts,
+    redirect: "/system/users",
+    name: "System",
+    meta: {
+      title: "系统管理",
+      roles: ["ADMIN"],
+      alwaysShow: true
+    },
+    children: [
+      {
+        path: "users",
+        component: () => import("@/pages/system/users/index.vue"),
+        name: "Users",
+        meta: {
+          title: "用户管理"
+        }
+      },
+      {
+        path: "roles",
+        component: () => import("@/pages/system/roles/index.vue"),
+        name: "Roles",
+        meta: {
+          title: "角色管理"
+        }
+      },
+      {
+        path: "menus",
+        component: () => import("@/pages/system/menus/index.vue"),
+        name: "Menus",
+        meta: {
+          title: "菜单管理"
+        }
+      }
+    ]
+  }
 ]
 
 /** 路由实例 */
