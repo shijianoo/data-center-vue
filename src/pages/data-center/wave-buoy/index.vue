@@ -5,7 +5,7 @@ import { formatDateTime } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
 
-const deviceModelId = "97d8f296-bb74-4aa5-8f27-38d454f28b0a"
+const deviceModelId = "cf2b5e10-ea76-432b-a77f-d3f66aede73b"
 const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,
@@ -83,7 +83,7 @@ const propertyDialog = ref<boolean>(false)
               主板温度：{{ scope.row.TempMb }} ℃
             </div>
             <div class="data-item">
-              MPPT：{{ scope.row.MpptStatus }}
+              充电状态：{{ scope.row.ChargingStatus }}
             </div>
           </template>
         </el-table-column>
@@ -106,7 +106,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="总体波浪特征" min-width="140px">
+        <el-table-column label="总体波浪特征" min-width="150px">
           <template #default="scope">
             <div class="data-item">
               波数：{{ scope.row.WaveNum }}
@@ -147,7 +147,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="风浪特征" min-width="160px">
+        <el-table-column label="风浪特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
               风浪谱的有效波高：{{ scope.row.WsHm }} m
@@ -169,7 +169,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="分位数与谱特征" min-width="160px">
+        <el-table-column label="分位数与谱特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
               三分之一波高：{{ scope.row.H13 }} m
@@ -191,7 +191,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="谱/风浪/涌浪特征" min-width="160px">
+        <el-table-column label="谱/风浪/涌浪特征" min-width="200px">
           <template #default="scope">
             <div class="data-item">
               谱峰周期：{{ scope.row.SpecTp }} s

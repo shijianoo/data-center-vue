@@ -70,9 +70,9 @@ async function onNextPage() {
             {{ formatDateTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column prop="FromCard" label="发送卡" width="160px" />
-        <el-table-column prop="ToCard" label="接收卡" width="160px" />
-        <el-table-column prop="Content" label="数据" />
+        <el-table-column prop="FromCard" label="发送卡" width="120" show-overflow-tooltip />
+        <el-table-column prop="ToCard" label="接收卡" width="120" show-overflow-tooltip />
+        <el-table-column prop="Content" label="数据" show-overflow-tooltip />
       </el-table>
     </div>
     <div class="pagination-bar">

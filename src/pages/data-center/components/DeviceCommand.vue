@@ -1,21 +1,27 @@
 <script lang="ts" setup>
 import type { DeviceCommand } from "@/common/apis/device-command/type"
 import type { Device } from "@/common/apis/devices/type"
-import axios from "axios"
+import type { DeviceFirmware } from "@/common/apis/firmwares/type"
 import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
+import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
 import { formatDateTime } from "@/common/utils/datetime"
-import { useDeviceModelStore } from "@/pinia/stores/device-models"
 
-const deviceModelStore = useDeviceModelStore()
+const loading = ref<boolean>(false)
 const visible = defineModel<boolean>("visible") // v-model:visible
 const device = defineModel<Device>("device") // v-model:device
 
 const commandData = ref<DeviceCommand[]>([]) // 用于存储设备命令数据
-const firmwareList = ref<any[]>([])
+const firmwareList = ref<DeviceFirmware[]>([])
 const selectedFirmware = ref("")
 
 function handleOpened() {
   fetchCommandData()
+}
+
+function handleClosed() {
+  commandData.value = []
+  firmwareList.value = []
+  selectedFirmware.value = ""
 }
 
 function handleDialogOpen() {
@@ -25,29 +31,24 @@ function handleDialogOpen() {
   }
 }
 
-function fetchCommandData() {
+async function fetchCommandData() {
   console.log("获取设备命令数据", device.value)
-  getDeviceCommandsApi(device.value!.id).then(({ data }) => {
+  loading.value = true
+  try {
+    const { data } = await getDeviceCommandsApi(device.value!.id)
     commandData.value = data
-  }).catch((error) => {
-    console.error("获取设备命令失败:", error)
-  })
-  console.log(device.value!)
-  let modelNumber = device.value?.deviceModel?.modelNumber
-  if (!modelNumber && device.value?.deviceModelId) {
-    const model = deviceModelStore.findById(device.value!.deviceModelId)
-    modelNumber = model?.modelNumber
+  } catch {
+    console.error("获取设备命令失败")
   }
-  if (modelNumber) {
-    axios.get(
-      `http://150.158.28.39:8085/Device/GetAllFirmwares?pid=${modelNumber}&hvn=`
-    ).then(({ data }) => {
-      console.log("获取固件列表成功", data.data)
-      firmwareList.value = data.data
-    }).catch((error) => {
-      console.error("获取固件列表失败:", error)
-    })
+
+  try {
+    const { data } = await getFirmwaresByDeviceApi(device.value!.id)
+    firmwareList.value = data.items
+  } catch {
+    console.error("获取设备固件失败")
   }
+
+  loading.value = false
 }
 
 function sendDeviceCommand(dcommand: string, parameter?: string) {
@@ -115,13 +116,7 @@ function handleUpgrade() {
     ElMessage.error("请先选择固件")
     return
   }
-  const firmware = firmwareList.value.find(item => item.id === selectedFirmware.value)
-  if (!firmware) {
-    ElMessage.error("固件信息异常")
-    return
-  }
-  const param = `${firmware.version},${firmware.id}`
-  sendDeviceCommand("Upgrade", param).then(() => {
+  sendDeviceCommand("Upgrade", selectedFirmware.value).then(() => {
     fetchCommandData()
   }).catch(() => {})
 }
@@ -155,7 +150,7 @@ function handleDeleteCommand(commandId: string) {
       v-model="visible"
       @open="handleDialogOpen"
       @opened="handleOpened"
-      @closed="() => commandData = []"
+      @closed="handleClosed"
       title="设备控制"
     >
       <div>
@@ -178,7 +173,7 @@ function handleDeleteCommand(commandId: string) {
                   <el-option
                     v-for="item in firmwareList"
                     :key="item.id"
-                    :label="item.version"
+                    :label="item.firmwareVersion"
                     :value="item.id"
                   />
                 </el-select>
@@ -195,7 +190,7 @@ function handleDeleteCommand(commandId: string) {
             <el-table-column prop="command" label="命令" align="center" />
             <el-table-column prop="isSentToDevice" label="状态" align="center">
               <template #default="scope">
-                <el-tag v-if="scope.row.isSentToDevice === 'true'" type="primary" effect="plain" disable-transitions>
+                <el-tag v-if="scope.row.isSentToDevice === true" type="primary" effect="plain" disable-transitions>
                   已接收
                 </el-tag>
                 <el-tag v-else type="warning" effect="plain" disable-transitions>

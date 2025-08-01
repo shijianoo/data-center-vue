@@ -130,8 +130,7 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: {
       title: "设备中心",
       alwaysShow: true,
-      svgIcon: "device-center",
-      hidden: true
+      svgIcon: "device-center"
     },
     children: [
       {
@@ -148,6 +147,14 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: "Devices",
         meta: {
           title: "设备实例"
+        }
+      },
+      {
+        path: "firmwares",
+        component: () => import("@/pages/device-center/firmwares/index.vue"),
+        name: "Firmwares",
+        meta: {
+          title: "固件管理"
         }
       }
     ]
