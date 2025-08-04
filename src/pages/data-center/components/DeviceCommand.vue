@@ -199,7 +199,7 @@ function handleDeleteCommand(commandId: string) {
               </template>
             </el-table-column>
             <el-table-column prop="parameter" label="参数" align="center" />
-            <el-table-column prop="updatedAt" label="时间戳" align="center">
+            <el-table-column prop="updatedAt" label="更新时间" align="center">
               <template #default="scope">
                 {{ formatDateTime(scope.row.updatedAt) }}
               </template>

@@ -4,6 +4,7 @@ import type { DeviceModel } from "@/common/apis/device-models/type"
 import type { DeviceFirmware } from "@/common/apis/firmwares/type"
 import { getToken } from "@@/utils/cache/cookies"
 import { CirclePlus, RefreshRight, UploadFilled } from "@element-plus/icons-vue"
+import SparkMD5 from "spark-md5"
 import { getDeviceModelsApi } from "@/common/apis/device-models"
 import { deleteFirmwaresApi, getFirmwaresByModelApi } from "@/common/apis/firmwares"
 
@@ -44,14 +45,16 @@ const uploadData = computed(() => ({
   deviceModelId: uploadForm.value.deviceModelId,
   firmwareVersion: uploadForm.value.firmwareVersion,
   description: uploadForm.value.description,
-  supportedHardwareVersions: uploadForm.value.supportedHardwareVersions.join(",")
+  supportedHardwareVersions: uploadForm.value.supportedHardwareVersions.join(","),
+  fileMd5: uploadForm.value.fileMd5
 }))
 
 const uploadForm = ref({
   deviceModelId: "",
   firmwareVersion: "",
   description: "",
-  supportedHardwareVersions: [] as string[]
+  supportedHardwareVersions: [] as string[],
+  fileMd5: ""
 })
 
 // 表单验证规则
@@ -106,12 +109,12 @@ const uploadHeaders = computed(() => {
 
 function handleCreate() {
   uploadDialogVisible.value = true
-  // 重置表单
   uploadForm.value = {
     deviceModelId: searchData.value.modelId || "",
     firmwareVersion: "",
     description: "",
-    supportedHardwareVersions: []
+    supportedHardwareVersions: [],
+    fileMd5: ""
   }
 }
 
@@ -123,16 +126,35 @@ function handleUpload() {
   })
 }
 
-// 上传前的验证
-function beforeUpload(rawFile: UploadRawFile): boolean {
-  console.log("开始上传前验证", rawFile)
-  console.log("当前表单数据:", uploadForm.value)
-  console.log("上传 URL:", uploadAction.value)
-  console.log("上传数据:", uploadData.value)
-  console.log("上传请求头:", uploadHeaders.value)
+// 计算文件MD5
+async function calculateFileMd5(file: UploadRawFile): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader()
+    fileReader.readAsArrayBuffer(file)
+    fileReader.onload = function (e) {
+      const spark = new SparkMD5.ArrayBuffer()
+      spark.append(e.target!.result as ArrayBuffer)
+      resolve(spark.end())
+    }
+    fileReader.onerror = function () {
+      reject(new Error("文件读取失败"))
+    }
+  })
+}
 
+// 上传前的验证
+async function beforeUpload(rawFile: UploadRawFile) {
   uploadLoading.value = true
-  return true
+  uploadForm.value.fileMd5 = ""
+  try {
+    uploadForm.value.fileMd5 = await calculateFileMd5(rawFile)
+    console.log("文件MD5:", uploadForm.value.fileMd5)
+    return true
+  } catch (e) {
+    ElMessage.error(`MD5计算失败: ${e}`)
+    uploadLoading.value = false
+    return false
+  }
 }
 
 function onUploadSuccess(response: any, _uploadFile: UploadFile): void {
@@ -169,7 +191,8 @@ function resetForm() {
     deviceModelId: "",
     firmwareVersion: "",
     description: "",
-    supportedHardwareVersions: []
+    supportedHardwareVersions: [],
+    fileMd5: ""
   }
 }
 
@@ -234,7 +257,6 @@ watch(
 
 onMounted(async () => {
   await fetchDeviceModels()
-  await fetchFirmwares()
 })
 // #endregion
 </script>
@@ -354,14 +376,16 @@ onMounted(async () => {
             :on-success="onUploadSuccess"
             :on-error="onUploadError"
             :limit="1"
+            drag
             :auto-upload="false"
             name="file"
+            class="upload-full-width"
           >
             <el-icon class="el-icon--upload">
               <UploadFilled />
             </el-icon>
             <div class="el-upload__text">
-              <em>点击上传</em>
+              拖拽文件到此处或<em>点击上传</em>
             </div>
           </el-upload>
         </el-form-item><el-form-item label="固件备注">
@@ -406,15 +430,20 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-:deep(.el-dialog__body) {
-  padding: 20px;
-}
-
-.dialog-footer {
-  text-align: right;
-}
-
-:deep(.el-upload-dragger) {
+.upload-full-width {
   width: 100%;
+
+  :deep(.el-upload) {
+    width: 100%;
+  }
+
+  :deep(.el-upload-dragger) {
+    width: 100%;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 </style>
