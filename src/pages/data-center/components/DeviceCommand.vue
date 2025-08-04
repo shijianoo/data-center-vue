@@ -63,7 +63,7 @@ function sendDeviceCommand(dcommand: string, parameter?: string) {
 }
 
 function handleRestart() {
-  sendDeviceCommand("Restart").then(() => {
+  sendDeviceCommand("Reset").then(() => {
     fetchCommandData()
   }).catch((error) => {
     ElMessage.error(`命令发下发失败: ${error.message}`)
@@ -105,7 +105,7 @@ function handleCycleCommandDialog() {
       ElMessage.error("周期不能为0")
       return
     }
-    sendDeviceCommand("SetCycle", value).then(() => {
+    sendDeviceCommand("Setuploadcycle", `${value},m`).then(() => {
       fetchCommandData()
     }).catch(() => {})
   }).catch(() => {})
