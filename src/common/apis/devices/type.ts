@@ -9,6 +9,17 @@ export interface CreateOrUpdateDeviceDto {
   description: string
 }
 
+export interface DeviceUpgrade extends Entity<string> {
+  deviceId: string
+  commandId: string
+  firmwareId: string
+  targetFirmwareVersion: string
+  startTime?: string
+  endTime?: string
+  status: number
+  downloadCount: number
+}
+
 export interface Device extends Entity<string> {
   deviceModelId: string
   serialNumber: string
@@ -16,6 +27,7 @@ export interface Device extends Entity<string> {
   description: string
   isActive: boolean
   deviceModel: DeviceModel
+  upgradeTasks?: DeviceUpgrade[]
 }
 
 export type DeviceListResponse = ApiResponseData<Device[]>

@@ -4,6 +4,7 @@ import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelectio
 import { formatDateTime } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
+import DeviceStatus from "./components/DeviceStatus.vue"
 
 const deviceModelId = "cf2b5e10-ea76-432b-a77f-d3f66aede73b"
 const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
@@ -18,6 +19,7 @@ const {
 
 const controlDialog = ref<boolean>(false)
 const propertyDialog = ref<boolean>(false)
+const statusDialog = ref<boolean>(false)
 </script>
 
 <template>
@@ -39,6 +41,9 @@ const propertyDialog = ref<boolean>(false)
       </el-button>
       <el-button style="margin: 0;" @click="propertyDialog = true">
         属性
+      </el-button>
+      <el-button style="margin: 0;" @click="statusDialog = true">
+        状态
       </el-button>
     </div>
     <div class="table-wrapper">
@@ -249,6 +254,10 @@ const propertyDialog = ref<boolean>(false)
     />
     <DeviceProperty
       v-model:visible="propertyDialog" v-model:device-id="selectedDeviceId"
+    />
+    <DeviceStatus
+      v-model:visible="statusDialog"
+      v-model:device="selectedDevice"
     />
   </div>
 </template>

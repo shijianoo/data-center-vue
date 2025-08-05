@@ -1,4 +1,4 @@
-import type { BeidouData, BeidouQueryParams, DeviceDataQueryOptions, IridiumData, IridiumQueryParams, ParsedDeviceDataQuery } from "./type"
+import type { BeidouData, BeidouQueryParams, DeviceDataQueryOptions, IridiumData, IridiumQueryParams, ParsedDeviceDataQuery, ParsedDeviceStatusQuery } from "./type"
 import type { QueryResult } from "@/common/apis/type"
 import { dataCenterRequest } from "@/http/axios"
 
@@ -12,11 +12,20 @@ export function queryParsedDeviceData<T>(params: ParsedDeviceDataQuery) {
 }
 
 /** 查询设备数据（支持锚点或范围模式） */
-export function queryDeviceDataByOptions<T>(options: DeviceDataQueryOptions) {
+export function queryParsedDeviceDataByOptions<T>(options: DeviceDataQueryOptions) {
   return dataCenterRequest<ApiResponseData<T[]>>({
     url: "data/parsed/query",
     method: "get",
     data: options
+  })
+}
+
+/** 查询设备状态  */
+export function queryParsedDeviceStatus<T>(params: ParsedDeviceStatusQuery) {
+  return dataCenterRequest<ApiResponseData<QueryResult<T>>>({
+    url: "data/parsed/status",
+    method: "get",
+    params
   })
 }
 

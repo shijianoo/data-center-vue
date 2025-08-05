@@ -3,6 +3,7 @@ import type { DeviceCommand } from "@/common/apis/device-command/type"
 import type { Device } from "@/common/apis/devices/type"
 import type { DeviceFirmware } from "@/common/apis/firmwares/type"
 import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
+import { getDeviceByIdApi } from "@/common/apis/devices"
 import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
 import { formatDateTime } from "@/common/utils/datetime"
 
@@ -141,6 +142,15 @@ function handleDeleteCommand(commandId: string) {
       })
   }).catch(() => {})
 }
+
+const upgradeStatusDialog = ref(false)
+const upgradeStatusList = ref<any[]>([])
+async function upgradeStatusDialogOpened() {
+  upgradeStatusList.value = []
+  const { data } = await getDeviceByIdApi(device.value?.id)
+  console.log("设备升级状态", data)
+  upgradeStatusList.value = data.upgradeTasks!
+}
 </script>
 
 <template>
@@ -180,6 +190,9 @@ function handleDeleteCommand(commandId: string) {
                 <el-button @click="handleUpgrade">
                   升级
                 </el-button>
+                <el-button @click="upgradeStatusDialog = true">
+                  升级状态
+                </el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -213,6 +226,27 @@ function handleDeleteCommand(commandId: string) {
             </el-table-column>
           </el-table>
         </div>
+      </div>
+    </el-dialog>
+    <el-dialog @closed="upgradeStatusDialog = false" @opened="upgradeStatusDialogOpened" v-model="upgradeStatusDialog" title="升级状态" width="30%">
+      <div>
+        <el-table width="100%" :data="upgradeStatusList">
+          <el-table-column prop="targetFirmwareVersion" label="目标固件版本" align="center" />
+          <el-table-column prop="status" label="升级状态" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.status === 0" type="warning" effect="plain" disable-transitions>
+                升级中
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 1" type="danger" effect="plain" disable-transitions>
+                升级失败
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 2" type="success" effect="plain" disable-transitions>
+                升级成功
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="downloadCount" label="下载次数" align="center" />
+        </el-table>
       </div>
     </el-dialog>
   </div>
