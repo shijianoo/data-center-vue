@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
+import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
@@ -17,6 +18,16 @@ const {
   goNextPage
 } = useAnchorPagination(deviceModelId, selectedDevice)
 
+const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
+  console.log("Device event:", id, data)
+  if (id === selectedDeviceId.value) {
+    console.warn("已收到相同设备的数据：", id)
+    resetToFirstPage()
+  } else {
+    console.warn("已收到不同设备的数据：", id)
+  }
+})
+
 const controlDialog = ref<boolean>(false)
 const propertyDialog = ref<boolean>(false)
 const statusDialog = ref<boolean>(false)
@@ -24,6 +35,20 @@ const statusDialog = ref<boolean>(false)
 
 <template>
   <div class="app-container">
+    <el-alert
+      v-if="isReconnecting"
+      title="实时数据推送已断开，正在重新连接..."
+      type="warning"
+      effect="dark"
+      show-icon
+    />
+    <el-alert
+      v-else-if="isDisconnected"
+      title="实时数据推送已断开，请检查网络连接并尝试刷新页面"
+      type="error"
+      effect="dark"
+      show-icon
+    />
     <div class="search-wrapper">
       <el-select style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
         <el-option
@@ -268,6 +293,10 @@ const statusDialog = ref<boolean>(false)
   display: flex;
   flex-direction: column;
   padding: 5px;
+}
+
+.el-alert {
+  margin: 0px 0px 5px 0px;
 }
 
 .search-wrapper {
