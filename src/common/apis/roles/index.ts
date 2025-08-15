@@ -51,3 +51,20 @@ export function getRoleMenuIdsApi(id: string) {
     method: "get"
   })
 }
+
+// 分配角色权限
+export function assignPermissionsApi(id: string, permissionIds: string[]) {
+  return authCenterRequest({
+    url: `/roles/${id}/permissions`,
+    method: "post",
+    data: permissionIds
+  })
+}
+
+// 获取角色权限Id列表
+export function getRolePermissionIdsApi(id: string) {
+  return authCenterRequest<ApiResponseData<string[]>>({
+    url: `/roles/${id}/permission-ids`,
+    method: "get"
+  })
+}

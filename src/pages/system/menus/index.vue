@@ -1,19 +1,26 @@
 <script lang="ts" setup>
-import type { FormRules } from "element-plus"
+import type { FormInstance, FormRules } from "element-plus"
 import type { MenuForm, MenuTree } from "@/common/apis/menus/type"
+import type { PermissionTree } from "@/common/apis/permissions/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
+import { ElMessage, ElMessageBox } from "element-plus"
 import { cloneDeep } from "lodash-es"
+import { computed, onMounted, ref } from "vue"
 import { createMenu, deleteMenu, getMenuTree, updateMenu } from "@/common/apis/menus"
+import { getPermissionTreeApi } from "@/common/apis/permissions"
 
 defineOptions({
   name: "Menus"
 })
 
-const loading = ref(false)
+const loading = ref<boolean>(false)
+const submitLoading = ref<boolean>(false)
+const currentUpdateId = ref<string>("")
 
-// #region 增 + 改 表单逻辑
+// #region 表单相关
 const defaultForm: MenuForm = {
   id: undefined,
+  parentId: undefined,
   name: "",
   type: 0,
   order: 0,
@@ -24,8 +31,8 @@ const defaultForm: MenuForm = {
   affix: false
 }
 
-const dialogVisible = ref(false)
-const formRef = useTemplateRef("formRef")
+const dialogVisible = ref<boolean>(false)
+const formRef = ref<FormInstance | null>(null)
 const formData = ref<MenuForm>(cloneDeep(defaultForm))
 
 const formRules = computed(() => {
@@ -40,78 +47,113 @@ const formRules = computed(() => {
     // 外链
     rules.externalUrl = [{ required: true, trigger: "blur", message: "请输入外链地址" }]
     rules.target = [{ required: true, trigger: "blur", message: "请输入打开方式" }]
-  } else if (formData.value.type === 2) {
-    // 按钮
-    rules.permissionCode = [{ required: true, trigger: "blur", message: "请输入权限代码" }]
   }
   return rules
 })
 
-// 选择父级菜单
-const parentMenuOptions = ref<MenuTree[]>([])
-
-function handleCreate(parent?: MenuTree) {
-  resetForm()
-  if (parent) {
-    formData.value.parentId = parent.id
-  } else {
-    formData.value.parentId = undefined
-  }
-  dialogVisible.value = true
-}
-
-function handleCreateOrUpdate() {
-  formRef.value?.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("表单校验不通过")
-      return
-    }
-    loading.value = true
-    try {
-      if (formData.value.id) {
-        await updateMenu(formData.value)
-      } else {
-        await createMenu(formData.value)
-      }
-      ElMessage.success("操作成功")
-      dialogVisible.value = false
-    } finally {
-      loading.value = false
-      getMenuData()
-    }
-  })
-}
 function resetForm() {
+  currentUpdateId.value = ""
   formRef.value?.clearValidate()
   formData.value = cloneDeep(defaultForm)
 }
 // #endregion
 
-// #region 删除
-function handleDelete(row: MenuTree) {
-  ElMessageBox.confirm(`正在删除菜单：${row.name}，确认删除？`, "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(async () => {
-    await deleteMenu(row.id)
-    getMenuData()
-    ElMessage.success("删除成功")
-  })
+// #region 数据相关
+const menuData = ref<MenuTree[]>([])
+const permissionData = ref<PermissionTree[]>([])
+
+// 菜单树选项（用于父级菜单选择）
+const menuTreeOptions = computed(() => {
+  const buildOptions = (nodes: MenuTree[], excludeId?: string): any[] => {
+    return nodes
+      .filter(node => node.id !== excludeId)
+      .map(node => ({
+        id: node.id,
+        name: node.name,
+        children: node.children ? buildOptions(node.children, excludeId) : []
+      }))
+  }
+  return buildOptions(menuData.value, currentUpdateId.value)
+})
+
+// 权限树选项（用于权限选择）
+const permissionTreeOptions = computed(() => {
+  const buildOptions = (nodes: PermissionTree[]): any[] => {
+    return nodes.map(node => ({
+      id: node.id,
+      name: node.name,
+      code: node.code,
+      children: node.children ? buildOptions(node.children) : []
+    }))
+  }
+  return buildOptions(permissionData.value)
+})
+
+// 根据权限ID获取权限名称
+function getPermissionNameById(permissionId?: string): string {
+  if (!permissionId) return ""
+
+  const findPermission = (nodes: PermissionTree[]): PermissionTree | null => {
+    for (const node of nodes) {
+      if (node.id === permissionId) {
+        return node
+      }
+      if (node.children) {
+        const found = findPermission(node.children)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const permission = findPermission(permissionData.value)
+  return permission ? permission.code : ""
+}
+
+async function getMenuData() {
+  loading.value = true
+  try {
+    const { data } = await getMenuTree()
+    menuData.value = data.items || []
+  } catch (error) {
+    console.error("获取菜单树失败:", error)
+    menuData.value = []
+    ElMessage.error("获取菜单数据失败")
+  } finally {
+    loading.value = false
+  }
+}
+
+async function getPermissionData() {
+  try {
+    const { data } = await getPermissionTreeApi()
+    permissionData.value = data.items || []
+  } catch (error) {
+    console.error("获取权限树失败:", error)
+    permissionData.value = []
+  }
 }
 // #endregion
 
-// #region 编辑
-function handleUpdate(row: MenuTree) {
+// #region 增删改操作
+function handleCreate(parentRow?: MenuTree) {
+  resetForm()
+  if (parentRow) {
+    formData.value.parentId = parentRow.id
+  }
   dialogVisible.value = true
+}
+
+function handleUpdate(row: MenuTree) {
+  currentUpdateId.value = row.id
   formData.value = {
     id: row.id,
-    parentId: row.parentId,
+    parentId: row.parentId || undefined,
     name: row.name,
     type: row.type,
     path: row.path,
     externalUrl: row.externalUrl,
-    permissionCode: row.permissionCode,
+    permissionId: row.permissionId,
     svgIcon: row.svgIcon,
     target: row.target,
     component: row.component,
@@ -124,20 +166,66 @@ function handleUpdate(row: MenuTree) {
     affix: row.affix,
     extra: row.extra
   }
+  dialogVisible.value = true
 }
 
-function handleTypeChange(val: number) {
-  if (val === 0) {
+async function handleCreateOrUpdate() {
+  if (!formRef.value) return
+
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
+
+  submitLoading.value = true
+  try {
+    if (currentUpdateId.value) {
+      await updateMenu(formData.value)
+      ElMessage.success("修改成功")
+    } else {
+      await createMenu(formData.value)
+      ElMessage.success("创建成功")
+    }
+    dialogVisible.value = false
+    await getMenuData()
+  } catch (error) {
+    console.error("操作失败:", error)
+    ElMessage.error("操作失败")
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+function handleDelete(row: MenuTree) {
+  ElMessageBox.confirm(
+    `确认删除菜单"${row.name}"吗？删除后不可恢复！`,
+    "删除确认",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    }
+  ).then(async () => {
+    try {
+      await deleteMenu(row.id)
+      ElMessage.success("删除成功")
+      await getMenuData()
+    } catch (error) {
+      console.error("删除失败:", error)
+      ElMessage.error("删除失败")
+    }
+  })
+}
+
+function handleTypeChange(val: string | number | boolean | undefined) {
+  const numVal = Number(val)
+  if (numVal === 0) {
     // 页面
     formData.value.externalUrl = undefined
     formData.value.target = undefined
-    formData.value.permissionCode = undefined
-  } else if (val === 1) {
+  } else if (numVal === 1) {
     // 外链
     formData.value.path = undefined
     formData.value.component = undefined
-    formData.value.permissionCode = undefined
-  } else if (val === 2) {
+  } else if (numVal === 2) {
     // 按钮
     formData.value.path = undefined
     formData.value.component = undefined
@@ -147,37 +235,9 @@ function handleTypeChange(val: number) {
 }
 // #endregion
 
-// #region 查
-const menuData = ref<MenuTree[]>([])
-
-function getMenuData() {
-  loading.value = true
-  getMenuTree().then(({ data }) => {
-    // 假设后端返回树形结构
-    menuData.value = data.items
-    console.log("Menu Data:", menuData.value)
-    parentMenuOptions.value = flattenMenuTree(data.items)
-  }).catch(() => {
-    menuData.value = []
-    parentMenuOptions.value = []
-  }).finally(() => {
-    loading.value = false
-  })
-}
-// 扁平化菜单树用于父级菜单选择
-function flattenMenuTree(tree: MenuTree[], arr: MenuTree[] = []): MenuTree[] {
-  for (const item of tree) {
-    arr.push(item)
-    if (item.children && item.children.length) {
-      flattenMenuTree(item.children, arr)
-    }
-  }
-  return arr
-}
-// #endregion
-
-onMounted(() => {
-  getMenuData()
+onMounted(async () => {
+  await getPermissionData()
+  await getMenuData()
 })
 </script>
 
@@ -197,7 +257,7 @@ onMounted(() => {
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="menuData" row-key="id" show-overflow-tooltip>
+        <el-table :data="menuData" row-key="id" default-expand-all show-overflow-tooltip>
           <el-table-column prop="name" label="菜单名称" align="center" />
           <el-table-column prop="type" label="菜单类型" align="center" width="80px">
             <template #default="scope">
@@ -208,10 +268,14 @@ onMounted(() => {
           </el-table-column>
           <el-table-column prop="path" label="页面路径" align="center" />
           <el-table-column prop="externalUrl" label="外链地址" align="center" />
-          <el-table-column prop="permissionCode" label="权限标识" align="center" />
+          <el-table-column prop="permissionId" label="关联权限" align="center">
+            <template #default="scope">
+              {{ getPermissionNameById(scope.row.permissionId) }}
+            </template>
+          </el-table-column>
           <el-table-column prop="svgIcon" label="图标" align="center" width="60px">
             <template #default="scope">
-              <SvgIcon v-if="scope.row.svgIcon" :name="scope.row.svgIcon" />
+              <SvgIcon v-if="scope.row.svgIcon" :name="scope.row.svgIcon as any" />
             </template>
           </el-table-column>
           <el-table-column prop="order" label="排序" align="center" width="60px" />
@@ -243,15 +307,15 @@ onMounted(() => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="190" align="center">
+          <el-table-column fixed="right" label="操作" width="240" align="center">
             <template #default="scope">
+              <el-button type="primary" text bg size="small" @click="handleCreate(scope.row)">
+                新增子菜单
+              </el-button>
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
                 修改
               </el-button>
-              <el-button type="primary" text bg size="small" @click="() => handleCreate(scope.row)">
-                新增
-              </el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
+              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)" :disabled="scope.row.isSystem">
                 删除
               </el-button>
             </template>
@@ -259,75 +323,131 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
-    <!-- 新增/修改 -->
+
+    <!-- 新增/修改对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="formData.id === undefined ? '新增菜单' : '修改菜单'"
-      width="400px"
+      :title="currentUpdateId ? '修改菜单' : '新增菜单'"
       @closed="resetForm"
+      width="600px"
     >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
+        <el-form-item prop="parentId" label="父级菜单">
+          <el-tree-select
+            v-model="formData.parentId"
+            :data="menuTreeOptions"
+            :props="{ value: 'id', label: 'name', children: 'children' }"
+            placeholder="请选择父级菜单（可为空）"
+            clearable
+            check-strictly
+            :render-after-expand="false"
+          />
+        </el-form-item>
         <el-form-item prop="type" label="菜单类型">
-          <el-select v-model="formData.type" placeholder="请选择类型" @change="handleTypeChange">
-            <el-option :value="0" label="页面" />
-            <el-option :value="1" label="外链" />
-            <el-option :value="2" label="按钮" />
-          </el-select>
+          <el-radio-group v-model="formData.type" @change="handleTypeChange">
+            <el-radio :label="0">
+              页面
+            </el-radio>
+            <el-radio :label="1">
+              外链
+            </el-radio>
+            <el-radio :label="2">
+              按钮
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item prop="name" label="菜单名称">
-          <el-input v-model="formData.name" placeholder="请输入" />
+          <el-input v-model="formData.name" placeholder="请输入菜单名称" />
         </el-form-item>
         <el-form-item v-if="formData.type === 0" prop="path" label="路由路径">
-          <el-input v-model="formData.path" placeholder="请输入" />
+          <el-input v-model="formData.path" placeholder="请输入路由路径" />
         </el-form-item>
-        <el-form-item v-if="formData.type === 0" prop="component" label="组件名称">
-          <el-input v-model="formData.component" placeholder="请输入" />
+        <el-form-item v-if="formData.type === 0" prop="component" label="组件路径">
+          <el-input v-model="formData.component" placeholder="请输入组件路径" />
         </el-form-item>
         <el-form-item v-if="formData.type === 1" prop="externalUrl" label="外链地址">
-          <el-input v-model="formData.externalUrl" placeholder="请输入" />
+          <el-input v-model="formData.externalUrl" placeholder="请输入外链地址" />
         </el-form-item>
         <el-form-item v-if="formData.type === 1" prop="target" label="打开方式">
-          <el-select v-model="formData.target" placeholder="请选择类型">
-            <el-option value="'_blank'" label="新窗口" />
-            <el-option value="'_self'" label="当前窗口" />
-            <el-option value="'_parent'" label="父窗口" />
+          <el-select v-model="formData.target" placeholder="请选择打开方式">
+            <el-option value="_blank" label="新窗口" />
+            <el-option value="_self" label="当前窗口" />
+            <el-option value="_parent" label="父窗口" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="formData.type === 2" prop="permissionCode" label="权限代码">
-          <el-input v-model="formData.permissionCode" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item prop="parentId" label="父级菜单">
-          <el-select v-model="formData.parentId" placeholder="请选择父级菜单" clearable filterable>
-            <el-option v-for="item in parentMenuOptions" :key="item.id" :label="item.name" :value="item.id" />
-          </el-select>
+        <el-form-item prop="permissionId" label="关联权限">
+          <el-tree-select
+            v-model="formData.permissionId"
+            :data="permissionTreeOptions"
+            :props="{ value: 'id', label: 'name', children: 'children' }"
+            placeholder="请选择关联权限（可为空）"
+            clearable
+            check-strictly
+            :render-after-expand="false"
+          />
         </el-form-item>
         <el-form-item prop="svgIcon" label="菜单图标">
-          <el-input v-model="formData.svgIcon" placeholder="请输入" />
+          <el-input v-model="formData.svgIcon" placeholder="请输入图标名称">
+            <template #prepend>
+              <SvgIcon v-if="formData.svgIcon" :name="formData.svgIcon as any" />
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item prop="description" label="菜单描述">
-          <el-input v-model="formData.description" placeholder="请输入" />
+          <el-input v-model="formData.description" type="textarea" placeholder="请输入菜单描述" />
         </el-form-item>
-        <el-form-item prop="order" label="菜单排序">
+        <el-form-item prop="extra" label="扩展信息">
+          <el-input v-model="formData.extra" placeholder="请输入扩展信息（可选）" />
+        </el-form-item>
+        <el-form-item v-if="formData.type === 0" prop="isHidden" label="是否隐藏">
+          <el-radio-group v-model="formData.isHidden">
+            <el-radio :label="false">
+              显示
+            </el-radio>
+            <el-radio :label="true">
+              隐藏
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="formData.type === 0" prop="keepAlive" label="页面缓存">
+          <el-radio-group v-model="formData.keepAlive">
+            <el-radio :label="false">
+              不缓存
+            </el-radio>
+            <el-radio :label="true">
+              缓存
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="formData.type === 0" prop="affix" label="固定标签">
+          <el-radio-group v-model="formData.affix">
+            <el-radio :label="false">
+              不固定
+            </el-radio>
+            <el-radio :label="true">
+              固定
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="order" label="排序">
           <el-input-number v-model="formData.order" :min="0" />
         </el-form-item>
-        <el-form-item prop="isActive" label="启用状态">
-          <el-switch v-model="formData.isActive" />
-        </el-form-item>
-        <el-form-item prop="isHidden" label="是否隐藏">
-          <el-switch v-model="formData.isHidden" />
-        </el-form-item>
-        <el-form-item prop="keepAlive" label="启用缓存">
-          <el-switch v-model="formData.keepAlive" />
-        </el-form-item>
-        <el-form-item prop="affix" label="启用固定">
-          <el-switch v-model="formData.affix" />
+        <el-form-item prop="isActive" label="状态">
+          <el-radio-group v-model="formData.isActive">
+            <el-radio :label="true">
+              启用
+            </el-radio>
+            <el-radio :label="false">
+              禁用
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">
           取消
         </el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreateOrUpdate">
+        <el-button type="primary" @click="handleCreateOrUpdate" :loading="submitLoading">
           确认
         </el-button>
       </template>

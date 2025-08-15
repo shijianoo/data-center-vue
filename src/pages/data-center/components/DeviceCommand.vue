@@ -1,21 +1,30 @@
 <script lang="ts" setup>
 import type { DeviceCommand } from "@/common/apis/device-command/type"
 import type { Device } from "@/common/apis/devices/type"
-import axios from "axios"
+import type { DeviceFirmware } from "@/common/apis/firmwares/type"
 import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
+import { getDeviceByIdApi } from "@/common/apis/devices"
+import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
 import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 import { formatDateTime } from "@/common/utils/datetime"
 
+const loading = ref<boolean>(false)
 const visible = defineModel<boolean>("visible") // v-model:visible
 const device = defineModel<Device>("device") // v-model:device
 
 const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const commandData = ref<DeviceCommand[]>([]) // 用于存储设备命令数据
-const firmwareList = ref<any[]>([])
+const firmwareList = ref<DeviceFirmware[]>([])
 const selectedFirmware = ref("")
 
 function handleOpened() {
   fetchCommandData()
+}
+
+function handleClosed() {
+  commandData.value = []
+  firmwareList.value = []
+  selectedFirmware.value = ""
 }
 
 function handleDialogOpen() {
@@ -27,7 +36,6 @@ function handleDialogOpen() {
 
 async function fetchCommandData() {
   await fetchDeviceModels()
-  console.log("获取设备命令数据", device.value)
   const { data } = await getDeviceCommandsApi(device.value!.id)
   commandData.value = data
   let modelNumber = device.value?.deviceModel?.modelNumber
@@ -35,16 +43,22 @@ async function fetchCommandData() {
     const model = deviceModels.value.find(m => m.id === device.value!.deviceModelId)
     modelNumber = model?.modelNumber
   }
-  if (modelNumber) {
-    axios.get(
-      `http://150.158.28.39:8085/Device/GetAllFirmwares?pid=${modelNumber}&hvn=`
-    ).then(({ data }) => {
-      console.log("获取固件列表成功", data.data)
-      firmwareList.value = data.data
-    }).catch((error) => {
-      console.error("获取固件列表失败:", error)
-    })
+  loading.value = true
+  try {
+    const { data } = await getDeviceCommandsApi(device.value!.id)
+    commandData.value = data
+  } catch {
+    console.error("获取设备命令失败")
   }
+
+  try {
+    const { data } = await getFirmwaresByDeviceApi(device.value!.id)
+    firmwareList.value = data.items
+  } catch {
+    console.error("获取设备固件失败")
+  }
+
+  loading.value = false
 }
 
 function sendDeviceCommand(dcommand: string, parameter?: string) {
@@ -59,7 +73,7 @@ function sendDeviceCommand(dcommand: string, parameter?: string) {
 }
 
 function handleRestart() {
-  sendDeviceCommand("Restart").then(() => {
+  sendDeviceCommand("Reset").then(() => {
     fetchCommandData()
   }).catch((error) => {
     ElMessage.error(`命令发下发失败: ${error.message}`)
@@ -101,7 +115,7 @@ function handleCycleCommandDialog() {
       ElMessage.error("周期不能为0")
       return
     }
-    sendDeviceCommand("SetCycle", value).then(() => {
+    sendDeviceCommand("Setuploadcycle", `${value},m`).then(() => {
       fetchCommandData()
     }).catch(() => {})
   }).catch(() => {})
@@ -112,13 +126,7 @@ function handleUpgrade() {
     ElMessage.error("请先选择固件")
     return
   }
-  const firmware = firmwareList.value.find(item => item.id === selectedFirmware.value)
-  if (!firmware) {
-    ElMessage.error("固件信息异常")
-    return
-  }
-  const param = `${firmware.version},${firmware.id}`
-  sendDeviceCommand("Upgrade", param).then(() => {
+  sendDeviceCommand("Upgrade", selectedFirmware.value).then(() => {
     fetchCommandData()
   }).catch(() => {})
 }
@@ -143,6 +151,15 @@ function handleDeleteCommand(commandId: string) {
       })
   }).catch(() => {})
 }
+
+const upgradeStatusDialog = ref(false)
+const upgradeStatusList = ref<any[]>([])
+async function upgradeStatusDialogOpened() {
+  upgradeStatusList.value = []
+  const { data } = await getDeviceByIdApi(device.value?.id)
+  console.log("设备升级状态", data)
+  upgradeStatusList.value = data.upgradeTasks!
+}
 </script>
 
 <template>
@@ -152,7 +169,7 @@ function handleDeleteCommand(commandId: string) {
       v-model="visible"
       @open="handleDialogOpen"
       @opened="handleOpened"
-      @closed="() => commandData = []"
+      @closed="handleClosed"
       title="设备控制"
     >
       <div>
@@ -175,12 +192,15 @@ function handleDeleteCommand(commandId: string) {
                   <el-option
                     v-for="item in firmwareList"
                     :key="item.id"
-                    :label="item.version"
+                    :label="item.firmwareVersion"
                     :value="item.id"
                   />
                 </el-select>
                 <el-button @click="handleUpgrade">
                   升级
+                </el-button>
+                <el-button @click="upgradeStatusDialog = true">
+                  升级状态
                 </el-button>
               </el-form-item>
             </el-form>
@@ -192,7 +212,7 @@ function handleDeleteCommand(commandId: string) {
             <el-table-column prop="command" label="命令" align="center" />
             <el-table-column prop="isSentToDevice" label="状态" align="center">
               <template #default="scope">
-                <el-tag v-if="scope.row.isSentToDevice === 'true'" type="primary" effect="plain" disable-transitions>
+                <el-tag v-if="scope.row.isSentToDevice === true" type="primary" effect="plain" disable-transitions>
                   已接收
                 </el-tag>
                 <el-tag v-else type="warning" effect="plain" disable-transitions>
@@ -201,7 +221,7 @@ function handleDeleteCommand(commandId: string) {
               </template>
             </el-table-column>
             <el-table-column prop="parameter" label="参数" align="center" />
-            <el-table-column prop="updatedAt" label="时间戳" align="center">
+            <el-table-column prop="updatedAt" label="更新时间" align="center">
               <template #default="scope">
                 {{ formatDateTime(scope.row.updatedAt) }}
               </template>
@@ -215,6 +235,27 @@ function handleDeleteCommand(commandId: string) {
             </el-table-column>
           </el-table>
         </div>
+      </div>
+    </el-dialog>
+    <el-dialog @closed="upgradeStatusDialog = false" @opened="upgradeStatusDialogOpened" v-model="upgradeStatusDialog" title="升级状态" width="30%">
+      <div>
+        <el-table width="100%" :data="upgradeStatusList">
+          <el-table-column prop="targetFirmwareVersion" label="目标固件版本" align="center" />
+          <el-table-column prop="status" label="升级状态" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.status === 0" type="warning" effect="plain" disable-transitions>
+                升级中
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 1" type="danger" effect="plain" disable-transitions>
+                升级失败
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 2" type="success" effect="plain" disable-transitions>
+                升级成功
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="downloadCount" label="下载次数" align="center" />
+        </el-table>
       </div>
     </el-dialog>
   </div>

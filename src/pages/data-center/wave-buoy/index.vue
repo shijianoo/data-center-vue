@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
+import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
+import DeviceStatus from "./components/DeviceStatus.vue"
 
 const deviceModelId = "97d8f296-bb74-4aa5-8f27-38d454f28b0a"
 const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
@@ -16,12 +18,37 @@ const {
   goNextPage
 } = useAnchorPagination(deviceModelId, selectedDevice)
 
+const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
+  console.log("Device event:", id, data)
+  if (id === selectedDeviceId.value) {
+    console.warn("已收到相同设备的数据：", id)
+    resetToFirstPage()
+  } else {
+    console.warn("已收到不同设备的数据：", id)
+  }
+})
+
 const controlDialog = ref<boolean>(false)
 const propertyDialog = ref<boolean>(false)
+const statusDialog = ref<boolean>(false)
 </script>
 
 <template>
   <div class="app-container">
+    <el-alert
+      v-if="isReconnecting"
+      title="实时数据推送已断开，正在重新连接..."
+      type="warning"
+      effect="dark"
+      show-icon
+    />
+    <el-alert
+      v-else-if="isDisconnected"
+      title="实时数据推送已断开，请检查网络连接并尝试刷新页面"
+      type="error"
+      effect="dark"
+      show-icon
+    />
     <div class="search-wrapper">
       <el-select style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
         <el-option
@@ -39,6 +66,9 @@ const propertyDialog = ref<boolean>(false)
       </el-button>
       <el-button style="margin: 0;" @click="propertyDialog = true">
         属性
+      </el-button>
+      <el-button style="margin: 0;" @click="statusDialog = true">
+        状态
       </el-button>
     </div>
     <div class="table-wrapper">
@@ -83,7 +113,7 @@ const propertyDialog = ref<boolean>(false)
               主板温度：{{ scope.row.TempMb }} ℃
             </div>
             <div class="data-item">
-              MPPT：{{ scope.row.MpptStatus }}
+              充电状态：{{ scope.row.ChargingStatus }}
             </div>
           </template>
         </el-table-column>
@@ -106,7 +136,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="总体波浪特征" min-width="140px">
+        <el-table-column label="总体波浪特征" min-width="150px">
           <template #default="scope">
             <div class="data-item">
               波数：{{ scope.row.WaveNum }}
@@ -147,7 +177,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="风浪特征" min-width="160px">
+        <el-table-column label="风浪特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
               风浪谱的有效波高：{{ scope.row.WsHm }} m
@@ -169,7 +199,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="分位数与谱特征" min-width="160px">
+        <el-table-column label="分位数与谱特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
               三分之一波高：{{ scope.row.H13 }} m
@@ -191,7 +221,7 @@ const propertyDialog = ref<boolean>(false)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="谱/风浪/涌浪特征" min-width="160px">
+        <el-table-column label="谱/风浪/涌浪特征" min-width="200px">
           <template #default="scope">
             <div class="data-item">
               谱峰周期：{{ scope.row.SpecTp }} s
@@ -250,6 +280,10 @@ const propertyDialog = ref<boolean>(false)
     <DeviceProperty
       v-model:visible="propertyDialog" v-model:device-id="selectedDeviceId"
     />
+    <DeviceStatus
+      v-model:visible="statusDialog"
+      v-model:device="selectedDevice"
+    />
   </div>
 </template>
 
@@ -259,6 +293,10 @@ const propertyDialog = ref<boolean>(false)
   display: flex;
   flex-direction: column;
   padding: 5px;
+}
+
+.el-alert {
+  margin: 0px 0px 5px 0px;
 }
 
 .search-wrapper {

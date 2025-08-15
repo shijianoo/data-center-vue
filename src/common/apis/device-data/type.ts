@@ -8,6 +8,14 @@ export interface ParsedDeviceDataQuery {
   limit?: number
 }
 
+export interface ParsedDeviceStatusQuery {
+  modelNumber?: string
+  deviceModelId?: string
+  serialNumber?: string
+  anchorTime?: string
+  limit?: number
+}
+
 export interface DeviceDataQueryOptions {
   bucket: string
   psn?: string

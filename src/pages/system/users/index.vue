@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { FormRules } from "element-plus"
-import type { Role } from "@/common/apis/roles/type"
 import type { User, UserForm } from "@/common/apis/users/type"
-import { CirclePlus, MoreFilled, RefreshLeft, RefreshRight, Setting } from "@element-plus/icons-vue"
+import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
-import { getAllRolesApi } from "@/common/apis/roles"
-import { assignRolesApi, createUserApi, deleteUserApi, getAllUsersApi, getUserRoleIdsApi, resetPasswordApi, updateUserApi } from "@/common/apis/users"
+import { createUserApi, deleteUserApi, getAllUsersApi, resetPasswordApi, updateUserApi } from "@/common/apis/users"
+import AssignDeviceDialog from "./components/AssignDeviceDialog.vue"
+import AssignRoleDialog from "./components/AssignRoleDialog.vue"
 
 defineOptions({
   name: "Users"
@@ -143,57 +143,22 @@ function handleResetPassword(row: User) {
 }
 // #endregion
 
-// #region 分配权限
-const roleListData = ref<Role[]>([])
-const assignDialogVisible = ref(false)
-const currentUser = ref<User | null>(null)
-const selectedRoleIds = ref<string[]>([])
+// #region 分配角色和设备
+const assignRoleDialogVisible = ref(false)
+const assignDeviceDialogVisible = ref(false)
+const currentUserId = ref<string>("")
+const currentUserName = ref<string>("")
 
-async function getRolesData() {
-  loading.value = true
-  try {
-    const { data } = await getAllRolesApi()
-    roleListData.value = data.items
-    console.log("获取角色数据", roleListData.value)
-  } catch {
-    roleListData.value = []
-  } finally {
-    loading.value = false
-  }
+function handleAssignRoles(row: User) {
+  currentUserId.value = row.id
+  currentUserName.value = row.userName
+  assignRoleDialogVisible.value = true
 }
 
-async function getUserRoleIds(userId: string) {
-  try {
-    const { data } = await getUserRoleIdsApi(userId)
-    selectedRoleIds.value = data || []
-  } catch (error) {
-    console.error("获取用户角色失败", error)
-    selectedRoleIds.value = []
-  }
-}
-
-async function handleAssignRoles(row: User) {
-  currentUser.value = row
-  await getRolesData()
-  await getUserRoleIds(row.id)
-  assignDialogVisible.value = true
-}
-
-async function submitAssignRoles() {
-  if (!currentUser.value) return
-
-  loading.value = true
-  try {
-    await assignRolesApi(currentUser.value.id, selectedRoleIds.value)
-    ElMessage.success("角色分配成功")
-    assignDialogVisible.value = false
-  } catch (error) {
-    ElMessage.error("角色分配失败")
-    console.error(error)
-  } finally {
-    getUserData() // 刷新用户数据以更新角色信息
-    loading.value = false
-  }
+function handleAssignDevice(row: User) {
+  currentUserId.value = row.id
+  currentUserName.value = row.userName
+  assignDeviceDialogVisible.value = true
 }
 // #endregion
 
@@ -245,29 +210,35 @@ onMounted(() => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="200" align="center">
+          <el-table-column fixed="right" label="操作" width="260" align="center">
             <template #default="scope">
+              <el-dropdown trigger="click">
+                <el-button type="primary" text bg size="small">
+                  用户管理
+                  <el-icon class="el-icon--right">
+                    <ArrowDown />
+                  </el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleAssignRoles(scope.row)">
+                      分配角色
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleAssignDevice(scope.row)">
+                      分配设备
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleResetPassword(scope.row)">
+                      重置密码
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
                 修改
               </el-button>
               <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
                 删除
               </el-button>
-              <el-dropdown trigger="click">
-                <el-button type="info" text bg size="small">
-                  <el-icon><MoreFilled /></el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="handleAssignRoles(scope.row)">
-                      <el-icon><Setting /></el-icon> 分配权限
-                    </el-dropdown-item>
-                    <el-dropdown-item @click="handleResetPassword(scope.row)">
-                      <el-icon><RefreshLeft /></el-icon> 重置密码
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
             </template>
           </el-table-column>
         </el-table>
@@ -317,41 +288,20 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <!-- 分配权限对话框 -->
-    <el-dialog
-      v-model="assignDialogVisible"
-      title="角色分配"
-      width="600px"
-    >
-      <div v-if="currentUser" v-loading="loading">
-        <el-alert
-          type="info"
-          :closable="false"
-          show-icon
-        >
-          <template #title>
-            为用户 <strong>{{ currentUser.userName }}</strong> 分配角色
-          </template>
-        </el-alert>
-        <br>
-        <el-transfer
-          v-model="selectedRoleIds"
-          :data="roleListData.map(role => ({
-            key: role.id,
-            label: role.name,
-          }))"
-          :titles="['可选角色', '已选角色']"
-        />
-      </div>
-      <template #footer>
-        <el-button @click="assignDialogVisible = false">
-          取消
-        </el-button>
-        <el-button type="primary" :loading="loading" @click="submitAssignRoles">
-          确认
-        </el-button>
-      </template>
-    </el-dialog>
+    <!-- 分配角色对话框 -->
+    <AssignRoleDialog
+      v-if="currentUserId"
+      v-model:visible="assignRoleDialogVisible"
+      :user-id="currentUserId"
+      :user-name="currentUserName"
+    />
+
+    <!-- 分配设备对话框 -->
+    <AssignDeviceDialog
+      v-model:visible="assignDeviceDialogVisible"
+      :user-id="currentUserId"
+      :user-name="currentUserName"
+    />
   </div>
 </template>
 

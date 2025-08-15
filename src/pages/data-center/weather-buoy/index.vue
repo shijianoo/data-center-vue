@@ -1,48 +1,12 @@
 <script lang="ts" setup>
 import type { BuoyData } from "./apis/type"
-import { computed, onMounted, ref, watch } from "vue"
-import { useRoute, useRouter } from "vue-router"
+import { ref, watch } from "vue"
+import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
 import { getBuoyData } from "./apis"
-import { useCardMgr } from "./hooks/card-mgr"
 
-const {
-  cardMgrDialog,
-  cardEditDialog,
-  formRules,
-  form,
-  formRef,
-  cardList,
-  loading,
-  isEdit,
-  openDialog,
-  fetchCardList,
-  handleEdit,
-  handleAdd,
-  handleSave,
-  handleDelete
-} = useCardMgr()
-
-const route = useRoute()
-const router = useRouter()
-const selectedCard = computed({
-  get() {
-    const card = route.query.card
-    const cardData = cardList.value.find(c => c.cardNumber === card) // 确保卡号存在
-    if (cardData === undefined) {
-      return ""
-    }
-    // 如果是数组，取第一个元素
-    // 如果是字符串，直接返回
-    // 如果是其他类型，返回空字符串
-    return Array.isArray(card) ? card[0] || "" : (card || "")
-  },
-  set(val: string) {
-    router.replace({
-      query: { ...route.query, card: val }
-    })
-  }
-})
+const deviceModelId = "134e3fa8-1337-4716-8cee-f17347cd6e85"
+const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)
 const buoyData = ref<BuoyData[]>([])
@@ -52,9 +16,9 @@ const total = ref(0)
 
 async function fetchBuoyData() {
   try {
-    if (selectedCard.value) {
+    if (selectedDevice.value) {
       dataLoading.value = true
-      const res = await getBuoyData(selectedCard.value, pageIndex.value - 1, pageSize.value)
+      const res = await getBuoyData(selectedDevice.value.serialNumber!, pageIndex.value - 1, pageSize.value)
       buoyData.value = res.data?.results || []
       total.value = res.data?.totalCount || 0
       ElMessage.success("查询浮标数据成功")
@@ -70,7 +34,7 @@ async function fetchBuoyData() {
 }
 
 watch(
-  () => selectedCard.value,
+  () => selectedDevice.value,
   async () => {
     fetchBuoyData()
   },
@@ -88,33 +52,21 @@ function handleCurrentChange(page: number) {
   console.log(`当前页码: ${pageIndex.value}`)
   fetchBuoyData()
 }
-
-onMounted(() => {
-  fetchCardList()
-})
 </script>
 
 <template>
   <div class="app-container">
     <div class="search-wrapper">
-      <el-select
-        v-model="selectedCard"
-        style="width: 300px;"
-        filterable
-        placeholder="请选择卡号"
-      >
+      <el-select style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
         <el-option
-          v-for="card in cardList"
-          :key="card.id"
-          :value="card.cardNumber"
-          :label="card.description ? `${card.cardNumber} - ${card.description}` : card.cardNumber"
+          v-for="option in serialNumberOptions"
+          :key="option.id"
+          :label="option.label"
+          :value="option.id"
         />
       </el-select>
       <el-button type="primary" @click="fetchBuoyData">
         查询
-      </el-button>
-      <el-button style="margin: 0;" @click="openDialog">
-        卡号管理
       </el-button>
     </div>
 
@@ -504,7 +456,7 @@ onMounted(() => {
         @current-change="handleCurrentChange"
       />
     </div>
-    <el-dialog
+    <!-- <el-dialog
       v-model="cardMgrDialog"
       title="卡号管理"
       @opened="openDialog"
@@ -575,7 +527,7 @@ onMounted(() => {
           确 定
         </el-button>
       </template>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 

@@ -9,6 +9,7 @@ import { UserFilled } from "@element-plus/icons-vue"
 import { useAppStore } from "@/pinia/stores/app"
 import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
+import ChangePasswordDialog from "../ChangePasswordDialog/index.vue"
 import { Breadcrumb, Hamburger, Sidebar } from "../index"
 
 const { isMobile } = useDevice()
@@ -24,6 +25,8 @@ const userStore = useUserStore()
 const settingsStore = useSettingsStore()
 
 const { showNotify, showThemeSwitch, showScreenfull, showSearchMenu } = storeToRefs(settingsStore)
+
+const showChangePasswordDialog = ref(false)
 
 /** 切换侧边栏 */
 function toggleSidebar() {
@@ -59,12 +62,9 @@ function logout() {
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <a target="_blank" href="https://github.com/un-pany/v3-admin-vite">
-              <el-dropdown-item>GitHub</el-dropdown-item>
-            </a>
-            <a target="_blank" href="https://gitee.com/un-pany/v3-admin-vite">
-              <el-dropdown-item>Gitee</el-dropdown-item>
-            </a>
+            <el-dropdown-item @click="showChangePasswordDialog = true">
+              修改密码
+            </el-dropdown-item>
             <el-dropdown-item divided @click="logout">
               退出登录
             </el-dropdown-item>
@@ -72,6 +72,7 @@ function logout() {
         </template>
       </el-dropdown>
     </div>
+    <ChangePasswordDialog v-model:visible="showChangePasswordDialog" />
   </div>
 </template>
 

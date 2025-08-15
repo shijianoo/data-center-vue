@@ -7,7 +7,7 @@ export interface Menu extends Entity<string> {
   type: number // 0=页面，1=外链，2=按钮
   path?: string
   externalUrl?: string
-  permissionCode?: string
+  permissionId?: string
   svgIcon?: string
   target?: string
   component?: string
@@ -29,7 +29,7 @@ export interface MenuForm {
   type: number
   path?: string
   externalUrl?: string
-  permissionCode?: string
+  permissionId?: string
   svgIcon?: string
   target?: string
   component?: string

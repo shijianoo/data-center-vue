@@ -1,16 +1,15 @@
+import type { Device } from "@/common/apis/devices/type"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import { useDeviceModels } from "@/common/hooks/useDeviceModels"
+import { getMyDevicesApi } from "../apis/device-access"
 
 export function useSerialNumberSelection(modelId: string) {
   const route = useRoute()
   const router = useRouter()
-  const { deviceModels, fetchDeviceModels } = useDeviceModels()
-  const isInitialized = ref(false)
+  const devices = ref<Device[]>([])
 
   const serialNumberOptions = computed(() => {
-    const model = deviceModels.value.find(m => m.id === modelId)
-    return model?.devices.map((d) => {
+    return devices.value.map((d) => {
       let label = d.serialNumber
       if (d.deviceName && d.description) {
         label += ` | ${d.deviceName}（${d.description}）`
@@ -29,16 +28,14 @@ export function useSerialNumberSelection(modelId: string) {
   const selectedDeviceId = computed({
     get: () => {
       const sn = route.query.sn?.toString() ?? ""
-      const model = deviceModels.value.find(m => m.id === modelId)
-      const device = model?.devices.find(d => d.serialNumber === sn)
+      const device = devices.value.find(d => d.serialNumber === sn)
       if (device === undefined) {
         return ""
       }
       return device?.id ?? ""
     },
     set: (val: string) => {
-      const model = deviceModels.value.find(m => m.id === modelId)
-      const device = model?.devices.find(d => d.id === val)
+      const device = devices.value.find(d => d.id === val)
       if (device) {
         router.replace({ query: { ...route.query, sn: device.serialNumber } })
       }
@@ -46,15 +43,13 @@ export function useSerialNumberSelection(modelId: string) {
   })
 
   const selectedDevice = computed(() => {
-    const model = deviceModels.value.find(m => m.id === modelId)
-    return model?.devices.find(d => d.id === selectedDeviceId.value)
+    return devices.value.find(d => d.id === selectedDeviceId.value)
   })
 
   onMounted(async () => {
-    if (!isInitialized.value) {
-      await fetchDeviceModels()
-      isInitialized.value = true
-    }
+    console.log("获取设备列表...", modelId)
+    const { data } = await getMyDevicesApi(modelId)
+    devices.value = data
   })
 
   return {

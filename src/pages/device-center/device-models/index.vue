@@ -81,6 +81,23 @@ function handleUpdate(row: DeviceModel) {
 }
 // #endregion
 
+// #region 复制ID
+function handleCopyId(id: string) {
+  navigator.clipboard.writeText(id).then(() => {
+    ElMessage.success(`设备型号ID已复制: ${id}`)
+  }).catch(() => {
+    // 降级方案：使用传统方法复制
+    const textArea = document.createElement("textarea")
+    textArea.value = id
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand("copy")
+    document.body.removeChild(textArea)
+    ElMessage.success(`设备型号ID已复制: ${id}`)
+  })
+}
+// #endregion
+
 // #region 查询
 onMounted(() => {
   fetchDeviceModels()
@@ -110,13 +127,16 @@ onMounted(() => {
           <el-table-column prop="description" label="设备描述" align="center" />
           <el-table-column prop="devices.length" label="设备数量" align="center" />
           <el-table-column prop="bucketMap.bucketName" label="BucketName" align="center" />
-          <el-table-column fixed="right" label="操作" width="150" align="center">
+          <el-table-column fixed="right" label="操作" width="200" align="center">
             <template #default="scope">
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
                 修改
               </el-button>
               <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
                 删除
+              </el-button>
+              <el-button type="info" text bg size="small" @click="handleCopyId(scope.row.id)">
+                复制ID
               </el-button>
             </template>
           </el-table-column>

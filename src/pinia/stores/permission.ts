@@ -50,7 +50,6 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
         svgIcon: menu.svgIcon as SvgName | undefined // 添加图标支持
       }
     } as RouteRecordRaw
-
     // 设置组件
     if (menu.type === 0) { // 页面菜单
       if (hasChildren) {
@@ -59,7 +58,8 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
 
         // 如果菜单本身有组件路径，则在子菜单中添加一个与父菜单同名但不带子菜单的菜单项
         if (menu.component && menu.component.trim() !== "") {
-          const componentPath = `@/pages/${menu.component}`
+        // 处理组件路径，确保无论前面有没有/都能正确拼接
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {
@@ -82,20 +82,23 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
         }
       } else {
         // 叶子节点加载实际组件
-        const componentPath = `@/pages/${menu.component}`
-        const component = viewsModules[componentPath.replace("@/", "/src/")]
+        if (menu.component && menu.component.trim() !== "") {
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
+          const component = viewsModules[componentPath.replace("@/", "/src/")]
 
-        if (component && typeof component === "function") {
-          route.component = component
-        } else {
-          console.warn(`菜单 "${menu.name}" 的组件路径 "${componentPath}" 不存在`)
-          // 对于没有找到组件的叶子节点，可以设置一个默认组件或404页面
-          const NotFound = () => import("@/pages/error/404.vue")
-          route.component = NotFound
+          if (component && typeof component === "function") {
+            route.component = component
+          } else {
+            console.warn(`菜单 "${menu.name}" 的组件路径 "${componentPath}" 不存在`)
+            // 对于没有找到组件的叶子节点，可以设置一个默认组件或404页面
+            const NotFound = () => import("@/pages/error/404.vue")
+            route.component = NotFound
+          }
         }
       }
     } else if (menu.type === 1) { // 外链菜单
-      // 外链处理逻辑
+      route.path = menu.externalUrl!
+      route.component = {}
     }
 
     // 递归处理子菜单

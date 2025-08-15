@@ -50,53 +50,6 @@ export const constantRoutes: RouteRecordRaw[] = [
     path: "/",
     component: Layouts
   }
-  // {
-  //   path: "/",
-  //   component: Layouts,
-  //   redirect: "/data-center",
-  //   children: [
-  //     {
-  //       path: "dashboard",
-  //       component: () => import("@/pages/dashboard/index.vue"),
-  //       name: "Dashboard",
-  //       meta: {
-  //         title: "首页",
-  //         svgIcon: "dashboard",
-  //         affix: true
-  //       }
-  //     }
-  //   ]
-  // },
-  // {
-  //   path: "/data-center",
-  //   component: Layouts,
-  //   name: "DataCenter",
-  //   meta: {
-  //     title: "数据中心",
-  //     svgIcon: "data-center",
-  //     alwaysShow: true
-  //   },
-  //   children: [
-  //     {
-  //       path: "wave-buoy",
-  //       name: "WaveBuoy",
-  //       component: () => import("@/pages/data-center/wave-buoy/index.vue"),
-  //       meta: {
-  //         title: "波浪浮标"
-  //       },
-  //       props: true
-  //     },
-  //     {
-  //       path: "weather-buoy",
-  //       name: "WeatherBuoy",
-  //       component: () => import("@/pages/data-center/weather-buoy/index.vue"),
-  //       meta: {
-  //         title: "气象浮标"
-  //       },
-  //       props: true
-  //     }
-  //   ]
-  // },
 ]
 
 /**
@@ -130,6 +83,14 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Roles",
         meta: {
           title: "角色管理"
+        }
+      },
+      {
+        path: "permissions",
+        component: () => import("@/pages/system/permissions/index.vue"),
+        name: "Permissions",
+        meta: {
+          title: "权限管理"
         }
       },
       {

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.1",
+    "@microsoft/signalr": "9.0.6",
     "axios": "1.10.0",
     "dayjs": "1.11.13",
     "element-plus": "2.10.2",
@@ -28,6 +29,7 @@
     "path-to-regexp": "8.2.0",
     "pinia": "3.0.3",
     "screenfull": "6.0.2",
+    "spark-md5": "3.0.2",
     "vue": "3.5.17",
     "vue-router": "4.5.1",
     "vxe-table": "4.6.25"
@@ -39,6 +41,7 @@
     "@types/node": "24.0.4",
     "@types/nprogress": "0.2.3",
     "@types/path-browserify": "1.0.3",
+    "@types/spark-md5": "3.0.5",
     "@vitejs/plugin-vue": "6.0.0",
     "@vue/test-utils": "2.4.6",
     "eslint": "9.29.0",
