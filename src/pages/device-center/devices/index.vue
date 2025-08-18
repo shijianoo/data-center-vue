@@ -99,6 +99,7 @@ async function handleDelete(device: Device) {
     type: "warning"
   }).then(async () => {
     await deleteDeviceApi(device.id)
+    fetchDevices()
     ElMessage.success("删除成功")
   })
 }
@@ -122,12 +123,8 @@ async function fetchDevices() {
 
 watch(
   () => searchData.value.modelId,
-  async (modelId) => {
-    if (modelId) {
-      devices.value = await fetchDevices()
-    } else {
-      devices.value = []
-    }
+  async () => {
+    await fetchDevices()
   },
   { immediate: true }
 )

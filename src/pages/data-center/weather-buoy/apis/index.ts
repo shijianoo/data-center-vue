@@ -1,7 +1,7 @@
 import type { CardData } from "./type"
 import axios from "axios"
 
-const API_BASE_URL = "http://150.158.28.39:8100"
+export const API_BASE_URL = "http://150.158.28.39:8100"
 
 export function getBuoyData(fromCard: string, pageIndex: number, pageSize: number) {
   return axios.get(`${API_BASE_URL}/BDData/GetBuoyPagedData?dataType=driftingbuoy&fromCard=${fromCard}&pageIndex=${pageIndex}&pageSize=${pageSize}`)

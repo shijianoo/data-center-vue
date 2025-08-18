@@ -1,11 +1,14 @@
 <script lang="ts" setup>
+import type { DateRange } from "@@/components/DateRangeDialog/index.vue"
 import type { BuoyData } from "./apis/type"
+import DateRangeDialog from "@@/components/DateRangeDialog/index.vue"
 import { ref, watch } from "vue"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
-import { getBuoyData } from "./apis"
+import { buildDownloadUrl, downloadFile } from "@/common/utils/download"
+import { API_BASE_URL, getBuoyData } from "./apis"
 
-const deviceModelId = "134e3fa8-1337-4716-8cee-f17347cd6e85"
+const deviceModelId = "ac7ea3b8-75b9-4081-b0be-5c4e79d78939"
 const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)
@@ -52,6 +55,26 @@ function handleCurrentChange(page: number) {
   console.log(`当前页码: ${pageIndex.value}`)
   fetchBuoyData()
 }
+
+const dateRangeVisible = ref(false)
+function handleDateRangeConfirm(dateRange: DateRange) {
+  console.log("开始日期", dateRange.startDate)
+  console.log("结束日期", dateRange.endDate)
+
+  if (!selectedDevice.value) {
+    ElMessage.warning("请先选择设备")
+  }
+
+  const params = {
+    dataType: "driftingbuoy",
+    fromCard: selectedDevice.value!.serialNumber!,
+    start: dateRange.startDate,
+    end: dateRange.endDate
+  }
+
+  const url = buildDownloadUrl(`${API_BASE_URL}/BDData/DowloadBuoyData`, params)
+  downloadFile(url)
+}
 </script>
 
 <template>
@@ -65,8 +88,11 @@ function handleCurrentChange(page: number) {
           :value="option.id"
         />
       </el-select>
-      <el-button type="primary" @click="fetchBuoyData">
+      <el-button style="margin: 0;" type="primary" @click="fetchBuoyData">
         查询
+      </el-button>
+      <el-button style="margin: 0;" type="primary" @click="dateRangeVisible = true">
+        下载
       </el-button>
     </div>
 
@@ -528,6 +554,10 @@ function handleCurrentChange(page: number) {
         </el-button>
       </template>
     </el-dialog> -->
+    <DateRangeDialog
+      v-model:visible="dateRangeVisible"
+      @confirm="handleDateRangeConfirm"
+    />
   </div>
 </template>
 
