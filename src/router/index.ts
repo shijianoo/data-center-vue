@@ -66,7 +66,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
     meta: {
       title: "系统管理",
       roles: ["ADMIN"],
-      alwaysShow: true
+      svgIcon: "sys-setting"
     },
     children: [
       {
@@ -74,7 +74,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/system/users/index.vue"),
         name: "Users",
         meta: {
-          title: "用户管理"
+          title: "用户管理",
+          svgIcon: "users-mgr"
         }
       },
       {
@@ -82,7 +83,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/system/roles/index.vue"),
         name: "Roles",
         meta: {
-          title: "角色管理"
+          title: "角色管理",
+          svgIcon: "roles-mgr"
         }
       },
       {
@@ -90,7 +92,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/system/menus/index.vue"),
         name: "Menus",
         meta: {
-          title: "菜单管理"
+          title: "菜单管理",
+          svgIcon: "menus-mgr"
         }
       },
       {
@@ -98,7 +101,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/system/permissions/index.vue"),
         name: "Permissions",
         meta: {
-          title: "权限管理"
+          title: "权限管理",
+          svgIcon: "permissions-mgr"
         }
       }
     ]

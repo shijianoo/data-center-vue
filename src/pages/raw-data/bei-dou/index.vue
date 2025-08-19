@@ -33,6 +33,9 @@ async function fetchData(cursorTime?: string) {
     updatePageStatus(list)
     // 更新游标
     anchorTime.value = list.length ? list[0].time : undefined
+    ElMessage.success("查询完成")
+  } catch {
+    ElMessage.error("查询失败")
   } finally {
     loading.value = false
   }

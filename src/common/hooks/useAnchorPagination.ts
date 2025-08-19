@@ -30,9 +30,9 @@ export function useAnchorPagination(modelId: string, selectedDevice: Ref<Device 
       const list = res.data.items ?? []
       dataList.value = list
       isLastPage.value = list.length < limit.value
-      ElMessage.success(`查询完成`)
+      ElMessage.success("查询完成")
     } catch {
-      ElMessage.success(`查询失败`)
+      ElMessage.error("查询失败")
       dataList.value = []
       isLastPage.value = true
     } finally {

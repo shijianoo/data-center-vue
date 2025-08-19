@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from "vue-router"
-import type { SvgName } from "~virtual/svg-component"
 import type { MenuTree } from "@/common/apis/menus/type"
+import { svgNames } from "~virtual/svg-component"
 import { pinia } from "@/pinia"
 import { constantRoutes, dynamicRoutes } from "@/router"
 import { routerConfig } from "@/router/config"
@@ -37,7 +37,6 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
     // 判断是否有子菜单（且子菜单不全为按钮类型）
     const validChildren = menu.children?.filter(child => child.type !== 2) || []
     const hasChildren = validChildren.length > 0
-
     // 构建路由
     const route: any = {
       path: menu.routePath || "",
@@ -47,7 +46,7 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
         hidden: menu.isHidden,
         keepAlive: menu.keepAlive,
         affix: menu.affix,
-        svgIcon: menu.svgIcon as SvgName | undefined // 添加图标支持
+        svgIcon: svgNames?.find(item => item === menu.svgIcon)
       }
     } as RouteRecordRaw
     // 设置组件
@@ -63,13 +62,14 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {
+            console.log(`菜单 "${menu.name}" 的组件路径 "${componentPath}" 存在`)
             const indexRoute = {
               path: "index", // 使用index作为默认子路由
               component,
               name: `${menu.name}Index`,
               meta: {
                 title: `${menu.name}概览`,
-                svgIcon: menu.svgIcon as SvgName | undefined,
+                svgIcon: svgNames?.find(item => item === menu.svgIcon),
                 hidden: false,
                 keepAlive: menu.keepAlive,
                 affix: false

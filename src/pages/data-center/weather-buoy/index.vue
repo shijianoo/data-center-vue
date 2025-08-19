@@ -24,11 +24,11 @@ async function fetchBuoyData() {
       const res = await getBuoyData(selectedDevice.value.serialNumber!, pageIndex.value - 1, pageSize.value)
       buoyData.value = res.data?.results || []
       total.value = res.data?.totalCount || 0
-      ElMessage.success("查询浮标数据成功")
+      ElMessage.success("查询成功")
     }
   } catch (error) {
     console.error("查询浮标数据失败:", error)
-    ElMessage.error("查询浮标数据失败")
+    ElMessage.error("查询失败")
     buoyData.value = []
     total.value = 0
   } finally {

@@ -15,7 +15,7 @@ export function useDeviceEvent(deviceModelId: string, onDataReceived: (id: strin
 
     connection = new HubConnectionBuilder()
       .withUrl(fullUrl)
-      .configureLogging(LogLevel.Trace)
+      .configureLogging(LogLevel.None)
       .withAutomaticReconnect()
       .build()
 
