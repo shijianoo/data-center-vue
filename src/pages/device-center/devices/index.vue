@@ -7,7 +7,7 @@ import { createDeviceApi, deleteDeviceApi, getDevicesApi, updateDeviceApi } from
 import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 
 defineOptions({
-  name: "设备实例"
+  name: "Devices"
 })
 
 const loading = ref<boolean>(false)
@@ -107,6 +107,10 @@ async function handleDelete(device: Device) {
 
 // #region 查询
 async function fetchDevices() {
+  if (!searchData.value.modelId) {
+    ElMessage.warning("请先选择设备型号")
+    return
+  }
   loading.value = true
   try {
     const { data } = await getDevicesApi(searchData.value.modelId)
@@ -230,7 +234,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .search-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   :deep(.el-card__body) {
     padding-bottom: 2px;
   }

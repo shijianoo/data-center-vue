@@ -160,21 +160,21 @@ onMounted(() => {
           <el-table-column prop="level" label="级别" align="center" />
           <el-table-column prop="dataScope" label="数据范围" align="center" />
           <el-table-column prop="description" label="描述" align="center" />
-          <el-table-column prop="isActive" label="状态" align="center">
+          <el-table-column prop="order" label="排序" align="center" width="60px" />
+          <el-table-column prop="isActive" label="状态" align="center" width="80px">
             <template #default="scope">
-              <el-tag :type="scope.row.isActive ? 'success' : 'info'">
+              <el-tag :type="scope.row.isActive ? 'success' : 'info'" width="80px">
                 {{ scope.row.isActive ? '启用' : '禁用' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="isSystem" label="系统内置" align="center">
+          <el-table-column prop="isSystem" label="系统内置" align="center" width="80px">
             <template #default="scope">
               <el-tag :type="scope.row.isSystem ? 'danger' : 'info'">
                 {{ scope.row.isSystem ? '是' : '否' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="order" label="排序" align="center" />
           <el-table-column fixed="right" label="操作" width="260" align="center">
             <template #default="scope">
               <el-dropdown>

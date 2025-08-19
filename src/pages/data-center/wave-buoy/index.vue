@@ -7,7 +7,7 @@ import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
 import DeviceStatus from "./components/DeviceStatus.vue"
 
-const deviceModelId = "97d8f296-bb74-4aa5-8f27-38d454f28b0a"
+const deviceModelId = "cf2b5e10-ea76-432b-a77f-d3f66aede73b"
 const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,

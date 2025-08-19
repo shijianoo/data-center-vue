@@ -42,7 +42,8 @@ const formRules = computed(() => {
   }
   if (formData.value.type === 0) {
     // 页面
-    rules.path = [{ required: true, trigger: "blur", message: "请输入路由路径" }]
+    rules.routePath = [{ required: true, trigger: "blur", message: "请输入路由路径" }]
+    rules.routeName = [{ required: true, trigger: "blur", message: "请输入路由名称" }]
   } else if (formData.value.type === 1) {
     // 外链
     rules.externalUrl = [{ required: true, trigger: "blur", message: "请输入外链地址" }]
@@ -151,7 +152,8 @@ function handleUpdate(row: MenuTree) {
     parentId: row.parentId || undefined,
     name: row.name,
     type: row.type,
-    path: row.path,
+    routeName: row.routeName,
+    routePath: row.routePath,
     externalUrl: row.externalUrl,
     permissionId: row.permissionId,
     svgIcon: row.svgIcon,
@@ -223,11 +225,13 @@ function handleTypeChange(val: string | number | boolean | undefined) {
     formData.value.target = undefined
   } else if (numVal === 1) {
     // 外链
-    formData.value.path = undefined
+    formData.value.routePath = undefined
+    formData.value.routeName = undefined
     formData.value.component = undefined
   } else if (numVal === 2) {
     // 按钮
-    formData.value.path = undefined
+    formData.value.routePath = undefined
+    formData.value.routeName = undefined
     formData.value.component = undefined
     formData.value.externalUrl = undefined
     formData.value.target = undefined
@@ -266,7 +270,7 @@ onMounted(async () => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="path" label="页面路径" align="center" />
+          <el-table-column prop="routePath" label="页面路径" align="center" />
           <el-table-column prop="externalUrl" label="外链地址" align="center" />
           <el-table-column prop="permissionId" label="关联权限" align="center">
             <template #default="scope">
@@ -359,8 +363,11 @@ onMounted(async () => {
         <el-form-item prop="name" label="菜单名称">
           <el-input v-model="formData.name" placeholder="请输入菜单名称" />
         </el-form-item>
-        <el-form-item v-if="formData.type === 0" prop="path" label="路由路径">
-          <el-input v-model="formData.path" placeholder="请输入路由路径" />
+        <el-form-item v-if="formData.type === 0" prop="routeName" label="路由名称">
+          <el-input v-model="formData.routeName" placeholder="请输入路由名称" />
+        </el-form-item>
+        <el-form-item v-if="formData.type === 0" prop="routePath" label="路由路径">
+          <el-input v-model="formData.routePath" placeholder="请输入路由路径" />
         </el-form-item>
         <el-form-item v-if="formData.type === 0" prop="component" label="组件路径">
           <el-input v-model="formData.component" placeholder="请输入组件路径" />

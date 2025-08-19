@@ -1,16 +1,17 @@
 <script lang="ts" setup>
-import type { FormRules } from "element-plus"
+import type { CheckboxValueType, FormRules } from "element-plus"
 import type { LoginRequestData } from "../../common/apis/auth/type"
 import ThemeSwitch from "@@/components/ThemeSwitch/index.vue"
 import { Key, Loading, Lock, Picture, User } from "@element-plus/icons-vue"
+import { useAppStore } from "@/pinia/stores/app"
 import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
 import { getCaptchaApi, loginApi } from "../../common/apis/auth"
 
 const router = useRouter()
 
+const appStore = useAppStore()
 const userStore = useUserStore()
-
 const settingsStore = useSettingsStore()
 
 /** 登录表单元素的引用 */
@@ -24,8 +25,8 @@ const codeBase64 = ref("")
 
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
-  username: "admin",
-  password: "sstd_admin.123!",
+  username: appStore.rememberAccount,
+  password: "",
   code: "",
   codeId: ""
 })
@@ -78,6 +79,14 @@ function createCode() {
   })
 }
 
+function handleRefdsfs(val: CheckboxValueType) {
+  if (val && loginFormData.username) {
+    appStore.saveRememberedAccount(loginFormData.username)
+  } else {
+    appStore.saveRememberedAccount(null)
+  }
+}
+
 // 初始化验证码
 createCode()
 </script>
@@ -95,14 +104,8 @@ createCode()
       <div class="login-right">
         <div class="form-header">
           <h1 class="system-title">
-            浅海科技-海洋数据中心
+            登录
           </h1>
-          <p class="system-slogan">
-            专业的海洋数据采集与分析平台
-          </p>
-          <h2 class="welcome-text">
-            欢迎登录
-          </h2>
         </div>
         <el-form ref="loginFormRef" :model="loginFormData" :rules="loginFormRules" @keyup.enter="handleLogin" class="login-form">
           <el-form-item prop="username">
@@ -152,6 +155,14 @@ createCode()
               </template>
             </el-input>
           </el-form-item>
+
+          <!-- 记住账户复选框 -->
+          <el-form-item class="remember-account-item">
+            <el-checkbox @change="handleRefdsfs" v-model="appStore.isRememberAccount" size="default">
+              记住账户
+            </el-checkbox>
+          </el-form-item>
+
           <el-button :loading="loading" type="primary" size="default" @click.prevent="handleLogin" class="login-button">
             <span v-if="!loading">登 录</span>
             <span v-else>验证中...</span>
@@ -187,7 +198,7 @@ createCode()
     display: flex;
     width: 900px;
     max-width: 100%;
-    min-height: 500px;
+    min-height: 600px;
     background-color: var(--el-bg-color);
     border-radius: 0;
     overflow: hidden;
@@ -230,7 +241,6 @@ createCode()
         font-size: 1.7rem;
         font-weight: 700;
         margin-bottom: 5px;
-        color: var(--el-color-primary);
       }
 
       .system-slogan {
@@ -299,6 +309,38 @@ createCode()
         &.is-error {
           animation: shake 0.5s;
         }
+
+        &.remember-account-item {
+          margin-bottom: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .el-form-item__content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+          }
+        }
+      }
+
+      .login-tips {
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+        font-style: italic;
+        opacity: 0.8;
+      }
+
+      :deep(.el-checkbox) {
+        .el-checkbox__label {
+          font-size: 14px;
+          color: var(--el-text-color-regular);
+        }
+
+        &.is-checked .el-checkbox__label {
+          color: var(--el-color-primary);
+        }
       }
 
       .el-button {
@@ -327,6 +369,37 @@ createCode()
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

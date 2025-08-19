@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { CheckboxValueType } from "element-plus"
 import { ElMessage } from "element-plus"
 import { computed, ref, watch } from "vue"
 import { assignDevicesApi, getAccessibleDevices } from "@/common/apis/device-access"
@@ -26,15 +27,65 @@ const modelOptions = computed(() =>
   }))
 )
 
+// 搜索关键词
+const searchKeyword = ref<string>("")
+
 // 当前型号的设备列表
 const currentModelDevices = computed(() => {
   const model = deviceModels.value.find(m => m.id === selectedModelId.value)
   console.log("当前型号的所有设备", model?.devices)
-  return model?.devices || []
+  // return model?.devices || []
+  return model?.devices
+})
+
+// 过滤后的设备列表
+const filteredDevices = computed(() => {
+  if (!searchKeyword.value.trim()) {
+    return currentModelDevices.value
+  }
+
+  const keyword = searchKeyword.value.toLowerCase()
+  return currentModelDevices.value!.filter(device =>
+    device.serialNumber.toLowerCase().includes(keyword)
+    || (device.description && device.description.toLowerCase().includes(keyword))
+  )
 })
 
 // 已选择的设备ID列表
 const selectedDeviceIds = ref<string[]>([])
+
+// 全选状态
+const isAllSelected = computed(() => {
+  if (filteredDevices.value!.length === 0) return false
+  return filteredDevices.value!.every(device => selectedDeviceIds.value.includes(device.id))
+})
+
+// 是否部分选中
+const isIndeterminate = computed(() => {
+  const selectedCount = filteredDevices.value!.filter(device =>
+    selectedDeviceIds.value.includes(device.id)
+  ).length
+  return selectedCount > 0 && selectedCount < filteredDevices.value!.length
+})
+
+// 全选/取消全选
+function handleSelectAll(checked: CheckboxValueType) {
+  if (checked) {
+    // 全选：将当前过滤结果中未选中的设备添加到已选列表
+    const newSelectedIds = [...selectedDeviceIds.value]
+    filteredDevices.value!.forEach((device) => {
+      if (!newSelectedIds.includes(device.id)) {
+        newSelectedIds.push(device.id)
+      }
+    })
+    selectedDeviceIds.value = newSelectedIds
+  } else {
+    // 取消全选：从已选列表中移除当前过滤结果中的设备
+    selectedDeviceIds.value = selectedDeviceIds.value.filter(id =>
+      !filteredDevices.value!.some(device => device.id === id)
+    )
+  }
+}
 
 // 获取用户在当前型号下已分配的设备
 async function getUserDevicesForModel() {
@@ -88,6 +139,7 @@ async function handleSubmit() {
 function resetForm() {
   selectedModelId.value = ""
   selectedDeviceIds.value = []
+  searchKeyword.value = ""
 }
 
 // 监听对话框打开
@@ -146,23 +198,52 @@ function handleDialogClose() {
         <div v-if="selectedModelId" class="device-selection">
           <h4 class="section-title">
             选择设备
-            <span class="device-count">(共 {{ currentModelDevices.length }} 台设备)</span>
+            <span class="device-count">(共 {{ currentModelDevices!.length }} 台设备)</span>
           </h4>
 
-          <div v-if="currentModelDevices.length > 0">
-            <el-checkbox-group v-model="selectedDeviceIds">
-              <el-checkbox
-                v-for="device in currentModelDevices"
-                :key="device.id"
-                :value="device.id"
-                class="device-item"
-              >
-                <div class="device-info">
-                  <span class="device-serial">{{ device.serialNumber }}</span>
-                  <span class="device-description">{{ device.description }}</span>
-                </div>
-              </el-checkbox>
-            </el-checkbox-group>
+          <!-- 搜索框 -->
+          <div class="search-container">
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索设备序列号或描述..."
+              clearable
+              prefix-icon="Search"
+            />
+          </div>
+
+          <div v-if="currentModelDevices!.length > 0" class="device-list-container">
+            <div v-if="filteredDevices!.length > 0" class="device-list">
+              <!-- 全选控制 -->
+              <div>
+                <el-checkbox
+                  :model-value="isAllSelected"
+                  :indeterminate="isIndeterminate"
+                  @change="handleSelectAll"
+                >
+                  全选 ({{ filteredDevices!.filter(device => selectedDeviceIds.includes(device.id)).length }}/{{ filteredDevices!.length }})
+                </el-checkbox>
+              </div>
+
+              <el-divider style="margin: 6px 0;" />
+
+              <el-checkbox-group v-model="selectedDeviceIds">
+                <el-checkbox
+                  v-for="device in filteredDevices"
+                  :key="device.id"
+                  :value="device.id"
+                  class="device-item"
+                >
+                  <div>
+                    <span class="device-serial">{{ device.serialNumber }}</span>
+                    <span class="device-description">{{ device.description }}</span>
+                  </div>
+                </el-checkbox>
+              </el-checkbox-group>
+            </div>
+
+            <div v-else class="no-search-results">
+              <el-empty description="未找到匹配的设备" />
+            </div>
           </div>
 
           <div v-else class="no-devices">
@@ -201,10 +282,6 @@ function handleDialogClose() {
   margin-bottom: 24px;
 }
 
-.device-selection {
-  margin-top: 24px;
-}
-
 .section-title {
   margin: 0 0 12px 0;
   font-size: 16px;
@@ -218,23 +295,44 @@ function handleDialogClose() {
   font-weight: 400;
 }
 
+.search-container {
+  margin-bottom: 16px;
+}
+
+.device-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 6px;
+  padding: 8px;
+  background-color: var(--el-bg-color-page);
+}
+
+.device-list {
+  .el-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
 .device-item {
   display: flex;
-  align-items: flex-start;
   width: 100%;
-  margin-bottom: 12px;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.2s;
+  background-color: var(--el-bg-color);
 
   &:hover {
     border-color: var(--el-color-primary);
     background-color: var(--el-color-primary-light-9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  &:last-child {
-    margin-bottom: 0;
+  .el-checkbox__input.is-checked + .el-checkbox__label {
+    color: var(--el-color-primary);
   }
 }
 
@@ -247,5 +345,17 @@ function handleDialogClose() {
   font-size: 12px;
   margin-left: 10px;
   color: var(--el-text-color-regular);
+}
+
+.no-search-results {
+  padding: 20px 0;
+}
+
+.no-devices {
+  padding: 20px 0;
+}
+
+.select-model-tip {
+  padding: 20px 0;
 }
 </style>

@@ -40,8 +40,8 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
 
     // 构建路由
     const route: any = {
-      path: menu.path || "",
-      name: menu.name || "",
+      path: menu.routePath || "",
+      name: menu.routeName || "",
       meta: {
         title: menu.name,
         hidden: menu.isHidden,
@@ -59,7 +59,7 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
         // 如果菜单本身有组件路径，则在子菜单中添加一个与父菜单同名但不带子菜单的菜单项
         if (menu.component && menu.component.trim() !== "") {
         // 处理组件路径，确保无论前面有没有/都能正确拼接
-          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}/index.vue`
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {
@@ -83,7 +83,7 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
       } else {
         // 叶子节点加载实际组件
         if (menu.component && menu.component.trim() !== "") {
-          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}/index.vue`
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {

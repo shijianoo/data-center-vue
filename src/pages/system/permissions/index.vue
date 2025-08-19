@@ -181,7 +181,6 @@ onMounted(() => {
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
           @selection-change="handleSelectionChange"
         >
-          <el-table-column type="selection" width="50" align="center" />
           <el-table-column prop="name" label="权限名称" align="left" min-width="200" />
           <el-table-column prop="code" label="权限代码" align="center" min-width="150" />
           <el-table-column prop="description" label="描述" align="center" min-width="150" show-overflow-tooltip />

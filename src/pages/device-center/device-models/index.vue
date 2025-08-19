@@ -7,7 +7,7 @@ import { createDeviceModelApi, deleteDeviceModelsApi, updateDeviceModelApi } fro
 import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 
 defineOptions({
-  name: "设备型号"
+  name: "DeviceModels"
 })
 const loading = ref<boolean>(false)
 const { deviceModels, fetchDeviceModels } = useDeviceModels()
@@ -43,6 +43,7 @@ function handleCreateOrUpdate() {
         await createDeviceModelApi(formData.value)
       }
       ElMessage.success("操作成功")
+      await fetchDeviceModels()
       dialogVisible.value = false
     } finally {
       loading.value = false

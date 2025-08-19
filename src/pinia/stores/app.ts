@@ -1,4 +1,5 @@
 import { DeviceEnum, SIDEBAR_CLOSED, SIDEBAR_OPENED } from "@@/constants/app-key"
+import { CacheKey } from "@@/constants/cache-key"
 import { getSidebarStatus, setSidebarStatus } from "@@/utils/cache/local-storage"
 import { pinia } from "@/pinia"
 
@@ -22,6 +23,9 @@ export const useAppStore = defineStore("app", () => {
   // 设备类型
   const device = ref<DeviceEnum>(DeviceEnum.Desktop)
 
+  const isRememberAccount = ref<boolean>(localStorage.getItem(CacheKey.REMEMBER_ACCOUNT_KEY) === "true")
+  const rememberAccount = ref<string>(localStorage.getItem(CacheKey.SAVED_USERNAME_KEY) || "")
+
   // 监听侧边栏 opened 状态
   watch(
     () => sidebar.opened,
@@ -29,6 +33,17 @@ export const useAppStore = defineStore("app", () => {
       handleSidebarStatus(opened)
     }
   )
+
+  // 保存记住账户信息
+  const saveRememberedAccount = (username: string | null) => {
+    if (username) {
+      localStorage.setItem(CacheKey.REMEMBER_ACCOUNT_KEY, "true")
+      localStorage.setItem(CacheKey.SAVED_USERNAME_KEY, username)
+    } else {
+      localStorage.removeItem(CacheKey.REMEMBER_ACCOUNT_KEY)
+      localStorage.removeItem(CacheKey.SAVED_USERNAME_KEY)
+    }
+  }
 
   // 切换侧边栏
   const toggleSidebar = (withoutAnimation: boolean) => {
@@ -47,7 +62,16 @@ export const useAppStore = defineStore("app", () => {
     device.value = value
   }
 
-  return { device, sidebar, toggleSidebar, closeSidebar, toggleDevice }
+  return {
+    device,
+    sidebar,
+    isRememberAccount,
+    rememberAccount,
+    toggleSidebar,
+    closeSidebar,
+    toggleDevice,
+    saveRememberedAccount
+  }
 })
 
 /**

@@ -5,7 +5,8 @@ export interface Menu extends Entity<string> {
   parentId?: string
   name: string
   type: number // 0=页面，1=外链，2=按钮
-  path?: string
+  routeName?: string
+  routePath?: string
   externalUrl?: string
   permissionId?: string
   svgIcon?: string
@@ -27,7 +28,8 @@ export interface MenuForm {
   name: string
   // 0=页面，1=外链，2=按钮
   type: number
-  path?: string
+  routeName?: string
+  routePath?: string
   externalUrl?: string
   permissionId?: string
   svgIcon?: string

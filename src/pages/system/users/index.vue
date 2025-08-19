@@ -184,26 +184,24 @@ onMounted(() => {
       </div>
       <div class="table-wrapper">
         <el-table :data="userData">
-          <el-table-column prop="userName" label="用户名称" align="center" />
-          <el-table-column prop="nickName" label="用户昵称" align="center" />
-          <el-table-column prop="email" label="邮箱" align="center" />
-          <el-table-column prop="phoneNumber" label="手机号" align="center" />
+          <el-table-column prop="userName" label="用户名称" align="center" min-width="120px" />
+          <el-table-column prop="nickName" label="用户昵称" align="center" min-width="120px" />
           <el-table-column prop="description" label="描述" align="center" />
-          <el-table-column prop="isActive" label="状态" align="center">
+          <el-table-column prop="isActive" label="状态" align="center" width="80px">
             <template #default="scope">
-              <el-tag :type="scope.row.isActive ? 'success' : 'info'">
+              <el-tag :type="scope.row.isActive ? 'success' : 'info'" width="80px">
                 {{ scope.row.isActive ? '启用' : '禁用' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="isAdmin" label="管理员" align="center">
+          <el-table-column prop="isAdmin" label="管理员" align="center" width="80px">
             <template #default="scope">
               <el-tag :type="scope.row.isAdmin ? 'warning' : 'info'">
                 {{ scope.row.isAdmin ? '是' : '否' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="isSystem" label="系统用户" align="center">
+          <el-table-column prop="isSystem" label="系统用户" align="center" width="80px">
             <template #default="scope">
               <el-tag :type="scope.row.isSystem ? 'danger' : 'info'">
                 {{ scope.row.isSystem ? '是' : '否' }}

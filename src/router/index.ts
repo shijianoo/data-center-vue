@@ -86,19 +86,19 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: "permissions",
-        component: () => import("@/pages/system/permissions/index.vue"),
-        name: "Permissions",
-        meta: {
-          title: "权限管理"
-        }
-      },
-      {
         path: "menus",
         component: () => import("@/pages/system/menus/index.vue"),
         name: "Menus",
         meta: {
           title: "菜单管理"
+        }
+      },
+      {
+        path: "permissions",
+        component: () => import("@/pages/system/permissions/index.vue"),
+        name: "Permissions",
+        meta: {
+          title: "权限管理"
         }
       }
     ]
