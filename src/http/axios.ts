@@ -9,6 +9,7 @@ async function refreshTokenAndRetry(config: AxiosRequestConfig) {
     const refreshToken = getRefreshToken()
     if (!refreshToken) {
       console.log("本地不存在刷新 Token, 退出登录")
+      ElMessage.warning("登录已过期, 需要重新登录")
       return logout()
     }
 
@@ -41,6 +42,7 @@ async function refreshTokenAndRetry(config: AxiosRequestConfig) {
     return retryResponse.data
   } catch (error) {
     console.log("刷新 AccessToken 失败, 退出登录:", error)
+    ElMessage.error("Token请求失败, 需要重新登录")
     return logout()
   }
 }
@@ -82,8 +84,8 @@ function createInstance() {
           // 本系统采用 code === 200 来表示没有业务错误
           return apiData
         case 401:
-          // Token 过期时
-          return logout()
+          // Token 过期时，尝试刷新 token
+          return refreshTokenAndRetry(response.config)
         default:
           // 不是正确的 code
           ElMessage.error(apiData.message || "Error")
@@ -102,7 +104,6 @@ function createInstance() {
           // Token 过期时
           console.error("Token 过期，需要重新获取 Token")
           return refreshTokenAndRetry(error.config)
-          break
         case 403:
           error.message = message || "拒绝访问"
           break

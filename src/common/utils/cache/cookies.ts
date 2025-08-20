@@ -8,7 +8,7 @@ export function getToken() {
 }
 
 export function setToken(token: string) {
-  Cookies.set(CacheKey.TOKEN, token, { expires: 0.5 / 24 })
+  Cookies.set(CacheKey.TOKEN, token, { expires: 0.25 / 24 })
 }
 
 export function removeToken() {
@@ -20,7 +20,7 @@ export function getRefreshToken() {
 }
 
 export function setRefreshToken(token: string) {
-  Cookies.set(CacheKey.REFRESH_TOKEN, token, { expires: 30 })
+  Cookies.set(CacheKey.REFRESH_TOKEN, token, { expires: 15 })
 }
 
 export function removeRefreshToken() {

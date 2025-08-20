@@ -1,7 +1,7 @@
 import type { Router } from "vue-router"
 import { setRouteChange } from "@@/composables/useRouteListener"
 import { useTitle } from "@@/composables/useTitle"
-import { getToken } from "@@/utils/cache/cookies"
+import { getRefreshToken } from "@@/utils/cache/cookies"
 import NProgress from "nprogress"
 import { usePermissionStore } from "@/pinia/stores/permission"
 import { useUserStore } from "@/pinia/stores/user"
@@ -21,10 +21,11 @@ export function registerNavigationGuard(router: Router) {
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
     // 如果没有登录
-    if (!getToken()) {
+    if (!getRefreshToken()) {
       // 如果在免登录的白名单中，则直接进入
       if (isWhiteList(to)) return true
       // 其他没有访问权限的页面将被重定向到登录页面
+      ElMessage.warning("登录已过期, 需要重新登录")
       return LOGIN_PATH
     }
     // 如果已经登录，并准备进入 Login 页面，则重定向到主页
