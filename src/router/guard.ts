@@ -24,8 +24,7 @@ export function registerNavigationGuard(router: Router) {
     if (!getRefreshToken()) {
       // 如果在免登录的白名单中，则直接进入
       if (isWhiteList(to)) return true
-      // 其他没有访问权限的页面将被重定向到登录页面
-      ElMessage.warning("登录已过期, 需要重新登录")
+      // 其他没有访问权限的页面将被重定向到登录页
       return LOGIN_PATH
     }
     // 如果已经登录，并准备进入 Login 页面，则重定向到主页
