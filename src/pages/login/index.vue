@@ -49,7 +49,6 @@ const loginFormRules: FormRules = {
 function handleLogin() {
   loginFormRef.value?.validate((valid) => {
     if (!valid) {
-      ElMessage.error("表单校验不通过")
       return
     }
     loading.value = true
@@ -104,8 +103,11 @@ createCode()
       <div class="login-right">
         <div class="form-header">
           <h1 class="system-title">
-            登录
+            浅海科技-海洋数据中心
           </h1>
+          <p class="system-slogan">
+            海洋数据管理平台
+          </p>
         </div>
         <el-form ref="loginFormRef" :model="loginFormData" :rules="loginFormRules" @keyup.enter="handleLogin" class="login-form">
           <el-form-item prop="username">
@@ -266,16 +268,17 @@ createCode()
         .el-input__wrapper {
           border-radius: 0px;
           height: 42px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-          border: 1px solid var(--el-color-primary-light-2);
+          box-shadow: none;
+          border: 1px solid #dcdfe6;
+          transition: all 0.3s;
 
           &:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: var(--el-color-primary-light-3);
           }
 
           &.is-focus {
-            box-shadow: 0 4px 12px rgba(45, 143, 213, 0.2);
-            border: 1px solid var(--el-color-primary-light-5);
+            border-color: var(--el-color-primary);
+            box-shadow: 0 0 0 2px rgba(45, 143, 213, 0.2);
           }
         }
 
@@ -287,27 +290,33 @@ createCode()
 
       :deep(.el-input-group__append) {
         padding: 0;
+        border: 1px solid #dcdfe6;
+        border-left: none;
 
         .el-image {
           width: 100px;
-          height: 42px;
+          height: 40px;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
           &:hover {
             opacity: 0.8;
-          }
-
-          &:active {
-            transform: scale(0.98);
           }
         }
       }
 
       :deep(.el-form-item) {
-        margin-bottom: 22px;
+        margin-bottom: 30px;
 
         &.is-error {
           animation: shake 0.5s;
+
+          .el-form-item__error {
+            padding-top: 2px;
+            margin-top: -10px;
+          }
         }
 
         &.remember-account-item {
@@ -389,17 +398,6 @@ createCode()
   60%,
   80% {
     transform: translateX(5px);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
   }
 }
 
