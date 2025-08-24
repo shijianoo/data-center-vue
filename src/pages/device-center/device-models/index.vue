@@ -16,8 +16,7 @@ const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const defaultForm: CreateOrUpdateDeviceModelDto = {
   id: undefined,
   modelNumber: "",
-  modelName: "",
-  description: ""
+  modelName: ""
 }
 
 const dialogVisible = ref(false)
@@ -77,7 +76,7 @@ function handleUpdate(row: DeviceModel) {
     id: row.id,
     modelNumber: row.modelNumber,
     modelName: row.modelName,
-    description: row.description || ""
+    description: row.description
   }
 }
 // #endregion
@@ -127,7 +126,6 @@ onMounted(() => {
           <el-table-column prop="modelName" label="设备名称" align="center" />
           <el-table-column prop="description" label="设备描述" align="center" />
           <el-table-column prop="devices.length" label="设备数量" align="center" />
-          <el-table-column prop="bucketMap.bucketName" label="BucketName" align="center" />
           <el-table-column fixed="right" label="操作" width="200" align="center">
             <template #default="scope">
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
@@ -160,9 +158,6 @@ onMounted(() => {
         </el-form-item>
         <el-form-item prop="description" label="设备描述">
           <el-input v-model="formData.description" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item v-if="formData.id === undefined" prop="bucketName" label="BucketName">
-          <el-input v-model="formData.bucketName" placeholder="请输入" />
         </el-form-item>
       </el-form>
       <template #footer>

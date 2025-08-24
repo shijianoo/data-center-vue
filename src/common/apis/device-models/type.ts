@@ -5,8 +5,7 @@ export interface CreateOrUpdateDeviceModelDto {
   id?: string
   modelNumber: string
   modelName: string
-  description: string
-  bucketName?: string
+  description?: string
 }
 
 export interface DeviceModel extends Entity<string> {
@@ -14,12 +13,6 @@ export interface DeviceModel extends Entity<string> {
   modelName: string
   description?: string
   devices: Device[]
-  bucketMaps: InfluxBucketMap
-}
-
-export interface InfluxBucketMap extends Entity<string> {
-  deviceModelId: string
-  bucketName: string
 }
 
 export type DeviceModelListResponse = ApiResponseData<DeviceModel[]>
