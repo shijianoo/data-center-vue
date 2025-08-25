@@ -8,7 +8,7 @@ import { formatDateTime } from "@/common/utils/datetime"
 import { buildDownloadUrl, downloadFile } from "@/common/utils/download"
 import { API_BASE_URL, getBuoyData } from "./apis"
 
-const deviceModelId = "3445a2f6-8f01-4031-9369-e6f48f0c762a"
+const deviceModelId = "9285430f-7e05-40de-94d4-bcdb40335697"
 const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)

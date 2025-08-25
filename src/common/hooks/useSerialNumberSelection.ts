@@ -1,11 +1,14 @@
+import type { DeviceModel } from "../apis/device-models/type"
 import type { Device } from "@/common/apis/devices/type"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { getMyDevicesApi } from "../apis/device-access"
+import { getDeviceModelByIdApi } from "../apis/device-models"
 
 export function useSerialNumberSelection(modelId: string) {
   const route = useRoute()
   const router = useRouter()
+  const deviceModel = ref<DeviceModel>()
   const devices = ref<Device[]>([])
 
   const serialNumberOptions = computed(() => {
@@ -47,6 +50,8 @@ export function useSerialNumberSelection(modelId: string) {
   })
 
   onMounted(async () => {
+    const response = await getDeviceModelByIdApi(modelId)
+    deviceModel.value = response.data
     console.log("获取设备列表...", modelId)
     const { data } = await getMyDevicesApi(modelId)
     devices.value = data
@@ -55,6 +60,7 @@ export function useSerialNumberSelection(modelId: string) {
   return {
     serialNumberOptions,
     selectedDeviceId,
-    selectedDevice
+    selectedDevice,
+    deviceModel
   }
 }

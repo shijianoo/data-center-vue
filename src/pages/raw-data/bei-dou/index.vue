@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import type { BeidouData } from "@/common/apis/device-data/type"
+import type { BeidouData } from "@/common/apis/data-query/type"
 import { ref } from "vue"
-import { queryBeidouData } from "@/common/apis/device-data"
+import { queryBeidouData } from "@/common/apis/data-query"
 import { formatDateTime } from "@/common/utils/datetime"
 
 const pageIndex = ref(1)
@@ -73,9 +73,9 @@ async function onNextPage() {
             {{ formatDateTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column prop="FromCard" label="发送卡" width="120" show-overflow-tooltip />
-        <el-table-column prop="ToCard" label="接收卡" width="120" show-overflow-tooltip />
-        <el-table-column prop="Content" label="数据" show-overflow-tooltip />
+        <el-table-column prop="from_card" label="发送卡" width="120" show-overflow-tooltip />
+        <el-table-column prop="to_card" label="接收卡" width="120" show-overflow-tooltip />
+        <el-table-column prop="content" label="数据" show-overflow-tooltip />
       </el-table>
     </div>
     <div class="pagination-bar">

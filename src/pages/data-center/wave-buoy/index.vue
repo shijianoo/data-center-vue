@@ -7,8 +7,8 @@ import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
 import DeviceStatus from "./components/DeviceStatus.vue"
 
-const deviceModelId = "cf2b5e10-ea76-432b-a77f-d3f66aede73b"
-const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
+const deviceModelId = "622a9ac7-7df1-42ea-9a26-f0a2a7abec3c"
+const { selectedDeviceId, selectedDevice, serialNumberOptions, deviceModel } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,
   isLastPage,
@@ -16,7 +16,7 @@ const {
   pageIndex,
   resetToFirstPage,
   goNextPage
-} = useAnchorPagination(deviceModelId, selectedDevice)
+} = useAnchorPagination(deviceModel, selectedDevice)
 
 const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
   console.log("Device event:", id, data)
@@ -79,167 +79,167 @@ const statusDialog = ref<boolean>(false)
               采样时间：{{ formatDateTime(scope.row.time) }}
             </div>
             <div class="data-item">
-              接收时间：{{ formatDateTime(scope.row.ReceiveTime) }}
+              接收时间：{{ formatDateTime(scope.row.receive_time) }}
             </div>
             <div class="data-item">
-              经度：{{ scope.row.Lon }} °
+              经度：{{ scope.row.lon }} °
             </div>
             <div class="data-item">
-              经度半球：{{ scope.row.LonHem }}
+              经度半球：{{ scope.row.lon_hem }}
             </div>
             <div class="data-item">
-              纬度：{{ scope.row.Lat }} °
+              纬度：{{ scope.row.lat }} °
             </div>
             <div class="data-item">
-              纬度半球：{{ scope.row.LatHem }}
+              纬度半球：{{ scope.row.lat_hem }}
             </div>
           </template>
         </el-table-column>
         <el-table-column label="设备运行与信号" min-width="200px">
           <template #default="scope">
             <div class="data-item">
-              上传通道：{{ scope.row.UploadChannel }}
+              上传通道：{{ scope.row.upload_channel }}
             </div>
             <div class="data-item">
-              搜星数：{{ scope.row.SatNum }}
+              搜星数：{{ scope.row.sat_num }}
             </div>
             <div class="data-item">
-              信号强度：{{ scope.row.CSQ }}
+              信号强度：{{ scope.row.c_s_q }}
             </div>
             <div class="data-item">
-              电池电压：{{ scope.row.Ubatt }} V
+              电池电压：{{ scope.row.ubatt }} V
             </div>
             <div class="data-item">
-              主板温度：{{ scope.row.TempMb }} ℃
+              主板温度：{{ scope.row.temp_mb }} ℃
             </div>
             <div class="data-item">
-              充电状态：{{ scope.row.ChargingStatus }}
+              充电状态：{{ scope.row.charging_status }}
             </div>
           </template>
         </el-table-column>
         <el-table-column label="传感器与状态" min-width="120px">
           <template #default="scope">
             <div class="data-item">
-              漏水状态：{{ scope.row.LeakStatus }}
+              漏水状态：{{ scope.row.leak_status }}
             </div>
             <div class="data-item">
-              环境湿度：{{ scope.row.Rh }}
+              环境湿度：{{ scope.row.rh }}
             </div>
             <div class="data-item">
-              姿态X：{{ scope.row.AngX }} °
+              姿态X：{{ scope.row.ang_x }} °
             </div>
             <div class="data-item">
-              姿态Y：{{ scope.row.AngY }} °
+              姿态Y：{{ scope.row.ang_y }} °
             </div>
             <div class="data-item">
-              姿态Z：{{ scope.row.AngZ }} °
+              姿态Z：{{ scope.row.ang_z }} °
             </div>
           </template>
         </el-table-column>
         <el-table-column label="总体波浪特征" min-width="150px">
           <template #default="scope">
             <div class="data-item">
-              波数：{{ scope.row.WaveNum }}
+              波数：{{ scope.row.wave_num }}
             </div>
             <div class="data-item">
-              平均波高：{{ scope.row.Hm }} m
+              平均波高：{{ scope.row.hm }} m
             </div>
             <div class="data-item">
-              平均周期：{{ scope.row.Tm }} s
+              平均周期：{{ scope.row.templatem }} s
             </div>
             <div class="data-item">
-              最大波高：{{ scope.row.Hmax }} m
+              最大波高：{{ scope.row.h_max }} m
             </div>
             <div class="data-item">
-              最大周期：{{ scope.row.Tmax }} s
+              最大周期：{{ scope.row.t_max }} s
             </div>
             <div class="data-item">
-              波向：{{ scope.row.Dir }} °
+              波向：{{ scope.row.dir }} °
             </div>
           </template>
         </el-table-column>
         <el-table-column label="涌浪特征" min-width="160px">
           <template #default="scope">
             <div class="data-item">
-              涌浪谱平均周期：{{ scope.row.SwTm }} s
+              涌浪谱平均周期：{{ scope.row.sw_tm }} s
             </div>
             <div class="data-item">
-              涌浪谱峰周期：{{ scope.row.SwTp }} s
+              涌浪谱峰周期：{{ scope.row.sw_tp }} s
             </div>
             <div class="data-item">
-              涌浪谱峰波向：{{ scope.row.SwDp }} °
+              涌浪谱峰波向：{{ scope.row.sw_dp }} °
             </div>
             <div class="data-item">
-              涌浪波向扩散度：{{ scope.row.SwDspr }} °
+              涌浪波向扩散度：{{ scope.row.sw_dspr }} °
             </div>
             <div class="data-item">
-              涌浪平均波向：{{ scope.row.SwDmean }} °
+              涌浪平均波向：{{ scope.row.sw_dmean }} °
             </div>
           </template>
         </el-table-column>
         <el-table-column label="风浪特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
-              风浪谱的有效波高：{{ scope.row.WsHm }} m
+              风浪谱的有效波高：{{ scope.row.ws_hm }} m
             </div>
             <div class="data-item">
-              风浪谱平均周期：{{ scope.row.WsTm }} s
+              风浪谱平均周期：{{ scope.row.ws_tm }} s
             </div>
             <div class="data-item">
-              风浪谱峰周期：{{ scope.row.WsTp }} s
+              风浪谱峰周期：{{ scope.row.ws_tp }} s
             </div>
             <div class="data-item">
-              风浪谱峰波向：{{ scope.row.WsDp }} °
+              风浪谱峰波向：{{ scope.row.ws_dp }} °
             </div>
             <div class="data-item">
-              风浪波向扩散度：{{ scope.row.WsDspr }} °
+              风浪波向扩散度：{{ scope.row.ws_dspr }} °
             </div>
             <div class="data-item">
-              风浪平均波向：{{ scope.row.WsDmean }} °
+              风浪平均波向：{{ scope.row.ws_dmean }} °
             </div>
           </template>
         </el-table-column>
         <el-table-column label="分位数与谱特征" min-width="170px">
           <template #default="scope">
             <div class="data-item">
-              三分之一波高：{{ scope.row.H13 }} m
+              三分之一波高：{{ scope.row.h13 }} m
             </div>
             <div class="data-item">
-              三分之一周期：{{ scope.row.T13 }} s
+              三分之一周期：{{ scope.row.t13 }} s
             </div>
             <div class="data-item">
-              十分之一波高：{{ scope.row.H10 }} m
+              十分之一波高：{{ scope.row.h10 }} m
             </div>
             <div class="data-item">
-              十分之一周期：{{ scope.row.T10 }} s
+              十分之一周期：{{ scope.row.t10 }} s
             </div>
             <div class="data-item">
-              谱的有效波高：{{ scope.row.SpecHm }} m
+              谱的有效波高：{{ scope.row.spec_hm }} m
             </div>
             <div class="data-item">
-              谱平均周期：{{ scope.row.SpecTm }} s
+              谱平均周期：{{ scope.row.spec_tm }} s
             </div>
           </template>
         </el-table-column>
         <el-table-column label="谱/风浪/涌浪特征" min-width="200px">
           <template #default="scope">
             <div class="data-item">
-              谱峰周期：{{ scope.row.SpecTp }} s
+              谱峰周期：{{ scope.row.spec_tp }} s
             </div>
             <div class="data-item">
-              谱峰波向：{{ scope.row.SpecDp }} °
+              谱峰波向：{{ scope.row.spec_dp }} °
             </div>
             <div class="data-item">
-              波向扩散度：{{ scope.row.Dspr }} °
+              波向扩散度：{{ scope.row.dspr }} °
             </div>
             <div class="data-item">
-              平均波向：{{ scope.row.Dmean }} °
+              平均波向：{{ scope.row.dmean }} °
             </div>
             <div class="data-item">
-              风浪涌浪分离频率：{{ scope.row.SepF }} Hz
+              风浪涌浪分离频率：{{ scope.row.sep_f }} Hz
             </div>
             <div class="data-item">
-              涌浪谱的有效波高：{{ scope.row.SwHm }} m
+              涌浪谱的有效波高：{{ scope.row.sw_hm }} m
             </div>
           </template>
         </el-table-column>
@@ -247,16 +247,16 @@ const statusDialog = ref<boolean>(false)
         <el-table-column label="风/其他参数" min-width="160px">
           <template #default="scope">
             <div class="data-item">
-              反演风速：{{ scope.row.WindSpd }} m/s
+              反演风速：{{ scope.row.wind_spd }} m/s
             </div>
             <div class="data-item">
-              反演风向：{{ scope.row.WindDir }} °
+              反演风向：{{ scope.row.wind_dir }} °
             </div>
             <div class="data-item">
-              气压：{{ scope.row.Press }} hPa
+              气压：{{ scope.row.press }} hPa
             </div>
             <div class="data-item">
-              温度：{{ scope.row.Temp }} °C
+              温度：{{ scope.row.temp }} °C
             </div>
           </template>
         </el-table-column>

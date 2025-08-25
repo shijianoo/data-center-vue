@@ -1,4 +1,4 @@
-import type { CreateOrUpdateDeviceModelDto, DeviceModelListResponse } from "@/common/apis/device-models/type"
+import type { CreateOrUpdateDeviceModelDto, DeviceModel, DeviceModelListResponse } from "@/common/apis/device-models/type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 创建设备型号 */
@@ -31,6 +31,14 @@ export function updateDeviceModelApi(data: CreateOrUpdateDeviceModelDto) {
 export function getDeviceModelsApi() {
   return dataCenterRequest<DeviceModelListResponse>({
     url: "device-models",
+    method: "get"
+  })
+}
+
+/** 获取设备型号 */
+export function getDeviceModelByIdApi(id: string) {
+  return dataCenterRequest<ApiResponseData<DeviceModel>>({
+    url: `device-models/${id}`,
     method: "get"
   })
 }

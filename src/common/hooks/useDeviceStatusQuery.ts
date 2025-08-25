@@ -1,10 +1,10 @@
-import type { ParsedDeviceStatusQuery } from "@/common/apis/device-data/type"
+import type { DeviceStatusQueryParams } from "@/common/apis/data-query/type"
 import type { Device } from "@/common/apis/devices/type"
-import { queryParsedDeviceStatus } from "@/common/apis/device-data"
+import { querDeviceStatus } from "../apis/data-query"
 
 export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
   const dataList = ref<any[]>([])
-  const anchorTime = ref("")
+  const anchorTime = ref<string | undefined>(undefined)
   const limit = ref(50)
   const loading = ref(false)
   const pageIndex = ref(1)
@@ -19,12 +19,13 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
     console.log("开始查询设备数据，设备编号:", device.value.serialNumber, "锚点时间:", anchorTime.value, "限制:", limit.value)
 
     try {
-      const params: ParsedDeviceStatusQuery = {
-        deviceModelId: device.value.deviceModelId,
+      const params: DeviceStatusQueryParams = {
         anchorTime: anchorTime.value || new Date().toISOString(),
+        modelNumber: device.value.deviceModel.modelNumber,
+        serialNumber: device.value.serialNumber,
         limit: limit.value
       }
-      const res = await queryParsedDeviceStatus(params)
+      const res = await querDeviceStatus(params)
       console.log("查询设备数据结果:", res)
       dataList.value = res.data.items ?? []
       ElMessage.success(`查询完成`)
@@ -46,7 +47,7 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
   const resetToFirstPage = async () => {
     console.log("重置到第一页")
     pageIndex.value = 1
-    anchorTime.value = new Date().toISOString()
+    anchorTime.value = undefined
     await fetchData()
   }
 

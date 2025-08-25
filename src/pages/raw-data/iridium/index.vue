@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import type { IridiumData } from "@/common/apis/device-data/type"
+import type { IridiumData } from "@/common/apis/data-query/type"
 import { ref } from "vue"
-import { queryIridiumData } from "@/common/apis/device-data"
+import { queryIridiumData } from "@/common/apis/data-query"
 import { formatDateTime } from "@/common/utils/datetime"
 
 const pageIndex = ref(1)
@@ -70,8 +70,8 @@ async function onNextPage() {
             {{ formatDateTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column prop="IMEI" label="IMEI" width="180px" />
-        <el-table-column prop="Content" label="数据" show-overflow-tooltip />
+        <el-table-column prop="ime1" label="IMEI" width="180px" />
+        <el-table-column prop="content" label="数据" show-overflow-tooltip />
       </el-table>
     </div>
     <div class="pagination-bar">
