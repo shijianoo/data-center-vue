@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import ChannelDropdown from "@@/components/ChannelDropdown/index.vue"
 import { InfoFilled } from "@element-plus/icons-vue"
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
@@ -16,6 +17,7 @@ const {
   isLastPage,
   loading,
   pageIndex,
+  uploadChannel,
   resetToFirstPage,
   goNextPage
 } = useAnchorPagination(selectedDevice)
@@ -69,9 +71,7 @@ function getChargingPanels(status: number) {
           :value="option.id"
         />
       </el-select>
-      <el-button type="primary" @click="resetToFirstPage">
-        查询
-      </el-button>
+      <ChannelDropdown @click="resetToFirstPage" v-model="uploadChannel" />
       <el-button style="margin: 0;" @click="controlDialog = true">
         控制
       </el-button>
@@ -335,6 +335,8 @@ function getChargingPanels(status: number) {
     gap: 4px;
   }
   .search-wrapper .el-select,
+  .search-wrapper .channel-dropdown-wrapper,
+  .search-wrapper .channel-dropdown-wrapper .el-dropdown,
   .search-wrapper .el-button {
     width: 100% !important;
     margin-left: 0 !important;
