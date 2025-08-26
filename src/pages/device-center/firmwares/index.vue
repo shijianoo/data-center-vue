@@ -45,7 +45,7 @@ const uploadData = computed(() => ({
   deviceModelId: uploadForm.value.deviceModelId,
   firmwareVersion: uploadForm.value.firmwareVersion,
   description: uploadForm.value.description,
-  supportedHardwareVersions: uploadForm.value.supportedHardwareVersions.join(","),
+  supportedHardwareVersions: uploadForm.value.supportedHardwareVersions.join(";"),
   fileMd5: uploadForm.value.fileMd5
 }))
 

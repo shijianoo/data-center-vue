@@ -1,9 +1,8 @@
-import type { DeviceModel } from "../apis/device-models/type"
 import type { DeviceDataQueryParams } from "@/common/apis/data-query/type"
 import type { Device } from "@/common/apis/devices/type"
 import { querDeviceData } from "../apis/data-query"
 
-export function useAnchorPagination(deviceModel: Ref<DeviceModel | undefined>, selectedDevice: Ref<Device | undefined>) {
+export function useAnchorPagination(selectedDevice: Ref<Device | undefined>) {
   const dataList = ref<any[]>([])
   const anchorTime = ref<string | undefined>(undefined)
   const limit = ref(50)
@@ -12,11 +11,8 @@ export function useAnchorPagination(deviceModel: Ref<DeviceModel | undefined>, s
   const isLastPage = ref(false)
 
   const fetchData = async () => {
-    if (!deviceModel.value) {
-      console.warn("无法确定设备型号，无法查询数据")
-      return
-    }
     if (!selectedDevice.value) {
+      ElMessage.warning("选择需要查询的设备")
       console.warn("未选择设备，无法查询数据")
       return
     }
@@ -25,7 +21,7 @@ export function useAnchorPagination(deviceModel: Ref<DeviceModel | undefined>, s
     try {
       const params: DeviceDataQueryParams = {
         anchorTime: anchorTime.value,
-        modelNumber: deviceModel.value.modelNumber,
+        modelNumber: selectedDevice.value.modelNumber,
         serialNumber: selectedDevice.value.serialNumber,
         limit: limit.value
       }

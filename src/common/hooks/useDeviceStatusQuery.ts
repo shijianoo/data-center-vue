@@ -12,6 +12,7 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
 
   const fetchData = async () => {
     if (!device.value) {
+      ElMessage.warning("选择需要查询的设备")
       console.warn("未选择设备，无法查询数据")
       return
     }
@@ -21,7 +22,7 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
     try {
       const params: DeviceStatusQueryParams = {
         anchorTime: anchorTime.value || new Date().toISOString(),
-        modelNumber: device.value.deviceModel.modelNumber,
+        modelNumber: device.value.modelNumber,
         serialNumber: device.value.serialNumber,
         limit: limit.value
       }

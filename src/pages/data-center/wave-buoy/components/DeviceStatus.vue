@@ -10,7 +10,7 @@ const { dataList, loading, pageIndex, isLastPage, goNextPage, resetToFirstPage }
 
 function handleDialogOpen() {
   if (!device.value) {
-    ElMessage.error("请先选择设备")
+    ElMessage.warning("请先选择设备")
     visible.value = false
   }
 }
@@ -107,7 +107,12 @@ function getG4Stat(code: number) {
 
 // SD卡状态
 function getSdStat(code: number) {
-  return code
+  switch (code) {
+    case 0:
+      return "正常"
+    default:
+      return `异常(${code})`
+  }
 }
 
 // 复位状态
@@ -177,61 +182,61 @@ function getGpsSatNum(code: number) {
                   采样时间：{{ formatDateTime(scope.row.time) }}
                 </div>
                 <div class="data-item">
-                  接收时间：{{ formatDateTime(scope.row.ReceiveTime) }}
+                  接收时间：{{ formatDateTime(scope.row.recv_time) }}
                 </div>
                 <div class="data-item">
-                  上传通道：{{ scope.row.UploadChannel }}
+                  上传通道：{{ scope.row.upld_ch }}
                 </div>
                 <div class="data-item">
-                  上传周期：{{ scope.row.UploadCycle }}
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="模块状态" min-width="200px">
-              <template #default="scope">
-                <div class="data-item">
-                  波浪模块：{{ getWaveStat(scope.row.WaveStat) }}
-                </div>
-                <div class="data-item">
-                  海温模块：{{ getTempStat(scope.row.TempStat) }}
-                </div>
-                <div class="data-item">
-                  气压模块：{{ getPresStat(scope.row.PresStat) }}
-                </div>
-                <div class="data-item">
-                  姿态模块：{{ getAttiStat(scope.row.AttiStat) }}
-                </div>
-                <div class="data-item">
-                  湿度模块：{{ getHumiStat(scope.row.HumiStat) }}
+                  上传周期：{{ scope.row.upld_intv }}
                 </div>
               </template>
             </el-table-column>
             <el-table-column label="模块状态" min-width="200px">
               <template #default="scope">
                 <div class="data-item">
-                  北斗模块：{{ getBdStat(scope.row.BdStat) }}
+                  波浪模块：{{ getWaveStat(scope.row.wave_stat) }}
                 </div>
                 <div class="data-item">
-                  4G模块：{{ getG4Stat(scope.row.G4Stat) }}
+                  海温模块：{{ getTempStat(scope.row.temp_stat) }}
                 </div>
                 <div class="data-item">
-                  SD卡模块：{{ getSdStat(scope.row.SdStat) }}
+                  气压模块：{{ getPresStat(scope.row.pres_stat) }}
                 </div>
                 <div class="data-item">
-                  复位状态：{{ getResetStat(scope.row.ResetStat) }}
+                  姿态模块：{{ getAttiStat(scope.row.atti_stat) }}
+                </div>
+                <div class="data-item">
+                  湿度模块：{{ getHumiStat(scope.row.humi_stat) }}
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="模块状态" min-width="200px">
+              <template #default="scope">
+                <div class="data-item">
+                  北斗模块：{{ getBdStat(scope.row.bd_stat) }}
+                </div>
+                <div class="data-item">
+                  4G模块：{{ getG4Stat(scope.row["4g_stat"]) }}
+                </div>
+                <div class="data-item">
+                  SD卡模块：{{ getSdStat(scope.row.sd_stat) }}
+                </div>
+                <div class="data-item">
+                  复位状态：{{ getResetStat(scope.row.reset_stat) }}
                 </div>
               </template>
             </el-table-column>
             <el-table-column label="GPS状态" min-width="200px">
               <template #default="scope">
                 <div class="data-item">
-                  经纬度：{{ getGpsStat(scope.row.GpsCoord) }}
+                  经纬度：{{ getGpsStat(scope.row.gps_coord) }}
                 </div>
                 <div class="data-item">
-                  时间信息：{{ getGpsTime(scope.row.GpsTime) }}
+                  时间信息：{{ getGpsTime(scope.row.gps_time) }}
                 </div>
                 <div class="data-item">
-                  卫星数量：{{ getGpsSatNum(scope.row.GpsSatNum) }}
+                  卫星数量：{{ getGpsSatNum(scope.row.gps_sat_num) }}
                 </div>
               </template>
             </el-table-column>

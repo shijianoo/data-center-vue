@@ -5,14 +5,12 @@ import type { DeviceFirmware } from "@/common/apis/firmwares/type"
 import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
 import { getDeviceByIdApi } from "@/common/apis/devices"
 import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
-import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 import { formatDateTime } from "@/common/utils/datetime"
 
 const loading = ref<boolean>(false)
 const visible = defineModel<boolean>("visible") // v-model:visible
 const device = defineModel<Device>("device") // v-model:device
 
-const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const commandData = ref<DeviceCommand[]>([]) // 用于存储设备命令数据
 const firmwareList = ref<DeviceFirmware[]>([])
 const selectedFirmware = ref("")
@@ -29,20 +27,15 @@ function handleClosed() {
 
 function handleDialogOpen() {
   if (!device.value) {
-    ElMessage.error("请先选择设备")
+    ElMessage.warning("请先选择设备")
     visible.value = false
   }
 }
 
 async function fetchCommandData() {
-  await fetchDeviceModels()
   const { data } = await getDeviceCommandsApi(device.value!.id)
   commandData.value = data
-  let modelNumber = device.value?.deviceModel?.modelNumber
-  if (!modelNumber && device.value?.deviceModelId) {
-    const model = deviceModels.value.find(m => m.id === device.value!.deviceModelId)
-    modelNumber = model?.modelNumber
-  }
+
   loading.value = true
   try {
     const { data } = await getDeviceCommandsApi(device.value!.id)

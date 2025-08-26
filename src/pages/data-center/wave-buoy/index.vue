@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { InfoFilled } from "@element-plus/icons-vue"
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
@@ -8,7 +9,7 @@ import DeviceProperty from "../components/DeviceProperty.vue"
 import DeviceStatus from "./components/DeviceStatus.vue"
 
 const deviceModelId = "622a9ac7-7df1-42ea-9a26-f0a2a7abec3c"
-const { selectedDeviceId, selectedDevice, serialNumberOptions, deviceModel } = useSerialNumberSelection(deviceModelId)
+const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,
   isLastPage,
@@ -16,21 +17,30 @@ const {
   pageIndex,
   resetToFirstPage,
   goNextPage
-} = useAnchorPagination(deviceModel, selectedDevice)
+} = useAnchorPagination(selectedDevice)
 
 const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
   console.log("Device event:", id, data)
   if (id === selectedDeviceId.value) {
-    console.warn("已收到相同设备的数据：", id)
     resetToFirstPage()
-  } else {
-    console.warn("已收到不同设备的数据：", id)
   }
 })
 
 const controlDialog = ref<boolean>(false)
 const propertyDialog = ref<boolean>(false)
 const statusDialog = ref<boolean>(false)
+
+function getChargingPanels(status: number) {
+  const panels = []
+  for (let i = 0; i < 5; i++) {
+    const isCharging = (status & (1 << i)) !== 0
+    panels.push({
+      name: `No${i + 1}`,
+      charging: isCharging
+    })
+  }
+  return panels
+}
 </script>
 
 <template>
@@ -79,27 +89,21 @@ const statusDialog = ref<boolean>(false)
               采样时间：{{ formatDateTime(scope.row.time) }}
             </div>
             <div class="data-item">
-              接收时间：{{ formatDateTime(scope.row.receive_time) }}
+              接收时间：{{ formatDateTime(scope.row.recv_time) }}
             </div>
             <div class="data-item">
-              经度：{{ scope.row.lon }} °
+              上传通道：{{ scope.row.upld_ch }}
             </div>
             <div class="data-item">
-              经度半球：{{ scope.row.lon_hem }}
+              经度：{{ scope.row.lon.toFixed(4) }} °{{ scope.row.lon_hem }}
             </div>
             <div class="data-item">
-              纬度：{{ scope.row.lat }} °
-            </div>
-            <div class="data-item">
-              纬度半球：{{ scope.row.lat_hem }}
+              纬度：{{ scope.row.lat.toFixed(4) }} °{{ scope.row.lat_hem }}
             </div>
           </template>
         </el-table-column>
         <el-table-column label="设备运行与信号" min-width="200px">
           <template #default="scope">
-            <div class="data-item">
-              上传通道：{{ scope.row.upload_channel }}
-            </div>
             <div class="data-item">
               搜星数：{{ scope.row.sat_num }}
             </div>
@@ -113,17 +117,33 @@ const statusDialog = ref<boolean>(false)
               主板温度：{{ scope.row.temp_mb }} ℃
             </div>
             <div class="data-item">
-              充电状态：{{ scope.row.charging_status }}
+              充电状态：{{ scope.row.chg_stat === 0 ? "未充电" : "充电中" }}
+              <el-tooltip effect="light" placement="top">
+                <template #content>
+                  <div class="charging-panels">
+                    <div
+                      v-for="(panel, index) in getChargingPanels(scope.row.chg_stat)"
+                      :key="index"
+                      :class="[panel.charging ? 'charging' : 'not-charging']"
+                    >
+                      {{ panel.name }}: {{ panel.charging ? '充电中' : '未充电' }}
+                    </div>
+                  </div>
+                </template>
+                <el-icon class="info-icon">
+                  <InfoFilled />
+                </el-icon>
+              </el-tooltip>
             </div>
           </template>
         </el-table-column>
         <el-table-column label="传感器与状态" min-width="120px">
           <template #default="scope">
             <div class="data-item">
-              漏水状态：{{ scope.row.leak_status }}
+              漏水状态：{{ scope.row.leak_stat }}
             </div>
             <div class="data-item">
-              环境湿度：{{ scope.row.rh }}
+              环境湿度：{{ scope.row.rh.toFixed(4) }}
             </div>
             <div class="data-item">
               姿态X：{{ scope.row.ang_x }} °
@@ -142,19 +162,19 @@ const statusDialog = ref<boolean>(false)
               波数：{{ scope.row.wave_num }}
             </div>
             <div class="data-item">
+              波向：{{ scope.row.dir }} °
+            </div>
+            <div class="data-item">
               平均波高：{{ scope.row.hm }} m
             </div>
             <div class="data-item">
-              平均周期：{{ scope.row.templatem }} s
+              平均周期：{{ scope.row.tm }} s
             </div>
             <div class="data-item">
-              最大波高：{{ scope.row.h_max }} m
+              最大波高：{{ scope.row.hmax }} m
             </div>
             <div class="data-item">
-              最大周期：{{ scope.row.t_max }} s
-            </div>
-            <div class="data-item">
-              波向：{{ scope.row.dir }} °
+              最大周期：{{ scope.row.tmax }} s
             </div>
           </template>
         </el-table-column>
@@ -236,10 +256,10 @@ const statusDialog = ref<boolean>(false)
               平均波向：{{ scope.row.dmean }} °
             </div>
             <div class="data-item">
-              风浪涌浪分离频率：{{ scope.row.sep_f }} Hz
+              风浪涌浪分离频率：{{ scope.row.sep_f.toFixed(3) }} Hz
             </div>
             <div class="data-item">
-              涌浪谱的有效波高：{{ scope.row.sw_hm }} m
+              涌浪谱的有效波高：{{ scope.row.sw_hm.toFixed(3) }} m
             </div>
           </template>
         </el-table-column>
@@ -253,10 +273,10 @@ const statusDialog = ref<boolean>(false)
               反演风向：{{ scope.row.wind_dir }} °
             </div>
             <div class="data-item">
-              气压：{{ scope.row.press }} hPa
+              气压：{{ scope.row.press.toFixed(3) }} hPa
             </div>
             <div class="data-item">
-              温度：{{ scope.row.temp }} °C
+              温度：{{ scope.row.temp.toFixed(4) }} °C
             </div>
           </template>
         </el-table-column>
@@ -332,8 +352,39 @@ const statusDialog = ref<boolean>(false)
 }
 
 .data-item {
+  display: flex;
   font-size: 12px;
+  align-items: center;
   line-height: 1.4;
   padding: 0;
+}
+
+.info-icon {
+  color: #409eff;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.charging-panels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.charging {
+  border-radius: 2px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background-color: #67c23a;
+  color: white;
+}
+
+.not-charging {
+  border-radius: 2px;
+  padding: 0 4px;
+  background-color: #909399;
+  color: white;
 }
 </style>

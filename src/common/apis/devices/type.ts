@@ -1,4 +1,3 @@
-import type { DeviceModel } from "../device-models/type"
 import type { Entity } from "@/common/apis/type"
 
 export interface CreateOrUpdateDeviceDto {
@@ -26,7 +25,7 @@ export interface Device extends Entity<string> {
   deviceName: string
   description: string
   isActive: boolean
-  deviceModel: DeviceModel
+  modelNumber: string
   upgradeTasks?: DeviceUpgrade[]
 }
 

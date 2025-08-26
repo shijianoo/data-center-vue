@@ -3,7 +3,6 @@ import type { Device } from "@/common/apis/devices/type"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { getMyDevicesApi } from "../apis/device-access"
-import { getDeviceModelByIdApi } from "../apis/device-models"
 
 export function useSerialNumberSelection(modelId: string) {
   const route = useRoute()
@@ -32,9 +31,6 @@ export function useSerialNumberSelection(modelId: string) {
     get: () => {
       const sn = route.query.sn?.toString() ?? ""
       const device = devices.value.find(d => d.serialNumber === sn)
-      if (device === undefined) {
-        return ""
-      }
       return device?.id ?? ""
     },
     set: (val: string) => {
@@ -50,12 +46,21 @@ export function useSerialNumberSelection(modelId: string) {
   })
 
   onMounted(async () => {
-    const response = await getDeviceModelByIdApi(modelId)
-    deviceModel.value = response.data
     console.log("获取设备列表...", modelId)
     const { data } = await getMyDevicesApi(modelId)
     devices.value = data
   })
+
+  watch(
+    () => selectedDeviceId.value,
+    (val) => {
+      const sn = route.query.sn?.toString() ?? ""
+      if (sn && val === "") {
+        ElMessage.warning(`你没有对设备 [${sn}] 的访问权限`)
+      }
+    },
+    { immediate: true }
+  )
 
   return {
     serialNumberOptions,

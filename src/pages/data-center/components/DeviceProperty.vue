@@ -23,7 +23,7 @@ const editKey = ref("")
 
 function handleDialogOpen() {
   if (!deviceId.value) {
-    ElMessage.error("请先选择设备")
+    ElMessage.warning("请先选择设备")
     visible.value = false
   }
 }

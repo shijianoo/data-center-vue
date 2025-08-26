@@ -12,11 +12,11 @@ export function querDeviceData<T>(params: DeviceDataQueryParams) {
 }
 
 /** 查询设备状态 */
-export function querDeviceStatus<T>(options: DeviceStatusQueryParams) {
+export function querDeviceStatus<T>(params: DeviceStatusQueryParams) {
   return dataCenterRequest<ApiResponseData<QueryResult<T>>>({
     url: "query/device-status",
     method: "get",
-    data: options
+    params
   })
 }
 
