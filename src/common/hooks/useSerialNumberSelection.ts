@@ -46,17 +46,20 @@ export function useSerialNumberSelection(modelId: string) {
   })
 
   onMounted(async () => {
-    console.log("获取设备列表...", modelId)
     const { data } = await getMyDevicesApi(modelId)
     devices.value = data
   })
 
   watch(
-    () => selectedDeviceId.value,
+    () => route.query.sn,
     (val) => {
-      const sn = route.query.sn?.toString() ?? ""
-      if (sn && val === "") {
-        ElMessage.warning(`你没有对设备 [${sn}] 的访问权限`)
+      if (val) {
+        const device = devices.value.find(d => d.serialNumber === val.toString())
+        if (!device) {
+          ElMessage.error(`你没有访问设备 [${val}] 的权限`)
+        }
+      } else {
+        ElMessage.warning("请选择一个设备")
       }
     },
     { immediate: true }
