@@ -30,8 +30,7 @@ const uploadDialogVisible = ref(false)
 const uploadRef = ref<UploadInstance>()
 const uploadFormRef = ref()
 
-// 四段式版本号正则表达式 (例如: 1.2.3.4)
-const versionPattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/
+const versionPattern = /^(\d+)\.(\d+)(?:\.(\d+))?(?:\.(\d+))?$/
 
 const uploadAction = computed(() => {
   const baseUrl = import.meta.env.VITE_DATA_CENTER_BASE_URL
@@ -64,7 +63,7 @@ function validateVersionFormat(version: string): boolean {
 
 function validateFirmwareVersion(rule: any, value: any, callback: any) {
   if (value && !versionPattern.test(value)) {
-    callback(new Error("固件版本格式不正确，请输入四段式版本号（例如：1.2.3.4）"))
+    callback(new Error("请输入2到4段式版本号（例如：1.2 或 1.2.3 或 1.2.3.4）"))
   } else {
     callback()
   }
@@ -76,7 +75,7 @@ function validateHardwareVersions(rule: any, value: any, callback: any) {
   }
   for (let i = 0; i < value.length; i++) {
     if (!validateVersionFormat(value[i])) {
-      return callback(new Error("所有的版本号必须是有效的四段版本号"))
+      return callback(new Error("所有的版本号必须是有效的2到4段版本号"))
     }
   }
   callback()
@@ -94,7 +93,6 @@ const uploadFormRules = {
     { required: true, trigger: "blur", message: "至少需要一个硬件版本" },
     { validator: validateHardwareVersions, trigger: "change" }
   ]
-
 }
 
 const uploadHeaders = computed(() => {
@@ -349,14 +347,14 @@ onMounted(async () => {
         <el-form-item label="固件版本" prop="firmwareVersion">
           <el-input
             v-model="uploadForm.firmwareVersion"
-            placeholder="请输入固件版本（例如：1.2.3.4）"
+            placeholder="请输入固件版本（例如：1.2 或 1.2.3 或 1.2.3.4）"
           />
         </el-form-item>
 
         <el-form-item label="硬件版本" prop="supportedHardwareVersions">
           <el-select
             v-model="uploadForm.supportedHardwareVersions"
-            placeholder="请输入支持的硬件版本，支持多选"
+            placeholder="请输入支持的硬件版本，支持多个"
             multiple
             default-first-option
             remote
