@@ -3,6 +3,7 @@ import { InfoFilled } from "@element-plus/icons-vue"
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
+import { parseLatHem, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
@@ -92,13 +93,13 @@ function getChargingPanels(status: number) {
               接收时间：{{ formatDateTime(scope.row.recv_time) }}
             </div>
             <div class="data-item">
-              上传通道：{{ scope.row.upld_ch }}
+              上传通道：{{ parseUploadChannel(scope.row.upld_ch) }}
             </div>
             <div class="data-item">
-              经度：{{ scope.row.lon.toFixed(4) }} °{{ scope.row.lon_hem }}
+              经度：{{ scope.row.lon.toFixed(4) }} ° {{ parseLonHem(scope.row.lon_hem) }}
             </div>
             <div class="data-item">
-              纬度：{{ scope.row.lat.toFixed(4) }} °{{ scope.row.lat_hem }}
+              纬度：{{ scope.row.lat.toFixed(4) }} ° {{ parseLatHem(scope.row.lat_hem) }}
             </div>
           </template>
         </el-table-column>
@@ -111,7 +112,7 @@ function getChargingPanels(status: number) {
               信号强度：{{ scope.row.c_s_q }}
             </div>
             <div class="data-item">
-              电池电压：{{ scope.row.ubatt }} V
+              电池电压：{{ parseUbatt(scope.row.ubatt) }} V
             </div>
             <div class="data-item">
               主板温度：{{ scope.row.temp_mb }} ℃
@@ -140,10 +141,10 @@ function getChargingPanels(status: number) {
         <el-table-column label="传感器与状态" min-width="120px">
           <template #default="scope">
             <div class="data-item">
-              漏水状态：{{ scope.row.leak_stat }}
+              漏水状态：{{ parseLeakStatus(scope.row.leak_stat) }}
             </div>
             <div class="data-item">
-              环境湿度：{{ scope.row.rh.toFixed(4) }}
+              环境湿度：{{ (scope.row.rh * 100).toFixed(1) }} %
             </div>
             <div class="data-item">
               姿态X：{{ scope.row.ang_x }} °

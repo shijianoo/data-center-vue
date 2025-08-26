@@ -50,21 +50,6 @@ export function useSerialNumberSelection(modelId: string) {
     devices.value = data
   })
 
-  watch(
-    () => route.query.sn,
-    (val) => {
-      if (val) {
-        const device = devices.value.find(d => d.serialNumber === val.toString())
-        if (!device) {
-          ElMessage.error(`你没有访问设备 [${val}] 的权限`)
-        }
-      } else {
-        ElMessage.warning("请选择一个设备")
-      }
-    },
-    { immediate: true }
-  )
-
   return {
     serialNumberOptions,
     selectedDeviceId,
