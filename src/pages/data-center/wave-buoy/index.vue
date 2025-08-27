@@ -328,7 +328,7 @@ function getChargingPanels(status: number) {
   align-items: flex-start;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 628px) {
   .search-wrapper {
     flex-direction: column;
     align-items: stretch;

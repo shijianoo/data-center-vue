@@ -14,7 +14,7 @@ const emit = defineEmits<Emits>()
 
 // 内置通道列表
 const channels = ref<Channel[]>([
-  { name: "所有", code: "" },
+  { name: "全部", code: "" },
   { name: "4G", code: "1" },
   { name: "北斗", code: "2" }
 ])
@@ -39,15 +39,16 @@ function getChannelName(code: string | undefined) {
 </script>
 
 <template>
-  <div class="channel-dropdown-wrapper">
-    <el-dropdown
-      trigger="click"
-      split-button
-      type="primary"
-      @click="handleButtonClick"
-      @command="handleChannelSelect"
-    >
-      查询{{ getChannelName(selectedChannel) }}
+  <el-button-group>
+    <el-button type="primary" @click="handleButtonClick">
+      查询{{ getChannelName(selectedChannel) }}通道
+    </el-button>
+    <el-dropdown trigger="click" @command="handleChannelSelect">
+      <el-button type="primary">
+        <el-icon>
+          <arrow-down />
+        </el-icon>
+      </el-button>
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item
@@ -60,9 +61,27 @@ function getChannelName(code: string | undefined) {
         </el-dropdown-menu>
       </template>
     </el-dropdown>
-  </div>
+  </el-button-group>
 </template>
 
 <style scoped>
+@media (max-width: 628px) {
+  /* el-button-group 在移动端占据整行 */
+  .el-button-group {
+    width: 100% !important;
+    display: flex !important;
+  }
 
+  /* el-button-group 内的 el-button 占据剩余空间 */
+  .el-button-group .el-button:not(.el-dropdown__caret-button) {
+    flex: 1 !important;
+  }
+
+  /* el-dropdown 的按钮保持固定宽度 */
+  .el-button-group .el-dropdown .el-button {
+    flex: none !important;
+    width: auto !important;
+    min-width: 32px !important;
+  }
+}
 </style>
