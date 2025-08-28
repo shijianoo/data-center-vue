@@ -569,7 +569,7 @@ function handleDateRangeConfirm(dateRange: DateRange) {
   border: 1px solid transparent;
 
   &:hover {
-    border-color: blue;
+    border-color: black;
   }
 
   &.status-success {
@@ -577,7 +577,7 @@ function handleDateRangeConfirm(dateRange: DateRange) {
   }
 
   &.status-danger {
-    background-color: #f56c6c;
+    background-color: red;
   }
 
   &.status-info {
