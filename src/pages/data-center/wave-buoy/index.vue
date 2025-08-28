@@ -24,8 +24,10 @@ const {
 
 const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
   console.log("Device event:", id, data)
-  if (id === selectedDeviceId.value) {
+  if (id === selectedDeviceId.value && pageIndex.value === 1) {
     resetToFirstPage()
+  } else {
+    ElMessage.success("设备已收到新数据")
   }
 })
 
