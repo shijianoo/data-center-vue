@@ -6,7 +6,7 @@ import { ref, watch } from "vue"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
 import { buildDownloadUrl, downloadFile } from "@/common/utils/download"
-import { API_BASE_URL, getBuoyData } from "./apis"
+import { API_BASE_URL, getWeatherBuoyData } from "./apis"
 
 const deviceModelId = "9285430f-7e05-40de-94d4-bcdb40335697"
 const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
@@ -21,7 +21,7 @@ async function fetchBuoyData() {
   try {
     if (selectedDevice.value) {
       dataLoading.value = true
-      const res = await getBuoyData(selectedDevice.value.serialNumber!, pageIndex.value - 1, pageSize.value)
+      const res = await getWeatherBuoyData(selectedDevice.value.serialNumber!, pageIndex.value, pageSize.value)
       buoyData.value = res.data?.results || []
       total.value = res.data?.totalCount || 0
       ElMessage.success("查询成功")
@@ -66,13 +66,12 @@ function handleDateRangeConfirm(dateRange: DateRange) {
   }
 
   const params = {
-    dataType: "driftingbuoy",
-    fromCard: selectedDevice.value!.serialNumber!,
+    deviceId: selectedDevice.value!.serialNumber!,
     start: dateRange.startDate,
     end: dateRange.endDate
   }
 
-  const url = buildDownloadUrl(`${API_BASE_URL}/BDData/DowloadBuoyData`, params)
+  const url = buildDownloadUrl(`${API_BASE_URL}/WeatherBuoy/Dowload`, params)
   downloadFile(url)
 }
 </script>
@@ -482,81 +481,10 @@ function handleDateRangeConfirm(dateRange: DateRange) {
         @current-change="handleCurrentChange"
       />
     </div>
-    <!-- <el-dialog
-      v-model="cardMgrDialog"
-      title="卡号管理"
-      @opened="openDialog"
-      width="1000px"
-      :close-on-click-modal="false"
-    >
-      <div>
-        <el-button type="primary" @click="handleAdd">
-          新增卡号
-        </el-button>
-        <el-table :data="cardList" height="600px" v-loading="loading">
-          <el-table-column prop="cardNumber" label="卡号" width="160px" />
-          <el-table-column prop="description" label="描述" />
-          <el-table-column prop="startDate" label="开始时间" width="160px">
-            <template #default="scope">
-              {{ formatDateTime(scope.row.startDate) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="endDate" label="结束时间" width="160px">
-            <template #default="scope">
-              {{ formatDateTime(scope.row.endDate) }}
-            </template>
-          </el-table-column>
-          <el-table-column fixed="right" label="操作" width="180px" align="center">
-            <template #default="scope">
-              <el-button type="primary" text bg size="small" @click="handleEdit(scope.row)">
-                编辑
-              </el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
-                删除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <template #footer>
-        <el-button @click="cardMgrDialog = false">
-          关 闭
-        </el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog
-      v-model="cardEditDialog"
-      :title="isEdit ? '编辑卡号' : '新增卡号'"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="form" :rules="formRules" ref="formRef">
-        <el-form-item label="设备卡号" prop="cardNumber">
-          <el-input v-model="form.cardNumber" />
-        </el-form-item>
-        <el-form-item label="开始时间" prop="startDate">
-          <el-date-picker v-model="form.startDate" type="datetime" />
-        </el-form-item>
-        <el-form-item label="结束时间" prop="endDate">
-          <el-date-picker v-model="form.endDate" type="datetime" />
-        </el-form-item>
-        <el-form-item label="卡号描述" prop="description">
-          <el-input v-model="form.description" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="cardEditDialog = false">
-          取 消
-        </el-button>
-        <el-button type="primary" @click="handleSave" :loading="loading">
-          确 定
-        </el-button>
-      </template>
-    </el-dialog> -->
     <DateRangeDialog
       v-model:visible="dateRangeVisible"
       @confirm="handleDateRangeConfirm"
+      :max-days="30"
     />
   </div>
 </template>

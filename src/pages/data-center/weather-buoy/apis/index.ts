@@ -22,3 +22,7 @@ export function updateCard(id: string, card: CardData) {
 export function deleteCard(id: string) {
   return axios.delete(`${API_BASE_URL}/card/delete?id=${id}`)
 }
+
+export function getWeatherBuoyData(deviceId: string, pageIndex: number, pageSize: number) {
+  return axios.get(`${API_BASE_URL}/WeatherBuoy/PagedData?deviceId=${deviceId}&pageIndex=${pageIndex}&pageSize=${pageSize}`)
+}
