@@ -8,13 +8,21 @@ import { formatDateTime } from "@/common/utils/datetime"
 import { buildDownloadUrl, downloadFile } from "@/common/utils/download"
 import { API_BASE_URL, getWeatherBuoyData } from "./apis"
 
+// 状态指示器辅助函数
+function getStatusClass(status: string | undefined, inverse = false) {
+  if (inverse) {
+    return status === "0" ? "status-danger" : "status-success"
+  }
+  return status === "0" ? "status-success" : "status-danger"
+}
+
 const deviceModelId = "9285430f-7e05-40de-94d4-bcdb40335697"
 const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)
 const buoyData = ref<BuoyData[]>([])
 const pageIndex = ref(1)
-const pageSize = ref(40)
+const pageSize = ref(20)
 const total = ref(0)
 
 async function fetchBuoyData() {
@@ -96,7 +104,10 @@ function handleDateRangeConfirm(dateRange: DateRange) {
     </div>
 
     <div class="table-wrapper">
-      <el-table :data="buoyData" height="100%" v-loading="dataLoading">
+      <el-table
+        :data="buoyData" height="100%" v-loading="dataLoading" :virtual="true"
+        :item-size="120"
+      >
         <el-table-column label="时间" min-width="200">
           <template #default="scope">
             <div class="data-item">
@@ -322,148 +333,147 @@ function handleDateRangeConfirm(dateRange: DateRange) {
         <el-table-column label="设备状态" min-width="340">
           <template #default="scope">
             <!-- 第一行：传感器状态 -->
-            <div class="data-item">
-              传感器状态：
-              <el-tooltip content="气压传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.airPressureSensorStatus === '0' ? 'success' : 'danger'">
-                  AP
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="气温传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.airTemperatureSensorStatus === '0' ? 'success' : 'danger'">
-                  AT
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="20cm海温/盐度传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.seaTemperatureSalinity20CMSensorStatus === '0' ? 'success' : 'danger'">
-                  STSS
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="风向/风速传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.windSpeedWindDirectionSensorStatus === '0' ? 'success' : 'danger'">
-                  WIND
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="红外皮温传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.skinTemperatureSensorStatus === '0' ? 'success' : 'danger'">
-                  IST
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="25cm海温传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.seaTemperature25CMSensorStatus === '0' ? 'success' : 'danger'">
-                  STA
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="30cm海温传感器状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.seaTemperature30CMSensorStatus === '0' ? 'success' : 'danger'">
-                  STB
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="水帆附着状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.waterSailStatus === '0' ? 'success' : 'danger'">
-                  WS
-                </el-tag>
-              </el-tooltip>
+            <div class="data-item device-status">
+              <span class="status-label">传感器状态:</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.airPressureSensorStatus)"
+                :title="`气压传感器状态: ${scope.row.airPressureSensorStatus === '0' ? '正常' : '异常'}`"
+              >AP</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.airTemperatureSensorStatus)"
+                :title="`气温传感器状态: ${scope.row.airTemperatureSensorStatus === '0' ? '正常' : '异常'}`"
+              >AT</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.seaTemperatureSalinity20CMSensorStatus)"
+                :title="`20cm海温/盐度传感器状态: ${scope.row.seaTemperatureSalinity20CMSensorStatus === '0' ? '正常' : '异常'}`"
+              >STSS</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.windSpeedWindDirectionSensorStatus)"
+                :title="`风向/风速传感器状态: ${scope.row.windSpeedWindDirectionSensorStatus === '0' ? '正常' : '异常'}`"
+              >WIND</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.skinTemperatureSensorStatus)"
+                :title="`红外皮温传感器状态: ${scope.row.skinTemperatureSensorStatus === '0' ? '正常' : '异常'}`"
+              >IST</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.seaTemperature25CMSensorStatus)"
+                :title="`25cm海温传感器状态: ${scope.row.seaTemperature25CMSensorStatus === '0' ? '正常' : '异常'}`"
+              >STA</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.seaTemperature30CMSensorStatus)"
+                :title="`30cm海温传感器状态: ${scope.row.seaTemperature30CMSensorStatus === '0' ? '正常' : '异常'}`"
+              >STB</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.waterSailStatus)"
+                :title="`水帆附着状态: ${scope.row.waterSailStatus === '0' ? '正常' : '异常'}`"
+              >WS</span>
             </div>
 
             <!-- 第二行：系统运行状态 -->
-            <div class="data-item">
-              系统运行状态
-              <el-tooltip content="程序状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.startStatus === '0' ? 'success' : 'danger'">
-                  START
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="看门狗状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.watchdogStatus === '0' ? 'success' : 'danger'">
-                  WDOG
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="50分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus50 === '0' ? 'danger' : 'success'">
-                  WE0
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="40分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus40 === '0' ? 'danger' : 'success'">
-                  WE1
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="30分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus30 === '0' ? 'danger' : 'success'">
-                  WE2
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="20分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus20 === '0' ? 'danger' : 'success'">
-                  WE3
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="10分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus10 === '0' ? 'danger' : 'success'">
-                  WE4
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="00分浮标浸没状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.buoyImmersionStatus00 === '0' ? 'danger' : 'success'">
-                  WE5
-                </el-tag>
-              </el-tooltip>
+            <div class="data-item device-status">
+              <span class="status-label">系统运行状态:</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.startStatus)"
+                :title="`程序状态: ${scope.row.startStatus === '0' ? '正常' : '异常'}`"
+              >START</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.watchdogStatus)"
+                :title="`看门狗状态: ${scope.row.watchdogStatus === '0' ? '正常' : '异常'}`"
+              >WDOG</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus50, true)"
+                :title="`50分浮标浸没状态: ${scope.row.buoyImmersionStatus50 === '0' ? '浸没' : '正常'}`"
+              >WE0</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus40, true)"
+                :title="`40分浮标浸没状态: ${scope.row.buoyImmersionStatus40 === '0' ? '浸没' : '正常'}`"
+              >WE1</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus30, true)"
+                :title="`30分浮标浸没状态: ${scope.row.buoyImmersionStatus30 === '0' ? '浸没' : '正常'}`"
+              >WE2</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus20, true)"
+                :title="`20分浮标浸没状态: ${scope.row.buoyImmersionStatus20 === '0' ? '浸没' : '正常'}`"
+              >WE3</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus10, true)"
+                :title="`10分浮标浸没状态: ${scope.row.buoyImmersionStatus10 === '0' ? '浸没' : '正常'}`"
+              >WE4</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.buoyImmersionStatus00, true)"
+                :title="`00分浮标浸没状态: ${scope.row.buoyImmersionStatus00 === '0' ? '浸没' : '正常'}`"
+              >WE5</span>
             </div>
 
             <!-- 第三行：北斗通讯状态 -->
-            <div class="data-item">
-              北斗通讯状态：
+            <div class="data-item device-status">
+              <span class="status-label">北斗通讯状态:</span>
             </div>
 
             <!-- 第四行：浮标姿态状态 -->
-            <div class="data-item">
-              浮标姿态状态
-              <el-tooltip content="姿态数据有效状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.attitudeValidStatus === '0' ? 'success' : 'danger'">
-                  ATTI_Valid
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="姿态数据接收状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.attitudeReceiveStatus === '0' ? 'success' : 'danger'">
-                  ATTI_Rx
-                </el-tag>
-              </el-tooltip>
+            <div class="data-item device-status">
+              <span class="status-label">浮标姿态状态:</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.attitudeValidStatus)"
+                :title="`姿态数据有效状态: ${scope.row.attitudeValidStatus === '0' ? '正常' : '异常'}`"
+              >ATTI_Valid</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.attitudeReceiveStatus)"
+                :title="`姿态数据接收状态: ${scope.row.attitudeReceiveStatus === '0' ? '正常' : '异常'}`"
+              >ATTI_Rx</span>
             </div>
 
             <!-- 第五行：GNSS定位状态 -->
-            <div class="data-item">
-              GNSS定位状态
-              <el-tooltip content="有效接收卫星数量" effect="light" placement="top">
-                <el-tag effect="dark" size="small" type="info">
-                  {{ scope.row.receiveSatelliteNumber || '0' }}
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="GNSS数据有效状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.gnssDataValidStatus === '0' ? 'success' : 'danger'">
-                  Posi
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="GNSS校时数据有效状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.gnssCheckTimeValidStatus === '0' ? 'success' : 'danger'">
-                  ChkDT
-                </el-tag>
-              </el-tooltip>
+            <div class="data-item device-status">
+              <span class="status-label">GNSS定位状态:</span>
+              <span
+                class="status-indicator status-info"
+                :title="`有效接收卫星数量: ${scope.row.receiveSatelliteNumber || '0'}`"
+              >{{ scope.row.receiveSatelliteNumber || '0' }}</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.gnssDataValidStatus)"
+                :title="`GNSS数据有效状态: ${scope.row.gnssDataValidStatus === '0' ? '正常' : '异常'}`"
+              >Posi</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.gnssCheckTimeValidStatus)"
+                :title="`GNSS校时数据有效状态: ${scope.row.gnssCheckTimeValidStatus === '0' ? '正常' : '异常'}`"
+              >ChkDT</span>
             </div>
 
             <!-- 第六行：报警状态 -->
-            <div class="data-item">
-              报警状态
-              <el-tooltip content="00分报警状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.alarm00Status === '0' ? 'success' : 'danger'">
-                  IS0
-                </el-tag>
-              </el-tooltip>
-              <el-tooltip content="30分报警状态" effect="light" placement="top">
-                <el-tag effect="dark" size="small" :type="scope.row.alarm30Status === '0' ? 'success' : 'danger'">
-                  IS1
-                </el-tag>
-              </el-tooltip>
+            <div class="data-item device-status">
+              <span class="status-label">报警状态:</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.alarm00Status)"
+                :title="`00分报警状态: ${scope.row.alarm00Status === '0' ? '正常' : '异常'}`"
+              >IS0</span>
+              <span
+                class="status-indicator"
+                :class="getStatusClass(scope.row.alarm30Status)"
+                :title="`30分报警状态: ${scope.row.alarm30Status === '0' ? '正常' : '异常'}`"
+              >IS1</span>
             </div>
           </template>
         </el-table-column>
@@ -529,18 +539,49 @@ function handleDateRangeConfirm(dateRange: DateRange) {
   text-align: right;
 }
 
-.el-tag {
-  height: 15px;
-  min-width: 20px;
-  font-size: 9px;
-  border-radius: 0px;
-  padding: 0 2px;
-  margin-left: 2px;
-}
-
 .data-item {
   font-size: 12px;
   line-height: 1.4;
-  padding: 0;
+}
+
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.status-label {
+  display: inline-block;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.status-indicator {
+  display: inline-block;
+  color: white;
+  cursor: help;
+  padding: 0 1px;
+  min-width: 20px;
+  text-align: center;
+  font-size: 9px;
+  height: 15px;
+  line-height: 15px;
+  border: 1px solid transparent;
+
+  &:hover {
+    border-color: blue;
+  }
+
+  &.status-success {
+    background-color: #67c23a;
+  }
+
+  &.status-danger {
+    background-color: #f56c6c;
+  }
+
+  &.status-info {
+    background-color: #909399;
+  }
 }
 </style>
