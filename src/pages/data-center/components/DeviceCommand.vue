@@ -236,13 +236,22 @@ async function upgradeStatusDialogOpened() {
           <el-table-column prop="targetFirmwareVersion" label="目标固件版本" align="center" />
           <el-table-column prop="status" label="升级状态" align="center">
             <template #default="scope">
-              <el-tag v-if="scope.row.status === 0" type="warning" effect="plain" disable-transitions>
-                升级中
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 1" type="danger" effect="plain" disable-transitions>
+              <el-tag v-if="scope.row.status === -1" type="danger" effect="plain" disable-transitions>
                 升级失败
               </el-tag>
-              <el-tag v-else-if="scope.row.status === 2" type="success" effect="plain" disable-transitions>
+              <el-tag v-else-if="scope.row.status === 0" type="info" effect="plain" disable-transitions>
+                待升级
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 1" type="info" effect="plain" disable-transitions>
+                升级信息已查询
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 2" type="primary" effect="plain" disable-transitions>
+                固件下载中
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 3" type="warning" effect="plain" disable-transitions>
+                升级中
+              </el-tag>
+              <el-tag v-else-if="scope.row.status === 4" type="success" effect="plain" disable-transitions>
                 升级成功
               </el-tag>
             </template>

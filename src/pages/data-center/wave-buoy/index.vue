@@ -146,7 +146,7 @@ function getChargingPanels(status: number) {
               漏水状态：{{ parseLeakStatus(scope.row.leak_stat) }}
             </div>
             <div class="data-item">
-              环境湿度：{{ (scope.row.rh * 100).toFixed(1) }} %
+              环境湿度：{{ scope.row.rh.toFixed(3) }}
             </div>
             <div class="data-item">
               姿态X：{{ scope.row.ang_x }} °
