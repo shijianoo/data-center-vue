@@ -111,7 +111,7 @@ function getChargingPanels(status: number) {
               搜星数：{{ scope.row.sat_num }}
             </div>
             <div class="data-item">
-              信号强度：{{ scope.row.c_s_q }}
+              信号强度：{{ scope.row.csq }}
             </div>
             <div class="data-item">
               电池电压：{{ parseUbatt(scope.row.ubatt) }} V
