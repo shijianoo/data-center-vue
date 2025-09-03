@@ -5,7 +5,7 @@ import { querDeviceData } from "../apis/data-query"
 export function useAnchorPagination(selectedDevice: Ref<Device | undefined>) {
   const dataList = ref<any[]>([])
   const anchorTime = ref<string | undefined>(undefined)
-  const uploadChannel = ref<string | undefined>(undefined)
+  const uploadChannel = ref(0)
   const limit = ref(50)
   const loading = ref(false)
   const pageIndex = ref(1)
@@ -24,7 +24,7 @@ export function useAnchorPagination(selectedDevice: Ref<Device | undefined>) {
         anchorTime: anchorTime.value,
         modelNumber: selectedDevice.value.modelNumber,
         serialNumber: selectedDevice.value.serialNumber,
-        uploadChannel: uploadChannel.value,
+        uploadChannel: uploadChannel.value === 0 ? "" : uploadChannel.value.toString(),
         limit: limit.value
       }
       const res = await querDeviceData(params)
@@ -58,7 +58,7 @@ export function useAnchorPagination(selectedDevice: Ref<Device | undefined>) {
   }
 
   watch([selectedDevice, uploadChannel], ([sd, uc]) => {
-    if (sd || uc !== undefined) resetToFirstPage()
+    if (sd || uc) resetToFirstPage()
   }, { immediate: true })
 
   return {

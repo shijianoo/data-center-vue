@@ -3,7 +3,7 @@ import { ref } from "vue"
 
 interface Channel {
   name: string
-  code: string
+  code: number
 }
 
 interface Emits {
@@ -14,13 +14,13 @@ const emit = defineEmits<Emits>()
 
 // 内置通道列表
 const channels = ref<Channel[]>([
-  { name: "全部", code: "" },
-  { name: "4G", code: "1" },
-  { name: "北斗", code: "2" }
+  { name: "全部", code: 0 },
+  { name: "4G", code: 1 },
+  { name: "北斗", code: 2 }
 ])
 
-const selectedChannel = defineModel<string | undefined>("modelValue", {
-  default: () => ""
+const selectedChannel = defineModel<number>("modelValue", {
+  default: () => 0
 })
 
 function handleChannelSelect(channel: Channel) {
@@ -32,7 +32,7 @@ function handleButtonClick() {
 }
 
 // 根据 code 获取对应的通道名称
-function getChannelName(code: string | undefined) {
+function getChannelName(code: number) {
   const channel = channels.value.find(c => c.code === code)
   return channel ? channel.name : "所有"
 }
