@@ -479,14 +479,13 @@ function handleDateRangeConfirm(dateRange: DateRange) {
         </el-table-column>
       </el-table>
     </div>
-    <div class="pagination-bar">
+    <div class="pagination-bar" style="display: flex; justify-content: flex-end;">
       <el-pagination
         background
-        layout="total, sizes, prev, pager, next, jumper"
+        layout="total, prev, pager, next"
         :total="total"
         :page-size="pageSize"
         :current-page="pageIndex"
-        :page-sizes="[10, 20, 40, 80, 100]"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
       />
