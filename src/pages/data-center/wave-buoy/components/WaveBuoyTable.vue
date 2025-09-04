@@ -44,7 +44,7 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="设备运行与信号" min-width="200px">
+    <el-table-column label="设备运行与信号" min-width="140px">
       <template #default="scope">
         <div class="data-item">
           搜星数：{{ scope.row.sat_num }}
@@ -79,7 +79,7 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="传感器与状态" min-width="140px">
+    <el-table-column label="传感器与状态" min-width="150px">
       <template #default="scope">
         <div class="data-item">
           漏水状态：{{ parseLeakStatus(scope.row.leak_stat) }}
@@ -98,7 +98,7 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="总体波浪特征" min-width="150px">
+    <el-table-column label="总体波浪特征" min-width="140px">
       <template #default="scope">
         <div class="data-item">
           波数：{{ scope.row.wave_num }}
@@ -120,7 +120,7 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="涌浪特征" min-width="160px">
+    <el-table-column label="涌浪特征" min-width="170px">
       <template #default="scope">
         <div class="data-item">
           涌浪谱平均周期：{{ scope.row.sw_tm }} s
@@ -139,7 +139,7 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="风浪特征" min-width="170px">
+    <el-table-column label="风浪特征" min-width="180px">
       <template #default="scope">
         <div class="data-item">
           风浪谱的有效波高：{{ scope.row.ws_hm }} m
