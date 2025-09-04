@@ -1,5 +1,5 @@
-export function parseUploadChannel(rawValue: string): string {
-  switch (rawValue) {
+export function parseUploadChannel(rawValue: string | number): string {
+  switch (rawValue.toString()) {
     case "1": return "4G"
     case "2": return "北斗"
     case "4": return "铱星"
