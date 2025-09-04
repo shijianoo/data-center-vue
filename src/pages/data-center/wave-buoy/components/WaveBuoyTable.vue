@@ -235,10 +235,9 @@ function getChargingPanels(status: number) {
 }
 
 .info-icon {
-  color: #409eff;
   cursor: pointer;
   margin-left: 5px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .charging-panels {
