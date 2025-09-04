@@ -79,13 +79,13 @@ function getChargingPanels(status: number) {
         </div>
       </template>
     </el-table-column>
-    <el-table-column label="传感器与状态" min-width="120px">
+    <el-table-column label="传感器与状态" min-width="140px">
       <template #default="scope">
         <div class="data-item">
           漏水状态：{{ parseLeakStatus(scope.row.leak_stat) }}
         </div>
         <div class="data-item">
-          环境湿度：{{ scope.row.rh.toFixed(3) }}
+          环境湿度：{{ scope.row.rh.toFixed(3) }} g/m³
         </div>
         <div class="data-item">
           姿态X：{{ scope.row.ang_x }} °
