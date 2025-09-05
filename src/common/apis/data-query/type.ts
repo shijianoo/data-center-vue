@@ -39,6 +39,21 @@ export interface IridiumData {
   content: string
 }
 
+export interface PageListQueryParams {
+  model: string
+  sn: string
+  ch: number
+  page: number
+  size: number
+}
+
+export interface PagedResult {
+  total: number
+  items: any[]
+}
+
 export type BeidouDataListResponse = ApiResponseData<BeidouData[]>
 
 export type IridiumDataListResponse = ApiResponseData<IridiumData[]>
+
+export type PagedResultResponse = ApiResponseData<PagedResult>

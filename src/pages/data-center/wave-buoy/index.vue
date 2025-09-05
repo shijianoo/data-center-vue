@@ -2,7 +2,7 @@
 import ChannelDropdown from "@@/components/ChannelDropdown/index.vue"
 import { buildExcelQuickExportUrl } from "@/common/apis/data-export"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
-import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
+import { useDeviceDataPagination } from "@/common/hooks/useDeviceDataPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { downloadFile } from "@/common/utils/download"
@@ -15,18 +15,18 @@ const deviceModelId = "622a9ac7-7df1-42ea-9a26-f0a2a7abec3c"
 const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,
-  isLastPage,
   loading,
   pageIndex,
+  pageSize,
   uploadChannel,
-  resetToFirstPage,
-  goNextPage
-} = useAnchorPagination(selectedDevice)
+  total,
+  fetchFirstPageData
+} = useDeviceDataPagination(selectedDevice)
 
 const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, data) => {
   console.log("Device event:", id, data)
   if (id === selectedDeviceId.value && pageIndex.value === 1) {
-    resetToFirstPage()
+    fetchFirstPageData()
   } else {
     ElMessage.success("设备已收到新数据")
   }
@@ -76,7 +76,7 @@ const statusDialog = ref<boolean>(false)
           :value="option.id"
         />
       </el-select>
-      <ChannelDropdown @click="resetToFirstPage" v-model="uploadChannel" />
+      <ChannelDropdown @click="fetchFirstPageData" v-model="uploadChannel" />
       <el-button style="margin: 0;" @click="controlDialog = true">
         控制
       </el-button>
@@ -94,15 +94,13 @@ const statusDialog = ref<boolean>(false)
       <WaveBuoyTable :loading="loading" :data-list="dataList" />
     </div>
     <div class="pagination-bar">
-      <el-button @click="resetToFirstPage" :disabled="loading">
-        首页
-      </el-button>
-      <el-text>
-        第 {{ pageIndex }} 页
-      </el-text>
-      <el-button @click="goNextPage" :disabled="isLastPage || loading">
-        下一页
-      </el-button>
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="total"
+        v-model:page-size="pageSize"
+        v-model:current-page="pageIndex"
+      />
     </div>
 
     <DeviceCommand
@@ -162,5 +160,44 @@ const statusDialog = ref<boolean>(false)
 .pagination-bar {
   margin-top: 5px;
   text-align: right;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.data-item {
+  display: flex;
+  font-size: 12px;
+  align-items: center;
+  line-height: 1.4;
+  padding: 0;
+}
+
+.info-icon {
+  color: #409eff;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.charging-panels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.charging {
+  border-radius: 2px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background-color: #67c23a;
+  color: white;
+}
+
+.not-charging {
+  border-radius: 2px;
+  padding: 0 4px;
+  background-color: #909399;
+  color: white;
 }
 </style>
