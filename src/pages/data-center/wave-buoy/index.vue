@@ -32,7 +32,7 @@ const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, da
   }
 })
 
-async function fsdf() {
+async function dataExport() {
   const data = await selectDateRange({ maxDays: 30 })
   if (data) {
     const url = buildExcelQuickExportUrl({
@@ -86,7 +86,7 @@ const statusDialog = ref<boolean>(false)
       <el-button style="margin: 0;" @click="statusDialog = true">
         状态
       </el-button>
-      <el-button style="margin: 0;" @click="fsdf">
+      <el-button style="margin: 0;" @click="dataExport">
         下载
       </el-button>
     </div>
