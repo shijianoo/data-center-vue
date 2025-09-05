@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import type { DateRange } from "@@/components/DateRangeDialog/index.vue"
 import type { BuoyData } from "./apis/type"
-import DateRangeDialog from "@@/components/DateRangeDialog/index.vue"
 import { ref, watch } from "vue"
+import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatDateTime } from "@/common/utils/datetime"
 import { buildDownloadUrl, downloadFile } from "@/common/utils/download"
@@ -17,7 +16,7 @@ function getStatusClass(status: string | undefined, inverse = false) {
 }
 
 const deviceModelId = "9285430f-7e05-40de-94d4-bcdb40335697"
-const { selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
+const { devicesLoading, selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)
 const buoyData = ref<BuoyData[]>([])
@@ -64,17 +63,24 @@ function handleCurrentChange(page: number) {
   fetchBuoyData()
 }
 
-const dateRangeVisible = ref(false)
-function handleDateRangeConfirm(dateRange: DateRange) {
+// 下载功能
+async function handleDownload() {
+  if (!selectedDevice.value) {
+    ElMessage.warning("请先选择设备")
+    return
+  }
+
+  const dateRange = await selectDateRange({ maxDays: 30 })
+  if (!dateRange) {
+    // 用户取消了选择
+    return
+  }
+
   console.log("开始日期", dateRange.startDate)
   console.log("结束日期", dateRange.endDate)
 
-  if (!selectedDevice.value) {
-    ElMessage.warning("请先选择设备")
-  }
-
   const params = {
-    deviceId: selectedDevice.value!.serialNumber!,
+    deviceId: selectedDevice.value.serialNumber!,
     start: dateRange.startDate,
     end: dateRange.endDate
   }
@@ -87,7 +93,7 @@ function handleDateRangeConfirm(dateRange: DateRange) {
 <template>
   <div class="app-container">
     <div class="search-wrapper">
-      <el-select style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
+      <el-select :loading="devicesLoading" style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
         <el-option
           v-for="option in serialNumberOptions"
           :key="option.id"
@@ -98,7 +104,7 @@ function handleDateRangeConfirm(dateRange: DateRange) {
       <el-button style="margin: 0;" type="primary" @click="fetchBuoyData">
         查询
       </el-button>
-      <el-button style="margin: 0;" type="primary" @click="dateRangeVisible = true">
+      <el-button style="margin: 0;" type="primary" @click="handleDownload">
         下载
       </el-button>
     </div>
@@ -490,11 +496,6 @@ function handleDateRangeConfirm(dateRange: DateRange) {
         @current-change="handleCurrentChange"
       />
     </div>
-    <DateRangeDialog
-      v-model:visible="dateRangeVisible"
-      @confirm="handleDateRangeConfirm"
-      :max-days="30"
-    />
   </div>
 </template>
 

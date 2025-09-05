@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router"
 import { getMyDevicesApi } from "../apis/device-access"
 
 export function useSerialNumberSelection(modelId: string) {
+  const devicesLoading = ref(false)
   const route = useRoute()
   const router = useRouter()
   const deviceModel = ref<DeviceModel>()
@@ -46,11 +47,14 @@ export function useSerialNumberSelection(modelId: string) {
   })
 
   onMounted(async () => {
+    devicesLoading.value = true
     const { data } = await getMyDevicesApi(modelId)
     devices.value = data
+    devicesLoading.value = false
   })
 
   return {
+    devicesLoading,
     serialNumberOptions,
     selectedDeviceId,
     selectedDevice,

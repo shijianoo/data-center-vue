@@ -3,13 +3,13 @@ import type { FormInstance, FormRules } from "element-plus"
 import dayjs from "dayjs"
 import timezone from "dayjs/plugin/timezone"
 import utc from "dayjs/plugin/utc"
-import { ref } from "vue"
+import zhCn from "element-plus/es/locale/lang/zh-cn" // Element Plus 中文包
+import { onMounted, ref } from "vue"
 
 const props = withDefaults(defineProps<Props>(), {
   maxDays: 60,
   useUtc: false
 })
-const emit = defineEmits<Emits>()
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
@@ -20,15 +20,14 @@ export interface DateRange {
 
 interface Props {
   maxDays?: number
-  useUtc?: boolean // true: 返回UTC时间，false: 返回本地时间
+  useUtc?: boolean
+  onResolve?: (result: DateRange | null) => void
+  onReject?: (error?: any) => void
 }
 
-interface Emits {
-  (e: "confirm", dateRange: DateRange): void
-}
-
-const visible = defineModel<boolean>("visible")
+const visible = ref(false)
 const formRef = ref<FormInstance>()
+const pendingResult = ref<DateRange | null>(null)
 
 const form = ref({
   startDate: new Date(),
@@ -43,6 +42,11 @@ const rules: FormRules = {
     { required: true, message: "请选择结束日期", trigger: "change" }
   ]
 }
+
+// 组件挂载后自动显示弹窗
+onMounted(() => {
+  visible.value = true
+})
 
 // 禁用开始日期
 function disabledStartDate(time: Date) {
@@ -81,7 +85,7 @@ async function handleConfirm() {
 
     // 使用 dayjs 处理日期验证
     const startDay = dayjs(form.value.startDate).startOf("day")
-    const endDay = dayjs(form.value.endDate).startOf("day")
+    const endDay = dayjs(form.value.endDate).endOf("day")
 
     // 验证开始日期不能等于结束日期
     if (startDay.isSame(endDay)) {
@@ -119,76 +123,98 @@ async function handleConfirm() {
       endDateString = endDay.tz(localTimezone).format("YYYY-MM-DDTHH:mm:ss.SSSZ")
     }
 
-    console.log(startDateString)
-    console.log(endDateString)
-    emit("confirm", {
+    const result: DateRange = {
       startDate: startDateString,
       endDate: endDateString
-    })
+    }
 
+    // 保存结果，等待弹窗关闭动画完成后再调用回调
+    pendingResult.value = result
     visible.value = false
   } catch (error) {
     console.error("表单验证失败:", error)
   }
 }
 
-function handleClose() {
+// 取消选择
+function handleCancel() {
+  // 保存null结果，等待弹窗关闭动画完成后再调用回调
+  pendingResult.value = null
   visible.value = false
-  // 重置表单数据
-  form.value.startDate = new Date()
-  form.value.endDate = new Date()
+}
+
+// 弹窗关闭事件（点击X或ESC键时触发）
+function handleClose() {
+  // 如果没有待处理的结果，说明是用户直接关闭弹窗
+  if (pendingResult.value === undefined) {
+    pendingResult.value = null
+  }
+}
+
+// 弹窗关闭动画完成后的事件
+function handleClosed() {
+  // 在关闭动画完成后调用回调函数
+  props.onResolve?.(pendingResult.value)
+  // 重置待处理结果
+  pendingResult.value = null
 }
 </script>
 
 <template>
-  <el-dialog
-    v-model="visible"
-    title="选择日期范围"
-    width="500px"
-    append-to-body
-  >
-    <div class="dialog-tip" v-if="props.maxDays">
-      <el-alert
-        :title="`最多可选择 ${props.maxDays} 天的日期范围`"
-        type="info"
-        :closable="false"
-        show-icon
-      />
-    </div>
-    <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
-      <el-form-item label="开始日期" prop="startDate">
-        <el-date-picker
-          v-model="form.startDate"
-          type="date"
-          placeholder="请选择开始日期"
-          format="YYYY-MM-DD"
-          style="width: 100%"
-          :disabled-date="disabledStartDate"
+  <el-config-provider :locale="zhCn">
+    <el-dialog
+      v-model="visible"
+      title="选择日期范围"
+      width="500px"
+      append-to-body
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      @close="handleClose"
+      @closed="handleClosed"
+    >
+      <div class="dialog-tip" v-if="props.maxDays">
+        <el-alert
+          :title="`最多可选择 ${props.maxDays} 天的日期范围`"
+          type="info"
+          :closable="false"
+          show-icon
         />
-      </el-form-item>
-      <el-form-item label="结束日期" prop="endDate">
-        <el-date-picker
-          v-model="form.endDate"
-          type="date"
-          placeholder="请选择结束日期"
-          format="YYYY-MM-DD"
-          style="width: 100%"
-          :disabled-date="disabledEndDate"
-        />
-      </el-form-item>
-    </el-form>
-
-    <template #footer>
-      <div>
-        <el-button @click="handleClose">
-          取消
-        </el-button>
-        <el-button type="primary" @click="handleConfirm">
-          确定
-        </el-button>
       </div>
-    </template>
-  </el-dialog>
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+        <el-form-item label="开始日期" prop="startDate">
+          <el-date-picker
+            v-model="form.startDate"
+            type="date"
+            placeholder="请选择开始日期"
+            format="YYYY-MM-DD"
+            style="width: 100%"
+            :disabled-date="disabledStartDate"
+          />
+        </el-form-item>
+        <el-form-item label="结束日期" prop="endDate">
+          <el-date-picker
+            v-model="form.endDate"
+            type="date"
+            placeholder="请选择结束日期"
+            format="YYYY-MM-DD"
+            style="width: 100%"
+            :disabled-date="disabledEndDate"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div>
+          <el-button @click="handleCancel">
+            取消
+          </el-button>
+          <el-button type="primary" @click="handleConfirm">
+            确定
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </el-config-provider>
 </template>
 
 <style scoped>

@@ -1,15 +1,18 @@
 <script lang="ts" setup>
 import ChannelDropdown from "@@/components/ChannelDropdown/index.vue"
+import { buildExcelQuickExportUrl } from "@/common/apis/data-export"
+import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useAnchorPagination } from "@/common/hooks/useAnchorPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
+import { downloadFile } from "@/common/utils/download"
 import DeviceCommand from "../components/DeviceCommand.vue"
 import DeviceProperty from "../components/DeviceProperty.vue"
 import DeviceStatus from "./components/DeviceStatus.vue"
 import WaveBuoyTable from "./components/WaveBuoyTable.vue"
 
 const deviceModelId = "622a9ac7-7df1-42ea-9a26-f0a2a7abec3c"
-const { selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
+const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const {
   dataList,
   isLastPage,
@@ -28,6 +31,20 @@ const { isReconnecting, isDisconnected } = useDeviceEvent(deviceModelId, (id, da
     ElMessage.success("设备已收到新数据")
   }
 })
+
+async function fsdf() {
+  const data = await selectDateRange({ maxDays: 30 })
+  if (data) {
+    const url = buildExcelQuickExportUrl({
+      model: selectedDevice.value!.modelNumber,
+      sn: selectedDevice.value!.serialNumber,
+      ch: uploadChannel.value,
+      start: data.startDate,
+      stop: data.endDate
+    })
+    downloadFile(url)
+  }
+}
 
 const controlDialog = ref<boolean>(false)
 const propertyDialog = ref<boolean>(false)
@@ -51,7 +68,7 @@ const statusDialog = ref<boolean>(false)
       show-icon
     />
     <div class="search-wrapper">
-      <el-select style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
+      <el-select :loading="devicesLoading" style="width: 300px;" v-model="selectedDeviceId" filterable placeholder="请选择设备">
         <el-option
           v-for="option in serialNumberOptions"
           :key="option.id"
@@ -68,6 +85,9 @@ const statusDialog = ref<boolean>(false)
       </el-button>
       <el-button style="margin: 0;" @click="statusDialog = true">
         状态
+      </el-button>
+      <el-button style="margin: 0;" @click="fsdf">
+        下载
       </el-button>
     </div>
     <div class="table-wrapper">
