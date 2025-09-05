@@ -29,9 +29,11 @@ const visible = ref(false)
 const formRef = ref<FormInstance>()
 const pendingResult = ref<DateRange | null>(null)
 
+// 确保初始化时开始日期和结束日期完全相同
+const initialDate = new Date()
 const form = ref({
-  startDate: new Date(),
-  endDate: new Date()
+  startDate: initialDate,
+  endDate: new Date(initialDate.getTime()) // 创建相同时间戳的新Date对象
 })
 
 const rules: FormRules = {
@@ -51,7 +53,10 @@ onMounted(() => {
 // 禁用开始日期
 function disabledStartDate(time: Date) {
   if (form.value.endDate) {
-    return time.getTime() >= form.value.endDate.getTime()
+    // 使用日期的开始时间进行比较，忽略时分秒
+    const endDateStart = dayjs(form.value.endDate).startOf("day")
+    const timeStart = dayjs(time).startOf("day")
+    return timeStart.isAfter(endDateStart)
   }
   return false
 }
@@ -59,18 +64,19 @@ function disabledStartDate(time: Date) {
 // 禁用结束日期
 function disabledEndDate(time: Date) {
   if (form.value.startDate) {
-    const startTime = form.value.startDate.getTime()
-    const currentTime = time.getTime()
+    // 使用日期的开始时间进行比较，忽略时分秒
+    const startDateStart = dayjs(form.value.startDate).startOf("day")
+    const timeStart = dayjs(time).startOf("day")
 
-    // 结束日期不能早于或等于开始日期
-    if (currentTime <= startTime) {
+    // 结束日期不能早于开始日期（允许同一天）
+    if (timeStart.isBefore(startDateStart)) {
       return true
     }
 
     // 如果设置了最大天数限制
     if (props.maxDays) {
-      const maxTime = startTime + (props.maxDays - 1) * 24 * 60 * 60 * 1000
-      return currentTime > maxTime
+      const maxDate = startDateStart.add(props.maxDays - 1, "day")
+      return timeStart.isAfter(maxDate)
     }
   }
   return false
@@ -86,12 +92,6 @@ async function handleConfirm() {
     // 使用 dayjs 处理日期验证
     const startDay = dayjs(form.value.startDate).startOf("day")
     const endDay = dayjs(form.value.endDate).endOf("day")
-
-    // 验证开始日期不能等于结束日期
-    if (startDay.isSame(endDay)) {
-      ElMessage.error("开始日期不能与结束日期相同")
-      return
-    }
 
     // 验证开始日期不能晚于结束日期
     if (startDay.isAfter(endDay)) {
