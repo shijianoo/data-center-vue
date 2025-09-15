@@ -8,6 +8,7 @@ import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
 import { getCaptchaApi, loginApi } from "../../common/apis/auth"
 
+const route = useRoute()
 const router = useRouter()
 
 const appStore = useAppStore()
@@ -55,7 +56,7 @@ function handleLogin() {
     loginApi(loginFormData).then(({ data }) => {
       userStore.setToken(data.accessToken)
       userStore.setRefreshToken(data.refreshToken)
-      router.push("/")
+      router.push(route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/")
     }).catch(() => {
       createCode()
       loginFormData.password = ""
