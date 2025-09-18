@@ -78,6 +78,9 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
             // 先添加子菜单数组
             if (!route.children) route.children = []
             route.children.unshift(indexRoute)
+            route.redirect = route.path.endsWith("/")
+              ? route.path + indexRoute.path
+              : `${route.path}/${indexRoute.path}`
           }
         }
       } else {
@@ -103,7 +106,7 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
 
     // 递归处理子菜单
     if (hasChildren) {
-      route.children = transformMenuToRoutes(validChildren)
+      route.children.push(...transformMenuToRoutes(validChildren))
 
       // 为只有一个子菜单的菜单设置重定向
       if (route.children.length === 1 && !route.redirect) {
