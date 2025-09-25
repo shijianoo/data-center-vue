@@ -47,6 +47,23 @@ export interface PageListQueryParams {
   size: number
 }
 
+export interface DeviceFieldDataQueryParams {
+  /** 设备型号 */
+  modelNumber: string
+  /** 设备序列号 */
+  serialNumber: string
+  /** 查询字段 */
+  field: string
+  /** 开始时间 */
+  start: string
+  /** 结束时间 */
+  end: string
+  /** 时间窗口 */
+  window?: string
+  /** 聚合方式 */
+  agg?: string
+}
+
 export interface PagedResult {
   total: number
   items: any[]

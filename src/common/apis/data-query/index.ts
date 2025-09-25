@@ -1,5 +1,5 @@
 import type { QueryResult } from "../type"
-import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceStatusQueryParams, IridiumData, IridiumRawQueryParams, PagedResultResponse, PageListQueryParams } from "./type"
+import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, IridiumData, IridiumRawQueryParams, PagedResultResponse, PageListQueryParams } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 查询设备数据 */
@@ -42,6 +42,15 @@ export function queryIridiumData(params: IridiumRawQueryParams) {
 export function querDeviceDataPageList(params: PageListQueryParams) {
   return dataCenterRequest<PagedResultResponse>({
     url: "query/device-page-data",
+    method: "get",
+    params
+  })
+}
+
+/** 查询设备字段数据 */
+export function queryDeviceFieldData(params: DeviceFieldDataQueryParams) {
+  return dataCenterRequest<ApiResponseData<QueryResult<any>>>({
+    url: "query/device-field-data",
     method: "get",
     params
   })

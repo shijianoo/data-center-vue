@@ -48,9 +48,15 @@ export function useSerialNumberSelection(modelId: string) {
 
   onMounted(async () => {
     devicesLoading.value = true
-    const { data } = await getMyDevicesApi(modelId)
-    devices.value = data
-    devicesLoading.value = false
+    try {
+      const { data } = await getMyDevicesApi(modelId)
+      devices.value = data
+    } catch {
+      devices.value = []
+      ElMessage.error("获取设备列表失败")
+    } finally {
+      devicesLoading.value = false
+    }
   })
 
   return {
@@ -58,6 +64,7 @@ export function useSerialNumberSelection(modelId: string) {
     serialNumberOptions,
     selectedDeviceId,
     selectedDevice,
-    deviceModel
+    deviceModel,
+    devices
   }
 }
