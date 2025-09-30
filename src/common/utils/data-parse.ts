@@ -28,3 +28,13 @@ export function parseLeakStatus(rawValue: number): string {
     default: return "未知"
   }
 }
+
+export function formatNumber(rawValue: number | any, precision: number): string {
+  if (rawValue === null || rawValue === undefined) {
+    return ""
+  }
+  if (typeof rawValue === "number") {
+    return rawValue.toFixed(precision)
+  }
+  return rawValue.toString()
+}

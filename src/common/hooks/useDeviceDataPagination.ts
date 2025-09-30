@@ -31,6 +31,8 @@ export function useDeviceDataPagination(selectedDevice: Ref<Device | undefined>)
       dataList.value = data.items
       ElMessage.success("查询完成")
     } catch (error) {
+      dataList.value = []
+      total.value = 0
       console.log(error)
       ElMessage.error("查询失败")
     } finally {
