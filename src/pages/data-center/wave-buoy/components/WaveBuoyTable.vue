@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { InfoFilled } from "@element-plus/icons-vue"
-import { parseLatHem, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
+import { formatNumber, parseLatHem, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 
 interface Props {
@@ -37,10 +37,10 @@ function getChargingPanels(status: number) {
           上传通道：{{ parseUploadChannel(scope.row.upld_ch) }}
         </div>
         <div class="data-item">
-          经度：{{ scope.row.lon.toFixed(4) }} ° {{ parseLonHem(scope.row.lon_hem) }}
+          经度：{{ formatNumber(scope.row.lon, 4) }} ° {{ parseLonHem(scope.row.lon_hem) }}
         </div>
         <div class="data-item">
-          纬度：{{ scope.row.lat.toFixed(4) }} ° {{ parseLatHem(scope.row.lat_hem) }}
+          纬度：{{ formatNumber(scope.row.lat, 4) }} ° {{ parseLatHem(scope.row.lat_hem) }}
         </div>
       </template>
     </el-table-column>
@@ -85,7 +85,7 @@ function getChargingPanels(status: number) {
           漏水状态：{{ parseLeakStatus(scope.row.leak_stat) }}
         </div>
         <div class="data-item">
-          环境湿度：{{ scope.row.rh.toFixed(3) }} g/m³
+          环境湿度：{{ formatNumber(scope.row.rh, 3) }} g/m³
         </div>
         <div class="data-item">
           姿态X：{{ scope.row.ang_x }} °
@@ -198,10 +198,10 @@ function getChargingPanels(status: number) {
           平均波向：{{ scope.row.dmean }} °
         </div>
         <div class="data-item">
-          风浪涌浪分离频率：{{ scope.row.sep_f.toFixed(3) }} Hz
+          风浪涌浪分离频率：{{ formatNumber(scope.row.sep_f, 3) }} Hz
         </div>
         <div class="data-item">
-          涌浪谱的有效波高：{{ scope.row.sw_hm.toFixed(3) }} m
+          涌浪谱的有效波高：{{ formatNumber(scope.row.sw_hm, 3) }} m
         </div>
       </template>
     </el-table-column>
@@ -215,10 +215,10 @@ function getChargingPanels(status: number) {
           反演风向：{{ scope.row.wind_dir }} °
         </div>
         <div class="data-item">
-          气压：{{ scope.row.press.toFixed(3) }} hPa
+          气压：{{ formatNumber(scope.row.press, 3) }} hPa
         </div>
         <div class="data-item">
-          温度：{{ scope.row.temp.toFixed(4) }} °C
+          温度：{{ formatNumber(scope.row.temp, 4) }} °C
         </div>
       </template>
     </el-table-column>
