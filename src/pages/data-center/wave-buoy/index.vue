@@ -77,7 +77,7 @@ const selectedDevice = ref<Device | null>(null)
         <div class="px-3 py-2 border-b border-gray-100">
           设备位置
         </div>
-        <div class="flex-1 px-3 pb-3">
+        <div class="flex-1 px-3 pb-3" v-loading="devicesLoading">
           <DeviceLocation :location-infos="locationInfos" />
         </div>
       </div>

@@ -34,6 +34,9 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
   menuTree.forEach((menu) => {
     if (menu.type === 2) return // 跳过按钮类型
 
+    if (!menu.routePath?.startsWith("/")) {
+      menu.routePath = `/${menu.routePath}`
+    }
     // 判断是否有子菜单（且子菜单不全为按钮类型）
     const validChildren = menu.children?.filter(child => child.type !== 2) || []
     const hasChildren = validChildren.length > 0
@@ -104,6 +107,10 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
             const NotFound = () => import("@/pages/error/404.vue")
             route.component = NotFound
           }
+        } else {
+          console.log(`${menu.name} 组件路径为空`)
+          const NotFound = () => import("@/pages/error/404.vue")
+          route.component = NotFound
         }
       }
     } else if (menu.type === 1) { // 外链菜单
