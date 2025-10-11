@@ -15,7 +15,8 @@ export const staticSvgNames = [
   "roles-mgr",
   "search",
   "sys-setting",
-  "users-mgr"
+  "users-mgr",
+  "wave-buoy"
 ] as const
 
 export type StaticSvgName = typeof staticSvgNames[number]
