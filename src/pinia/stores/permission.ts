@@ -51,14 +51,17 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
     } as RouteRecordRaw
     // 设置组件
     if (menu.type === 0) { // 页面菜单
+      console.log(`加载页面菜单 ${menu.name} `)
       if (hasChildren) {
+        console.log(`${menu.name} 有子菜单`)
         // 有子菜单的菜单使用Layouts组件作为布局容器
         route.component = Layouts
 
         // 如果菜单本身有组件路径，则在子菜单中添加一个与父菜单同名但不带子菜单的菜单项
         if (menu.component && menu.component.trim() !== "") {
-        // 处理组件路径，确保无论前面有没有/都能正确拼接
-          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}/index.vue`
+          console.log(`${menu.name} 有组件路径: ${menu.component}`)
+          // 处理组件路径，确保无论前面有没有/都能正确拼接
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {
@@ -82,11 +85,15 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
               ? route.path + indexRoute.path
               : `${route.path}/${indexRoute.path}`
           }
+        } else {
+          console.log(`${menu.name} 没有组件路径`)
         }
       } else {
         // 叶子节点加载实际组件
+        console.log(`${menu.name} 叶子节点`)
         if (menu.component && menu.component.trim() !== "") {
-          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}/index.vue`
+          console.log(`${menu.name} 有组件路径: ${menu.component}`)
+          const componentPath = `@/pages/${menu.component.startsWith("/") ? menu.component.substring(1) : menu.component}`
           const component = viewsModules[componentPath.replace("@/", "/src/")]
 
           if (component && typeof component === "function") {
@@ -106,6 +113,7 @@ function transformMenuToRoutes(menuTree: MenuTree[]): RouteRecordRaw[] {
 
     // 递归处理子菜单
     if (hasChildren) {
+      if (!route.children) route.children = []
       route.children.push(...transformMenuToRoutes(validChildren))
 
       // 为只有一个子菜单的菜单设置重定向

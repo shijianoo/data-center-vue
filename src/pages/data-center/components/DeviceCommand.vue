@@ -33,9 +33,6 @@ function handleDialogOpen() {
 }
 
 async function fetchCommandData() {
-  const { data } = await getDeviceCommandsApi(device.value!.id)
-  commandData.value = data
-
   loading.value = true
   try {
     const { data } = await getDeviceCommandsApi(device.value!.id)
@@ -163,7 +160,7 @@ async function upgradeStatusDialogOpened() {
       @open="handleDialogOpen"
       @opened="handleOpened"
       @closed="handleClosed"
-      title="设备控制"
+      :title="`设备控制 - ${device?.serialNumber}`"
     >
       <div>
         <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
@@ -201,7 +198,7 @@ async function upgradeStatusDialogOpened() {
         </div>
         <el-divider />
         <div>
-          <el-table :data="commandData">
+          <el-table :data="commandData" v-loading="loading">
             <el-table-column prop="command" label="命令" align="center" />
             <el-table-column prop="isSentToDevice" label="状态" align="center">
               <template #default="scope">

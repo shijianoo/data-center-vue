@@ -55,3 +55,15 @@ export function queryDeviceFieldData(params: DeviceFieldDataQueryParams) {
     params
   })
 }
+
+/** 查询设备最新数据 */
+export function queryDeviceLatestData(modelNumber: string, serialNumber: string) {
+  return dataCenterRequest<ApiResponseData<any>>({
+    url: "query/device-latest-data",
+    method: "get",
+    params: {
+      modelNumber,
+      serialNumber
+    }
+  })
+}

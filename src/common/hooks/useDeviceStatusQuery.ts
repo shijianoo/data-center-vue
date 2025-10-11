@@ -52,6 +52,10 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
     await fetchData()
   }
 
+  watch([device], ([sd]) => {
+    if (sd) resetToFirstPage()
+  }, { immediate: true })
+
   return {
     dataList,
     loading,

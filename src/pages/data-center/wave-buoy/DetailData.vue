@@ -6,10 +6,11 @@ import { useDeviceDataPagination } from "@/common/hooks/useDeviceDataPagination"
 import { useDeviceEvent } from "@/common/hooks/useDeviceEvent"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { downloadFile } from "@/common/utils/download"
-import DeviceCommand from "@/pages/data-center/components/DeviceCommand.vue"
-import DeviceProperty from "@/pages/data-center/components/DeviceProperty.vue"
-import DeviceStatus from "@/pages/data-center/wave-buoy/components/DeviceStatus.vue"
 import WaveBuoyTable from "@/pages/data-center/wave-buoy/components/WaveBuoyTable.vue"
+
+defineOptions({
+  name: "WaveBuoyDetailData"
+})
 
 const deviceModelId = "622a9ac7-7df1-42ea-9a26-f0a2a7abec3c"
 const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
@@ -45,10 +46,6 @@ async function dataExport() {
     downloadFile(url)
   }
 }
-
-const controlDialog = ref<boolean>(false)
-const propertyDialog = ref<boolean>(false)
-const statusDialog = ref<boolean>(false)
 </script>
 
 <template>
@@ -77,15 +74,6 @@ const statusDialog = ref<boolean>(false)
         />
       </el-select>
       <ChannelDropdown @click="fetchFirstPageData" v-model="uploadChannel" />
-      <el-button style="margin: 0;" @click="controlDialog = true">
-        控制
-      </el-button>
-      <el-button style="margin: 0;" @click="propertyDialog = true">
-        属性
-      </el-button>
-      <el-button style="margin: 0;" @click="statusDialog = true">
-        状态
-      </el-button>
       <el-button style="margin: 0;" @click="dataExport">
         下载
       </el-button>
@@ -102,17 +90,6 @@ const statusDialog = ref<boolean>(false)
         v-model:current-page="pageIndex"
       />
     </div>
-
-    <DeviceCommand
-      v-model:visible="controlDialog" v-model:device="selectedDevice"
-    />
-    <DeviceProperty
-      v-model:visible="propertyDialog" v-model:device-id="selectedDeviceId"
-    />
-    <DeviceStatus
-      v-model:visible="statusDialog"
-      v-model:device="selectedDevice"
-    />
   </div>
 </template>
 

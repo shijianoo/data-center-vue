@@ -1,4 +1,4 @@
-import type { CreateOrUpdatePermission, PermissionTreeListResponseData } from "./type"
+import type { CreateOrUpdatePermission, PermissionListResponseData, PermissionTreeListResponseData } from "./type"
 import { authCenterRequest } from "@/http/axios"
 
 /** 创建权限 */
@@ -31,6 +31,14 @@ export function deletePermissionApi(id: string) {
 export function getPermissionTreeApi() {
   return authCenterRequest<PermissionTreeListResponseData>({
     url: "/permissions/tree",
+    method: "get"
+  })
+}
+
+// 获取当前用户菜单权限树
+export function getCurrentPermissionsApi() {
+  return authCenterRequest<PermissionListResponseData>({
+    url: "/permissions/me",
     method: "get"
   })
 }

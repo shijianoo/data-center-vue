@@ -2,6 +2,7 @@ import type { MenuTree } from "@/common/apis/menus/type"
 import { getCurrentUserApi } from "@@/apis/users"
 import { setRefreshToken as _setRefreshToken, setToken as _setToken, getRefreshToken, getToken, removeRefreshToken, removeToken } from "@@/utils/cache/cookies"
 import { getCurrentMenusApi } from "@/common/apis/menus"
+import { getCurrentPermissionsApi } from "@/common/apis/permissions"
 import { pinia } from "@/pinia"
 import { resetRouter } from "@/router"
 import { routerConfig } from "@/router/config"
@@ -17,6 +18,8 @@ export const useUserStore = defineStore("user", () => {
   const username = ref<string>("")
 
   const menus = ref<MenuTree[]>([])
+
+  const permissions = ref<string[]>([])
 
   const tagsViewStore = useTagsViewStore()
 
@@ -42,6 +45,10 @@ export const useUserStore = defineStore("user", () => {
     const menuData = await getCurrentMenusApi()
     menus.value = menuData.data.items || []
     console.log("用户菜单:", menus.value)
+
+    const permissionData = await getCurrentPermissionsApi()
+    permissions.value = (permissionData.data.items || []).map(item => item.code)
+    console.log("用户权限:", permissions.value)
   }
 
   // 模拟角色变化
@@ -81,7 +88,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { token, roles, menus, username, setToken, setRefreshToken, getInfo, changeRoles, logout, resetToken }
+  return { token, roles, permissions, menus, username, setToken, setRefreshToken, getInfo, changeRoles, logout, resetToken }
 })
 
 /**
