@@ -43,8 +43,8 @@ async function initMap() {
     // 创建地图实例
     map = new AMap.Map("container", {
       viewMode: "3D",
-      zoom: 11,
-      center: [116.397428, 39.90923], // 默认中心点（北京）
+      zoom: 0,
+      center: [0, 0], // 默认中心点（北京）
       mapStyle: "amap://styles/normal"
     })
 
@@ -79,10 +79,10 @@ function renderMarkers() {
       map,
       position: [locationInfo.lon, locationInfo.lat]
     })
-
     marker.setLabel({
-      content: locationInfo.id,
-      direction: "top"
+      direction: "right",
+      offset: new AMap.Pixel(5, 0), // 设置文本标注偏移量
+      content: `<div class='info'>${locationInfo.id}</div>` // 设置文本标注内容
     })
 
     // 构建信息窗体内容
@@ -136,7 +136,7 @@ function renderMarkers() {
         isCustom: true,
         closeWhenClickMap: true,
         content: buildContent(locationInfo),
-        offset: new AMap.Pixel(0, -31)
+        offset: new AMap.Pixel(0, -40)
       })
       infoWindow.open(map, marker.getPosition())
     })
@@ -145,7 +145,7 @@ function renderMarkers() {
   }
 
   markers.value = newMarkers
-  map.setFitView()
+  map.setFitView(null, false, [150, 60, 100, 60])
 }
 
 /** 监听位置信息变化 */
@@ -195,7 +195,6 @@ onUnmounted(() => {
 .info-window-content {
   width: 280px;
   background: #fff;
-  border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .info-header {
@@ -281,5 +280,25 @@ onUnmounted(() => {
       }
     }
   }
+}
+
+.amap-icon img {
+  width: 25px;
+  height: 34px;
+}
+
+.amap-marker-label {
+  height: 26px;
+  border: 0;
+  padding: 0 10px;
+  text-align: center;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.info {
+  line-height: 26px;
 }
 </style>

@@ -68,7 +68,7 @@ const selectedDevice = ref<Device | null>(null)
       <div class="bg-white min-h-90 px-3 pt-1 pb-2">
         <el-tabs class="h-full" v-loading="devicesLoading">
           <el-tab-pane :lazy="true" class="h-full" :label="device.serialNumber" v-for="device in devices" :key="device.id">
-            <FieldDataChart :default-days="1" :windows="['1m', '1h']" default-window="1m" :device="device" :fields="fields" />
+            <FieldDataChart :default-days="7" :windows="['1m', '1h']" default-window="1m" :device="device" :fields="fields" />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -94,7 +94,7 @@ const selectedDevice = ref<Device | null>(null)
               }}
             </template>
           </el-table-column>
-          <el-table-column label="最近上报时间" min-width="120" align="center">
+          <el-table-column label="最近上报时间" min-width="160" align="center">
             <template #default="scope">
               {{ formatHybridAgo(getLatestData(scope.row.serialNumber).time) ?? '-' }}
             </template>
@@ -106,18 +106,18 @@ const selectedDevice = ref<Device | null>(null)
               }}
             </template>
           </el-table-column>
-          <el-table-column label="信号强度" min-width="80" align="center">
+          <el-table-column label="信号强度(CSQ)" min-width="120" align="center">
             <template #default="scope">
               {{ getLatestData(scope.row.serialNumber).csq }}
             </template>
           </el-table-column>
-          <el-table-column label="电池电量" min-width="80">
+          <el-table-column label="电池电量(V)" min-width="100">
             <template #default="scope">
               {{ getLatestData(scope.row.serialNumber).ubatt / 1000 }}
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="200" v-permission="['CTRL']" fixed="right" align="center">
+          <el-table-column label="操作" v-permission="['CTRL']" align="center">
             <template #default="scope">
               <el-button @click="() => { controlDialog = true; selectedDevice = scope.row }" type="primary" text bg size="small">
                 控制
