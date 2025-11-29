@@ -63,7 +63,7 @@ watch(selectedDevice, () => {
           :value="option.id"
         />
       </el-select>
-      <el-button style="margin: 0;" type="primary">
+      <el-button style="margin: 0;" type="primary" @click="fetchCTChain">
         查询
       </el-button>
     </div>
@@ -91,7 +91,7 @@ watch(selectedDevice, () => {
               主板温度：{{ formatNumber(scope.row.tempMb, 4) }}
             </div>
             <div class="data-item">
-              漏水状态：{{ parseLeakStatus(scope.row.from4G) }}
+              漏水状态：{{ parseLeakStatus(scope.row.leakStatus) }}
             </div>
             <div class="data-item">
               4G信号强度：{{ scope.row.csq }}

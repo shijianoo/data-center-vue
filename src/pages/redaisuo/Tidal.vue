@@ -63,7 +63,7 @@ watch(selectedDevice, () => {
           :value="option.id"
         />
       </el-select>
-      <el-button style="margin: 0;" type="primary">
+      <el-button style="margin: 0;" type="primary" @click="fetchTidal">
         查询
       </el-button>
     </div>
