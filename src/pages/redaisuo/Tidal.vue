@@ -108,7 +108,7 @@ watch(selectedDevice, () => {
           min-width="100"
         >
           <template #default="scope">
-            <span>{{ formatNumber(scope.row.ctdPres, 4) }}</span>
+            <span>{{ formatNumber(scope.row.ctdPres, 2) }}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -144,7 +144,7 @@ watch(selectedDevice, () => {
           min-width="100"
         >
           <template #default="scope">
-            <span>{{ formatNumber(scope.row.wtPres, 4) }}</span>
+            <span>{{ formatNumber(scope.row.wtPres, 2) }}</span>
           </template>
         </el-table-column>
         <el-table-column

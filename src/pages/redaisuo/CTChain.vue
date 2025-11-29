@@ -133,7 +133,7 @@ watch(selectedDevice, () => {
               温度：{{ formatNumber(scope.row.ctD1Temp, 4) }} ℃
             </div>
             <div class="data-item">
-              深度：{{ formatNumber(scope.row.ctD1Pres, 4) }} dbar
+              深度：{{ formatNumber(scope.row.ctD1Pres, 2) }} dbar
             </div>
             <div class="data-item">
               电导率：{{ formatNumber(scope.row.ctD1Cond, 4) }} mS/cm
@@ -149,7 +149,7 @@ watch(selectedDevice, () => {
               温度：{{ formatNumber(scope.row.ctD2Temp, 4) }} ℃
             </div>
             <div class="data-item">
-              深度：{{ formatNumber(scope.row.ctD2Pres, 4) }} dbar
+              深度：{{ formatNumber(scope.row.ctD2Pres, 2) }} dbar
             </div>
             <div class="data-item">
               电导率：{{ formatNumber(scope.row.ctD2Cond, 4) }} mS/cm
@@ -165,7 +165,7 @@ watch(selectedDevice, () => {
               温度：{{ formatNumber(scope.row.ctD3Temp, 4) }} ℃
             </div>
             <div class="data-item">
-              深度：{{ formatNumber(scope.row.ctD3Pres, 4) }} dbar
+              深度：{{ formatNumber(scope.row.ctD3Pres, 2) }} dbar
             </div>
             <div class="data-item">
               电导率：{{ formatNumber(scope.row.ctD3Cond, 4) }} mS/cm
@@ -181,7 +181,7 @@ watch(selectedDevice, () => {
               温度：{{ formatNumber(scope.row.ctD4Temp, 4) }} ℃
             </div>
             <div class="data-item">
-              深度：{{ formatNumber(scope.row.ctD4Pres, 4) }} dbar
+              深度：{{ formatNumber(scope.row.ctD4Pres, 2) }} dbar
             </div>
             <div class="data-item">
               电导率：{{ formatNumber(scope.row.ctD4Cond, 4) }} mS/cm
@@ -197,7 +197,7 @@ watch(selectedDevice, () => {
               温度：{{ formatNumber(scope.row.ctD5Temp, 4) }} ℃
             </div>
             <div class="data-item">
-              深度：{{ formatNumber(scope.row.ctD5Pres, 4) }} dbar
+              深度：{{ formatNumber(scope.row.ctD5Pres, 2) }} dbar
             </div>
             <div class="data-item">
               电导率：{{ formatNumber(scope.row.ctD5Cond, 4) }} mS/cm
