@@ -88,7 +88,7 @@ watch(selectedDevice, () => {
               电池电压：{{ parseUbatt(scope.row.ubatt) }}
             </div>
             <div class="data-item">
-              主板温度：{{ formatNumber(scope.row.tempMb, 4) }}
+              主板温度：{{ scope.row.tempMb }}
             </div>
             <div class="data-item">
               漏水状态：{{ parseLeakStatus(scope.row.leakStatus) }}
@@ -117,13 +117,13 @@ watch(selectedDevice, () => {
         <el-table-column label="姿态" min-width="130">
           <template #default="scope">
             <div class="data-item">
-              X轴角度：{{ formatNumber(scope.row.angX, 3) }}
+              X轴角度：{{ scope.row.angX }}
             </div>
             <div class="data-item">
-              Y轴角度：{{ formatNumber(scope.row.angY, 3) }}
+              Y轴角度：{{ scope.row.angY }}
             </div>
             <div class="data-item">
-              Z轴角度：{{ formatNumber(scope.row.angZ, 3) }}
+              Z轴角度：{{ scope.row.angZ }}
             </div>
           </template>
         </el-table-column>
