@@ -2,6 +2,7 @@
 import AMapLoader from "@amap/amap-jsapi-loader"
 import { ElMessage } from "element-plus"
 import { onMounted, onUnmounted, shallowRef, watch } from "vue"
+import { wgs84togcj02 } from "@/common/utils/lnglat-convert"
 
 const {
   locationInfos = []
@@ -77,7 +78,7 @@ function renderMarkers() {
   for (const locationInfo of locationInfos) {
     const marker = new AMap.Marker({
       map,
-      position: [locationInfo.lon, locationInfo.lat]
+      position: wgs84togcj02(locationInfo.lon, locationInfo.lat)
     })
     marker.setLabel({
       direction: "right",
