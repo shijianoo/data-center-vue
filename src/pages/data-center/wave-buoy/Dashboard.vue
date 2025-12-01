@@ -84,7 +84,7 @@ const selectedDevice = ref<Device | null>(null)
     </div>
     <div class="bg-white flex-1">
       <div class="p-2 min-h-88">
-        <el-table style="height: 100%;" v-loading="devicesLoading" :data="devices">
+        <el-table :style="{ height: '100%' }" v-loading="devicesLoading" :data="devices">
           <el-table-column label="序列号" min-width="200" prop="serialNumber" align="center" />
           <el-table-column label="备注" min-width="200" prop="description" align="center" />
           <el-table-column label="上传周期(分钟)" min-width="120" align="center">
