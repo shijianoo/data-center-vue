@@ -4,7 +4,7 @@ import { formatNumber, parseLatHem, parseLeakStatus, parseLonHem, parseUbatt } f
 import { formatDateTime } from "@/common/utils/datetime"
 import { getCTChain } from "./apis"
 
-const deviceModelId = "a44e70f1-ab1a-4c02-9482-855863acad42"
+const deviceModelId = "635c8aa4-bc42-430d-83cc-0ee06576cea4"
 const { devicesLoading, selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const pageIndex = ref(1)
