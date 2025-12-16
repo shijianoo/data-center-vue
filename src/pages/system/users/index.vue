@@ -4,6 +4,7 @@ import type { User, UserForm } from "@/common/apis/users/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
 import { createUserApi, deleteUserApi, getAllUsersApi, resetPasswordApi, updateUserApi } from "@/common/apis/users"
+import { useTenantStore } from "@/pinia/stores/tenant"
 import AssignDeviceDialog from "./components/AssignDeviceDialog.vue"
 import AssignRoleDialog from "./components/AssignRoleDialog.vue"
 
@@ -11,20 +12,16 @@ defineOptions({
   name: "Users"
 })
 
+const tenantStore = useTenantStore()
+const currentSelectedTenantId = ref("")
 const loading = ref(false)
 
 // #region 增 + 改 表单逻辑
 const defaultForm: UserForm = {
   id: undefined,
   userName: "",
-  password: "",
-  nickName: "",
-  email: "",
-  phoneNumber: "",
-  description: "",
   isActive: true,
-  isAdmin: false,
-  extra: ""
+  sortOrder: 0
 }
 
 const dialogVisible = ref(false)
@@ -43,7 +40,7 @@ const formRules: FormRules<UserForm> = {
   email: [
     { type: "email", message: "请输入正确的邮箱格式", trigger: "blur" }
   ],
-  phoneNumber: [
+  phone: [
     { pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号格式", trigger: "blur" }
   ]
 }
@@ -96,12 +93,12 @@ function handleUpdate(row: User) {
     id: row.id,
     userName: row.userName,
     nickName: row.nickName,
+    realName: row.realName,
     email: row.email,
-    phoneNumber: row.phoneNumber,
+    phone: row.phone,
     description: row.description,
     isActive: row.isActive,
-    isAdmin: row.isAdmin,
-    extra: row.extra
+    sortOrder: row.sortOrder
   }
 }
 // #endregion
@@ -111,9 +108,9 @@ const userData = ref<User[]>([])
 
 function getUserData() {
   loading.value = true
-  getAllUsersApi().then(({ data }) => {
-    console.log("获取用户数据", data.items)
-    userData.value = data.items
+  getAllUsersApi(currentSelectedTenantId.value).then(({ data }) => {
+    console.log("获取用户数据", data)
+    userData.value = data
   }).catch(() => {
     userData.value = []
   }).finally(() => {
@@ -155,14 +152,18 @@ function handleAssignRoles(row: User) {
   assignRoleDialogVisible.value = true
 }
 
-function handleAssignDevice(row: User) {
-  currentUserId.value = row.id
-  currentUserName.value = row.userName
-  assignDeviceDialogVisible.value = true
-}
+// function handleAssignDevice(row: User) {
+//   currentUserId.value = row.id
+//   currentUserName.value = row.userName
+//   assignDeviceDialogVisible.value = true
+// }
 // #endregion
 
 onMounted(() => {
+  getUserData()
+})
+
+watch(() => currentSelectedTenantId.value, () => {
   getUserData()
 })
 </script>
@@ -175,6 +176,9 @@ onMounted(() => {
           <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">
             新增用户
           </el-button>
+          <el-select :style="{ marginLeft: '10px' }" clearable v-model="currentSelectedTenantId" placeholder="请选择租户" style="width: 200px;">
+            <el-option v-for="tenant in tenantStore.tenants" :key="tenant.id" :label="tenant.name" :value="tenant.id" />
+          </el-select>
         </div>
         <div>
           <el-tooltip content="刷新当前页">
@@ -184,31 +188,40 @@ onMounted(() => {
       </div>
       <div class="table-wrapper">
         <el-table :data="userData">
-          <el-table-column prop="userName" label="用户名称" align="center" min-width="120px" />
-          <el-table-column prop="nickName" label="用户昵称" align="center" min-width="120px" />
-          <el-table-column prop="description" label="描述" align="center" />
-          <el-table-column prop="isActive" label="状态" align="center" width="80px">
+          <el-table-column prop="userName" label="用户名称" align="left" width="140" />
+          <el-table-column prop="nickName" label="用户昵称" align="left" width="140" />
+          <el-table-column prop="realName" label="真实姓名" align="left" width="140" />
+          <el-table-column prop="isActive" label="状态" align="center" width="80">
             <template #default="scope">
-              <el-tag :type="scope.row.isActive ? 'success' : 'info'" width="80px">
-                {{ scope.row.isActive ? '启用' : '禁用' }}
+              <el-tag v-if="scope.row.isActive" type="success" effect="plain">
+                启用
+              </el-tag>
+              <el-tag v-else type="danger" effect="dark">
+                禁用
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="isAdmin" label="管理员" align="center" width="80px">
+          <el-table-column prop="description" label="描述" align="left" />
+
+          <el-table-column prop="isSuperAdmin" label="超级管理员" align="center" width="100px">
             <template #default="scope">
-              <el-tag :type="scope.row.isAdmin ? 'warning' : 'info'">
-                {{ scope.row.isAdmin ? '是' : '否' }}
+              <el-tag :type="scope.row.isSuperAdmin ? 'warning' : 'info'">
+                {{ scope.row.isSuperAdmin ? '是' : '否' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="isSystem" label="系统用户" align="center" width="80px">
+          <el-table-column prop="sortOrder" label="排序" align="center" width="80" />
+          <el-table-column prop="isSystem" label="系统用户" align="center" width="80">
             <template #default="scope">
-              <el-tag :type="scope.row.isSystem ? 'danger' : 'info'">
-                {{ scope.row.isSystem ? '是' : '否' }}
+              <el-tag v-if="scope.row.isSystem" type="warning" effect="dark">
+                是
+              </el-tag>
+              <el-tag v-else type="success" effect="plain">
+                否
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="260" align="center">
+          <el-table-column fixed="right" label="操作" width="220" align="center">
             <template #default="scope">
               <el-dropdown trigger="click">
                 <el-button type="primary" text bg size="small">
@@ -222,9 +235,9 @@ onMounted(() => {
                     <el-dropdown-item @click="handleAssignRoles(scope.row)">
                       分配角色
                     </el-dropdown-item>
-                    <el-dropdown-item @click="handleAssignDevice(scope.row)">
+                    <!-- <el-dropdown-item @click="handleAssignDevice(scope.row)">
                       分配设备
-                    </el-dropdown-item>
+                    </el-dropdown-item> -->
                     <el-dropdown-item @click="handleResetPassword(scope.row)">
                       重置密码
                     </el-dropdown-item>
@@ -252,28 +265,38 @@ onMounted(() => {
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
         <el-form-item prop="userName" label="用户名称">
-          <el-input v-model="formData.userName" placeholder="请输入" />
+          <el-input v-model="formData.userName" placeholder="请输入用户名称" />
         </el-form-item>
-        <el-form-item v-if="formData.id === undefined" prop="password" label="用户密码">
-          <el-input v-model="formData.password" placeholder="请输入" />
+        <el-form-item prop="password" v-if="formData.id === undefined" label="密码">
+          <el-input v-model="formData.password" placeholder="请输入密码" />
         </el-form-item>
         <el-form-item prop="nickName" label="昵称">
-          <el-input v-model="formData.nickName" placeholder="请输入" />
+          <el-input v-model="formData.nickName" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item prop="realName" label="真实姓名">
+          <el-input v-model="formData.realName" placeholder="请输入真实姓名" />
         </el-form-item>
         <el-form-item prop="email" label="邮箱">
-          <el-input v-model="formData.email" placeholder="请输入" />
+          <el-input v-model="formData.email" placeholder="请输入邮箱" />
         </el-form-item>
-        <el-form-item prop="phoneNumber" label="手机号">
-          <el-input v-model="formData.phoneNumber" placeholder="请输入" />
+        <el-form-item prop="phone" label="手机号">
+          <el-input v-model="formData.phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item prop="description" label="描述">
-          <el-input v-model="formData.description" placeholder="请输入" />
+          <el-input v-model="formData.description" type="textarea" placeholder="请输入描述" />
         </el-form-item>
         <el-form-item prop="isActive" label="状态">
-          <el-switch v-model="formData.isActive" />
+          <el-radio-group v-model="formData.isActive">
+            <el-radio :label="true">
+              启用
+            </el-radio>
+            <el-radio :label="false">
+              禁用
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
-        <el-form-item prop="isAdmin" label="管理员">
-          <el-switch v-model="formData.isAdmin" />
+        <el-form-item prop="sortOrder" label="排序">
+          <el-input-number v-model="formData.sortOrder" :min="0" />
         </el-form-item>
       </el-form>
       <template #footer>

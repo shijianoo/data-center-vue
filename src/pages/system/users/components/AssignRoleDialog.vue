@@ -31,6 +31,7 @@ const filteredRoles = computed(() => {
   const keyword = searchKeyword.value.toLowerCase()
   return allRoles.value.filter(role =>
     role.name.toLowerCase().includes(keyword)
+    || (role.tenantName && role.tenantName.toLowerCase().includes(keyword))
     || (role.description && role.description.toLowerCase().includes(keyword))
   )
 })
@@ -73,7 +74,7 @@ async function getAllRoles() {
   loading.value = true
   try {
     const { data } = await getAllRolesApi()
-    allRoles.value = data.items || []
+    allRoles.value = data.sort((a, b) => a.scope - b.scope) || []
     console.log("获取所有角色", allRoles.value)
   } catch (error) {
     console.error("获取角色列表失败:", error)
@@ -163,7 +164,7 @@ function handleDialogClose() {
         <div class="search-container">
           <el-input
             v-model="searchKeyword"
-            placeholder="搜索角色名称或描述..."
+            placeholder="搜索角色名称或租户名称..."
             clearable
             prefix-icon="Search"
           />
@@ -191,9 +192,21 @@ function handleDialogClose() {
                 :value="role.id"
                 class="role-item"
               >
-                <div>
-                  <span class="role-name">{{ role.name }}</span>
-                  <span class="role-description">{{ role.description }}</span>
+                <div class="role-info">
+                  <div class="role-header">
+                    <el-tag
+                      :type="role.scope === 1 ? 'primary' : 'success'"
+                      :effect="role.scope === 1 ? 'light' : 'plain'"
+                      size="small"
+                      class="role-scope-tag"
+                    >
+                      {{ role.tenantName ?? '全局' }}
+                    </el-tag>
+                    <span class="role-title">{{ role.name }}</span>
+                  </div>
+                  <div v-if="role.description" class="role-desc">
+                    {{ role.description }}
+                  </div>
                 </div>
               </el-checkbox>
             </el-checkbox-group>
@@ -269,6 +282,8 @@ function handleDialogClose() {
   border-radius: 6px;
   transition: all 0.2s;
   background-color: var(--el-bg-color);
+  white-space: normal;
+  height: auto;
 
   &:hover {
     border-color: var(--el-color-primary);
@@ -276,20 +291,47 @@ function handleDialogClose() {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .el-checkbox__input.is-checked + .el-checkbox__label {
-    color: var(--el-color-primary);
+  :deep(.el-checkbox__input) {
+    margin-top: 2px; /* Align checkbox with the first line of text */
+  }
+
+  :deep(.el-checkbox__label) {
+    display: flex;
+    flex: 1;
+    white-space: normal;
+    color: inherit;
   }
 }
 
-.role-name {
-  font-weight: 500;
+.role-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.role-scope-tag {
+  flex-shrink: 0;
+}
+
+.role-title {
+  font-weight: 600;
+  font-size: 14px;
   color: var(--el-text-color-primary);
 }
 
-.role-description {
+.role-desc {
   font-size: 12px;
-  margin-left: 10px;
-  color: var(--el-text-color-regular);
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
+  margin-top: 2px;
 }
 
 .no-search-results {

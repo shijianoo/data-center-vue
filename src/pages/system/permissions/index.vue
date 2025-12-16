@@ -24,10 +24,13 @@ const selectedIds = ref<string[]>([])
 // #region 表单相关
 const defaultForm: CreateOrUpdatePermission = {
   parentId: undefined,
+  scope: 0,
+  type: 0,
   name: "",
   code: "",
+  description: undefined,
   isActive: true,
-  order: 0
+  sortOrder: 0
 }
 
 const dialogVisible = ref<boolean>(false)
@@ -35,6 +38,14 @@ const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdatePermission>(cloneDeep(defaultForm))
 
 const formRules: FormRules<CreateOrUpdatePermission> = {
+  scope: [{ validator: (_, value, callback) => {
+    if (value === 0) callback(new Error("请选择权限类型"))
+    else callback()
+  }, trigger: "blur", message: "请选择权限作用域" }],
+  type: [{ validator: (_, value, callback) => {
+    if (value === 0) callback(new Error("请选择权限类型"))
+    else callback()
+  }, trigger: "blur", message: "请选择权限类型" }],
   name: [{ required: true, trigger: "blur", message: "请输入权限名称" }],
   code: [{ required: true, trigger: "blur", message: "请输入权限代码" }]
 }
@@ -67,7 +78,7 @@ async function getTableData() {
   loading.value = true
   try {
     const { data } = await getPermissionTreeApi()
-    tableData.value = data.items || []
+    tableData.value = data || []
   } catch (error) {
     console.error("获取权限树失败:", error)
     tableData.value = []
@@ -91,12 +102,13 @@ function handleUpdate(row: PermissionTree) {
   currentUpdateId.value = row.id
   formData.value = {
     parentId: row.parentId || undefined,
+    scope: row.scope,
+    type: row.type,
     name: row.name,
     code: row.code,
-    description: row.description || "",
+    description: row.description || undefined,
     isActive: row.isActive,
-    order: row.order,
-    extra: row.extra || ""
+    sortOrder: row.sortOrder
   }
   dialogVisible.value = true
 }
@@ -177,24 +189,60 @@ onMounted(() => {
           :data="tableData"
           v-loading="loading"
           row-key="id"
-          default-expand-all
+          show-overflow-tooltip
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
           @selection-change="handleSelectionChange"
         >
-          <el-table-column prop="name" label="权限名称" align="left" min-width="200" />
-          <el-table-column prop="code" label="权限代码" align="center" min-width="150" />
-          <el-table-column prop="description" label="描述" align="center" min-width="150" show-overflow-tooltip />
+          <el-table-column prop="name" label="权限名称" align="left" width="200" />
+          <el-table-column prop="scope" label="权限作用域" align="center" width="100">
+            <template #default="scope">
+              <el-tag v-if="scope.row.scope === 1" type="success" effect="dark">
+                平台
+              </el-tag>
+              <el-tag v-else-if="scope.row.scope === 2" type="danger" effect="plain">
+                租户
+              </el-tag>
+              <el-tag v-else type="danger" effect="dark">
+                未知
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="type" label="权限类型" align="center" width="100">
+            <template #default="scope">
+              <el-tag v-if="scope.row.type === 1" type="info" effect="dark">
+                分组/目录
+              </el-tag>
+              <el-tag v-else-if="scope.row.type === 2" type="danger" effect="plain">
+                功能/操作
+              </el-tag>
+              <el-tag v-else type="danger" effect="dark">
+                未知
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="isActive" label="状态" align="center" width="80">
             <template #default="scope">
               <el-tag v-if="scope.row.isActive" type="success" effect="plain">
                 启用
               </el-tag>
-              <el-tag v-else type="danger" effect="plain">
+              <el-tag v-else type="danger" effect="dark">
                 禁用
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="order" label="排序" align="center" width="80" />
+          <el-table-column prop="code" label="权限代码" align="left" min-width="150" />
+          <el-table-column prop="description" label="描述" align="left" />
+          <el-table-column prop="sortOrder" label="排序" align="center" width="80" />
+          <el-table-column prop="isSystem" label="系统权限" align="center" width="80">
+            <template #default="scope">
+              <el-tag v-if="scope.row.isSystem" type="warning" effect="dark">
+                是
+              </el-tag>
+              <el-tag v-else type="success" effect="plain">
+                否
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column fixed="right" label="操作" width="240" align="center">
             <template #default="scope">
               <el-button type="primary" text bg size="small" @click="handleCreate(scope.row)">
@@ -231,6 +279,38 @@ onMounted(() => {
             :render-after-expand="false"
           />
         </el-form-item>
+        <el-form-item prop="scope" label="权限作用域">
+          <el-select v-model="formData.scope" placeholder="请选择权限作用域">
+            <el-option
+              label="未知"
+              :value="0"
+            />
+            <el-option
+              label="平台"
+              :value="1"
+            />
+            <el-option
+              label="租户"
+              :value="2"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="type" label="权限类型">
+          <el-select v-model="formData.type" placeholder="请选择权限类型">
+            <el-option
+              label="未知"
+              :value="0"
+            />
+            <el-option
+              label="分组/目录"
+              :value="1"
+            />
+            <el-option
+              label="功能/操作"
+              :value="2"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item prop="name" label="权限名称">
           <el-input v-model="formData.name" placeholder="请输入权限名称" />
         </el-form-item>
@@ -250,11 +330,8 @@ onMounted(() => {
             </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item prop="order" label="排序">
-          <el-input-number v-model="formData.order" :min="0" />
-        </el-form-item>
-        <el-form-item prop="extra" label="扩展信息">
-          <el-input v-model="formData.extra" placeholder="请输入扩展信息（可选）" />
+        <el-form-item prop="sortOrder" label="排序">
+          <el-input-number v-model="formData.sortOrder" :min="0" />
         </el-form-item>
       </el-form>
       <template #footer>

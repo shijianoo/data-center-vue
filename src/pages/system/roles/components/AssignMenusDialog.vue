@@ -29,8 +29,8 @@ async function loadData() {
       getRoleMenuIdsApi(props.roleId!)
     ])
 
-    if (menuRes.data.items) {
-      menuTreeData.value = menuRes.data.items
+    if (menuRes.data) {
+      menuTreeData.value = menuRes.data
     }
 
     if (roleMenuRes.data) {
@@ -92,7 +92,7 @@ function handleClosed() {
         node-key="id"
         default-expand-all
         :check-strictly="true"
-        :props="{ label: 'name' }"
+        :props="{ label: 'title' }"
       />
     </div>
     <template #footer>

@@ -1,39 +1,51 @@
-import type { Entity, QueryResult } from "../type"
-
 export interface CreateOrUpdatePermission {
   parentId?: string
+  /* 权限作用域 */
+  scope: number
+  /* 权限类型 */
+  type: number
   name: string
   code: string
   description?: string
   isActive: boolean
-  order: number
-  extra?: string
+  sortOrder: number
 }
 
-export interface Permission extends Entity<string> {
-  createdByUserId: string
+export interface PermissionExtra {}
+
+export interface Permission {
+  id: string
+  createdAt: string
   parentId?: string
+  scope: number
+  type: number
   name: string
   code: string
   description?: string
   isSystem: boolean
   isActive: boolean
-  order: number
-  extra?: string
+  sortOrder: number
+  createdByUserId: string
+  extra?: PermissionExtra
 }
 
-export interface PermissionTree extends Entity<string> {
-  createdByUserId: string
-  parentId?: string
-  name: string
-  code: string
-  description?: string
-  isSystem: boolean
-  isActive: boolean
-  order: number
-  extra?: string
+export interface PermissionTree extends Permission {
   children: PermissionTree[]
 }
 
-export type PermissionListResponseData = ApiResponseData<QueryResult<Permission>>
-export type PermissionTreeListResponseData = ApiResponseData<QueryResult<PermissionTree>>
+export type PermissionListResponseData = ApiResponseData<Permission[]>
+export type PermissionTreeListResponseData = ApiResponseData<PermissionTree[]>
+
+export function findPermissionById(
+  list: PermissionTree[],
+  id: string
+): PermissionTree | null {
+  for (const item of list) {
+    if (item.id === id) return item
+    if (item.children?.length) {
+      const found = findPermissionById(item.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}

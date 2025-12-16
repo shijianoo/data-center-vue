@@ -58,7 +58,7 @@ function logout() {
       <el-dropdown>
         <div class="right-menu-item user">
           <el-avatar :icon="UserFilled" :size="30" />
-          <span>{{ userStore.username }}</span>
+          <span>{{ userStore.user!.userName }}</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu>

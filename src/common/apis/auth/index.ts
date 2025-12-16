@@ -27,11 +27,8 @@ export function refreshTokenApi(refreshToken: string) {
     url: "auth/refresh",
     method: "post",
     headers: {
-      // 不使用默认Authorization，而是直接在body中提供refreshToken
-      Authorization: undefined
-    },
-    data: {
-      refreshToken
+      // 不使用默认Authorization
+      Authorization: refreshToken
     }
   })
 }

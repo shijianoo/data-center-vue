@@ -45,6 +45,21 @@
   --v3-hamburger-text-color: var(--el-text-color-primary);
   /* RightPanel 组件  */
   --v3-rightpanel-button-bg-color: #001428;
+
+  --primary: #2563eb;
+  --accent: #2563eb;
+  --bg-body: #f1f5f9;
+  --text-main: #1e293b;
+  --text-sub: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+
+  --header-h: 60px;
 }
 
 /* 内容区放大时，将不需要的组件隐藏 */

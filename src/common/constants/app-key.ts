@@ -20,3 +20,6 @@ export const SIDEBAR_CLOSED = "closed"
 export type SidebarOpened = typeof SIDEBAR_OPENED
 
 export type SidebarClosed = typeof SIDEBAR_CLOSED
+
+/** 平台租户标识 */
+export const PlatformTenantNo = "platform"

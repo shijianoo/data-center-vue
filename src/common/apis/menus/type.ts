@@ -1,52 +1,56 @@
-import type { Entity, QueryResult } from "../type"
+export interface MenuExtra {
+  svgIcon?: string
+  isHidden: boolean
+  roles?: string[]
+  breadcrumb: boolean
+  affix: boolean
+  alwaysShow: boolean
+  activeMenu?: string
+  keepAlive: boolean
+}
 
-export interface Menu extends Entity<string> {
-  createdByUserId: string
+export interface Menu {
+  id: string
+  createdAt: string
   parentId?: string
-  name: string
-  type: number // 0=页面，1=外链，2=按钮
+  scope: number
+  title: string
+  type: number
   routeName?: string
   routePath?: string
-  externalUrl?: string
-  permissionId?: string
-  svgIcon?: string
-  target?: string
   component?: string
+  externalUrl?: string
+  target?: string
+  redirect?: string
+  permissionId?: string
   description?: string
-  order: number
-  isHidden: boolean
   isSystem: boolean
   isActive: boolean
-  keepAlive: boolean
-  affix: boolean
-  extra?: string
+  sortOrder: number
+  createdByUserId: string
+  extra?: MenuExtra
 }
 
 export interface MenuForm {
   id?: string
   parentId?: string
-  name: string
-  // 0=页面，1=外链，2=按钮
+  scope: number
+  title: string
   type: number
   routeName?: string
   routePath?: string
-  externalUrl?: string
-  permissionId?: string
-  svgIcon?: string
-  target?: string
   component?: string
+  externalUrl?: string
+  target?: string
+  redirect?: string
+  permissionId?: string
   description?: string
-  order: number
-  isHidden: boolean
-  isSystem: boolean
   isActive: boolean
-  keepAlive: boolean
-  affix: boolean
-  extra?: string
+  sortOrder: number
 }
 
 export interface MenuTree extends Menu {
   children?: MenuTree[]
 }
 
-export type MenuTreeListResponseData = ApiResponseData<QueryResult<MenuTree>>
+export type MenuTreeListResponseData = ApiResponseData<MenuTree[]>

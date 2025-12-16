@@ -5,7 +5,7 @@ import { useUserStore } from "@/pinia/stores/user"
 export function checkPermission(permissionRoles: string[]): boolean {
   if (isArray(permissionRoles) && permissionRoles.length > 0) {
     const { roles } = useUserStore()
-    return roles.some(role => permissionRoles.includes(role))
+    return roles?.some(role => permissionRoles.includes(role)) || false
   } else {
     console.error("参数必须是一个数组且长度大于 0，参考：checkPermission(['admin', 'editor'])")
     return false

@@ -35,7 +35,7 @@ export function getPermissionTreeApi() {
   })
 }
 
-// 获取当前用户菜单权限树
+// 获取当前用户菜单权限列表
 export function getCurrentPermissionsApi() {
   return authCenterRequest<PermissionListResponseData>({
     url: "/permissions/me",

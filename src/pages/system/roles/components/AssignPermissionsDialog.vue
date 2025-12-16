@@ -33,8 +33,8 @@ async function loadData() {
       getRolePermissionIdsApi(props.roleId!)
     ])
 
-    if (permissionRes.data.items) {
-      permissionTree.value = permissionRes.data.items
+    if (permissionRes.data) {
+      permissionTree.value = permissionRes.data
     }
 
     if (rolePermissionRes.data) {
@@ -100,7 +100,14 @@ function handleClose() {
         default-expand-all
         :check-strictly="true"
         class="permission-tree"
-      />
+      >
+        <template #default="{ node, data }">
+          <div class="custom-tree-node">
+            <span>{{ node.label }}</span>
+            <span style="color: var(--el-text-color-secondary); margin-left: 10px">{{ data.code }}</span>
+          </div>
+        </template>
+      </ElTree>
     </div>
 
     <template #footer>

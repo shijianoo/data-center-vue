@@ -1,21 +1,29 @@
-import type { Entity, QueryResult } from "../type"
-
-export interface CurrentUser {
-  userName: string
-  roles: string[]
+export interface UserExtra {
+  avatarUrl?: string
+  culture?: string
+  timeZone?: string
+  themeMode?: string
+  gender?: string
+  birthday?: string
 }
 
-export interface User extends Entity<string> {
-  createdByUserId: string
+export interface User {
+  id: string
+  createdAt: string
   userName: string
   nickName?: string
+  realName?: string
   email?: string
-  phoneNumber?: string
+  emailVerifiedAt?: string
+  phone?: string
+  phoneVerifiedAt?: string
+  isSuperAdmin: boolean
   description?: string
   isSystem: boolean
   isActive: boolean
-  isAdmin: boolean
-  extra?: string
+  sortOrder: number
+  createdByUserId: string
+  extra?: UserExtra
   roles?: string[]
 }
 
@@ -24,12 +32,12 @@ export interface UserForm {
   userName: string
   password?: string
   nickName?: string
+  realName?: string
   email?: string
-  phoneNumber?: string
+  phone?: string
   description?: string
   isActive: boolean
-  isAdmin: boolean
-  extra?: string
+  sortOrder: number
 }
 
 export interface ChangePassword {
@@ -47,6 +55,5 @@ export interface AssignRole {
   roleIds: string[]
 }
 
-export type CurrentUserResponseData = ApiResponseData<CurrentUser>
 export type UserResponseData = ApiResponseData<User>
-export type UserListResponseData = ApiResponseData<QueryResult<User>>
+export type UserListResponseData = ApiResponseData<User[]>

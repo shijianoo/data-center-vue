@@ -1,29 +1,33 @@
-import type { Entity, QueryResult } from "../type"
+export interface RoleExtra {
+  level: number
+  dataScope: number
+}
 
-export interface Role extends Entity<string> {
-  createdByUserId: string
+export interface Role {
+  id: string
+  createdAt: string
+  tenantId: string
+  scope: number
   name: string
   code: string
-  level: number
-  dataScope?: string
   description?: string
   isSystem: boolean
   isActive: boolean
-  order: number
-  extra?: string
+  sortOrder: number
+  createdByUserId: string
+  extra?: RoleExtra
+  tenantName: string
 }
 
 export interface RoleForm {
   id?: string
+  tenantId?: string
+  scope: number
   name: string
   code?: string
-  level: number
-  dataScope?: string
   description?: string
-  isSystem: boolean
   isActive: boolean
-  order: number
-  extra?: string
+  sortOrder: number
 }
 
-export type RoleListResponseData = ApiResponseData<QueryResult<Role>>
+export type RoleListResponseData = ApiResponseData<Role[]>

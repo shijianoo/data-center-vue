@@ -7,6 +7,45 @@ import { flatMultiLevelRoutes } from "./helper"
 const Layouts = () => import("@/layouts/index.vue")
 
 /**
+ * @name 租户路由
+ * @description 用来放置租户级别的路由
+ */
+export const tenantRoutes: RouteRecordRaw = {
+  path: "/console/:tenantIdentifier",
+  component: () => import("@/layouts/TenantLayout.vue"),
+  meta: {
+    hidden: true
+  },
+  children:
+  [
+    {
+      path: "",
+      component: () => import("@/pages/tenant/dashboard/index.vue")
+    },
+    {
+      path: "project/:id",
+      component: () => import("@/pages/tenant/project/index.vue")
+    },
+    {
+      path: "device-list/:model",
+      component: () => import("@/pages/tenant/device-list/index.vue")
+    },
+    {
+      path: "device/:sn",
+      component: () => import("@/pages/tenant/device/index.vue")
+    },
+    {
+      path: "reports",
+      component: () => import("@/pages/tenant/device/index.vue") // Placeholder
+    },
+    {
+      path: "settings",
+      component: () => import("@/pages/tenant/device/index.vue") // Placeholder
+    }
+  ]
+}
+
+/**
  * @name 常驻路由
  * @description 除了 redirect/403/404/login 等隐藏页面，其他页面建议设置唯一的 Name 属性
  */
@@ -47,9 +86,13 @@ export const constantRoutes: RouteRecordRaw[] = [
     }
   },
   {
-    path: "/",
-    component: Layouts
-  }
+    path: "/platform",
+    component: () => import("@/pages/platform/index.vue"),
+    meta: {
+      title: "进入平台前端"
+    }
+  },
+  tenantRoutes
 ]
 
 /**
@@ -59,16 +102,21 @@ export const constantRoutes: RouteRecordRaw[] = [
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
   {
-    path: "/system",
+    path: "/admin",
     component: Layouts,
-    redirect: "/system/users",
-    name: "System",
     meta: {
-      title: "系统管理",
-      roles: ["ADMIN"],
-      svgIcon: "sys-setting"
+      title: "平台后台管理"
     },
     children: [
+      {
+        path: "tenants",
+        component: () => import("@/pages/system/tenant/index.vue"),
+        name: "Tenants",
+        meta: {
+          title: "租户管理",
+          svgIcon: "tenant-mgr"
+        }
+      },
       {
         path: "users",
         component: () => import("@/pages/system/users/index.vue"),

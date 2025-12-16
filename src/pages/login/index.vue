@@ -39,7 +39,7 @@ const loginFormRules: FormRules = {
   ],
   password: [
     { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 6, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
+    { min: 0, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
   ],
   code: [
     { required: true, message: "请输入验证码", trigger: "blur" }

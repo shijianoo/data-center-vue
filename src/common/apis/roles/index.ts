@@ -2,10 +2,14 @@ import type * as Roles from "./type"
 import { authCenterRequest } from "@/http/axios"
 
 // 获取所有角色
-export function getAllRolesApi() {
+export function getAllRolesApi(tenantId?: string, t?: boolean) {
   return authCenterRequest<Roles.RoleListResponseData>({
     url: "/roles",
-    method: "get"
+    method: "get",
+    params: {
+      tenantId,
+      t
+    }
   })
 }
 

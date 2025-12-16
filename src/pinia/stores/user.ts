@@ -1,4 +1,5 @@
 import type { MenuTree } from "@/common/apis/menus/type"
+import type { User } from "@/common/apis/users/type"
 import { getCurrentUserApi } from "@@/apis/users"
 import { setRefreshToken as _setRefreshToken, setToken as _setToken, getRefreshToken, getToken, removeRefreshToken, removeToken } from "@@/utils/cache/cookies"
 import { getCurrentMenusApi } from "@/common/apis/menus"
@@ -8,14 +9,15 @@ import { resetRouter } from "@/router"
 import { routerConfig } from "@/router/config"
 import { useSettingsStore } from "./settings"
 import { useTagsViewStore } from "./tags-view"
+import { useTenantStore } from "./tenant"
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "")
   const refreshToken = ref<string>(getRefreshToken() || "")
 
-  const roles = ref<string[]>([])
+  const roles = ref<string[] | undefined>(undefined)
 
-  const username = ref<string>("")
+  const user = ref<User | null>(null)
 
   const menus = ref<MenuTree[]>([])
 
@@ -24,6 +26,8 @@ export const useUserStore = defineStore("user", () => {
   const tagsViewStore = useTagsViewStore()
 
   const settingsStore = useSettingsStore()
+
+  const tenantStore = useTenantStore()
 
   // 设置 Token
   const setToken = (value: string) => {
@@ -38,16 +42,16 @@ export const useUserStore = defineStore("user", () => {
   // 获取用户详情
   const getInfo = async () => {
     const { data } = await getCurrentUserApi()
-    username.value = data.userName
+    user.value = data
     // 验证返回的 roles 是否为一个非空数组，否则塞入一个没有任何作用的默认角色，防止路由守卫逻辑进入无限循环
-    roles.value = data.roles?.length > 0 ? data.roles : routerConfig.defaultRoles
+    roles.value = data.roles !== undefined ? data.roles : routerConfig.defaultRoles
     console.log("用户角色:", roles.value)
     const menuData = await getCurrentMenusApi()
-    menus.value = menuData.data.items || []
+    menus.value = menuData.data || []
     console.log("用户菜单:", menus.value)
 
     const permissionData = await getCurrentPermissionsApi()
-    permissions.value = (permissionData.data.items || []).map(item => item.code)
+    permissions.value = (permissionData.data || []).map(item => item.code)
     console.log("用户权限:", permissions.value)
   }
 
@@ -66,9 +70,12 @@ export const useUserStore = defineStore("user", () => {
     removeRefreshToken()
     token.value = ""
     refreshToken.value = ""
-    roles.value = []
+    roles.value = undefined
     resetRouter()
     resetTagsView()
+    user.value = null
+    tenantStore.tenants = undefined
+    tenantStore.activeTenant = null
   }
 
   // 重置 Token
@@ -77,7 +84,8 @@ export const useUserStore = defineStore("user", () => {
     removeRefreshToken()
     token.value = ""
     refreshToken.value = ""
-    roles.value = []
+    roles.value = undefined
+    user.value = null
   }
 
   // 重置 Visited Views 和 Cached Views
@@ -88,7 +96,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { token, roles, permissions, menus, username, setToken, setRefreshToken, getInfo, changeRoles, logout, resetToken }
+  return { token, roles, permissions, menus, user, setToken, setRefreshToken, getInfo, changeRoles, logout, resetToken }
 })
 
 /**

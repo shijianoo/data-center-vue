@@ -3,24 +3,27 @@ import { authCenterRequest } from "@/http/axios"
 
 /** 获取当前登录用户详情 */
 export function getCurrentUserApi() {
-  return authCenterRequest<Users.CurrentUserResponseData>({
+  return authCenterRequest<Users.UserResponseData>({
     url: "users/me",
     method: "get"
   })
 }
 
 /** 获取所有用户（仅ADMIN） */
-export function getAllUsersApi() {
+export function getAllUsersApi(tenantId?: string) {
   return authCenterRequest<Users.UserListResponseData>({
-    url: "users",
-    method: "get"
+    url: "/users",
+    method: "get",
+    params: {
+      tenantId
+    }
   })
 }
 
 /** 获取指定用户详情（仅ADMIN） */
 export function getUserApi(id: string) {
   return authCenterRequest<Users.UserResponseData>({
-    url: `users/${id}`,
+    url: `/users/${id}`,
     method: "get"
   })
 }
@@ -28,7 +31,7 @@ export function getUserApi(id: string) {
 /** 创建用户（仅ADMIN） */
 export function createUserApi(dto: Users.UserForm) {
   return authCenterRequest({
-    url: "users",
+    url: "/users",
     method: "post",
     data: dto
   })
@@ -37,7 +40,7 @@ export function createUserApi(dto: Users.UserForm) {
 /** 更新用户（仅ADMIN） */
 export function updateUserApi(dto: Users.UserForm) {
   return authCenterRequest({
-    url: `users/${dto.id}`,
+    url: `/users/${dto.id}`,
     method: "put",
     data: dto
   })
@@ -46,7 +49,7 @@ export function updateUserApi(dto: Users.UserForm) {
 /** 删除用户（仅ADMIN） */
 export function deleteUserApi(id: string) {
   return authCenterRequest({
-    url: `users/${id}`,
+    url: `/users/${id}`,
     method: "delete"
   })
 }
@@ -54,7 +57,7 @@ export function deleteUserApi(id: string) {
 /** 分配角色（仅ADMIN） */
 export function assignRolesApi(id: string, roleIds: string[]) {
   return authCenterRequest({
-    url: `users/${id}/roles`,
+    url: `/users/${id}/roles`,
     method: "post",
     data: roleIds
   })
@@ -63,7 +66,7 @@ export function assignRolesApi(id: string, roleIds: string[]) {
 /** 获取用户角色（仅ADMIN） */
 export function getUserRoleIdsApi(id: string) {
   return authCenterRequest<ApiResponseData<string[]>>({
-    url: `users/${id}/role-ids`,
+    url: `/users/${id}/role-ids`,
     method: "get"
   })
 }
@@ -72,7 +75,7 @@ export function getUserRoleIdsApi(id: string) {
 export function changePasswordApi(oldPassword: string, newPassword: string) {
   const data: Users.ChangePassword = { oldPassword, newPassword }
   return authCenterRequest({
-    url: "users/change-password",
+    url: "/users/change-password",
     method: "post",
     data
   })
@@ -82,7 +85,7 @@ export function changePasswordApi(oldPassword: string, newPassword: string) {
 export function resetPasswordApi(userId: string, newPassword: string) {
   const data: Users.ResetPassword = { userId, newPassword }
   return authCenterRequest({
-    url: "users/reset-password",
+    url: "/users/reset-password",
     method: "post",
     data
   })

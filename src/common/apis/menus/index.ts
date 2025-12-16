@@ -27,6 +27,23 @@ export function deleteMenu(id: string) {
   })
 }
 
+// 更新菜单额外信息
+export function updateMenuExtra(id: string, data: Menus.MenuExtra) {
+  return authCenterRequest({
+    url: `/menus/extra/${id}`,
+    method: "put",
+    data
+  })
+}
+
+// 获取菜单
+export function getMenu(id: string) {
+  return authCenterRequest<ApiResponseData<Menus.Menu>>({
+    url: `/menus/${id}`,
+    method: "get"
+  })
+}
+
 // 获取菜单树
 export function getMenuTree() {
   return authCenterRequest<Menus.MenuTreeListResponseData>({
