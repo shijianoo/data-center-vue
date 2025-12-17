@@ -73,7 +73,7 @@ async function getAllRoles() {
   loading.value = true
   try {
     const { data } = await getAllRolesApi()
-    allRoles.value = data.items || []
+    allRoles.value = data || []
     console.log("获取所有角色", allRoles.value)
   } catch (error) {
     console.error("获取角色列表失败:", error)

@@ -100,8 +100,8 @@ const roleData = ref<Role[]>([])
 function getRoleData() {
   loading.value = true
   getAllRolesApi().then(({ data }) => {
-    console.log("获取角色数据", data.items)
-    roleData.value = data.items
+    console.log("获取角色数据", data)
+    roleData.value = data
   }).catch(() => {
     roleData.value = []
   }).finally(() => {

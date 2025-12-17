@@ -1,4 +1,4 @@
-import type { Entity, QueryResult } from "../type"
+import type { Entity } from "../type"
 
 export interface Role extends Entity<string> {
   createdByUserId: string
@@ -26,4 +26,4 @@ export interface RoleForm {
   extra?: string
 }
 
-export type RoleListResponseData = ApiResponseData<QueryResult<Role>>
+export type RoleListResponseData = ApiResponseData<Role[]>

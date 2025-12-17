@@ -112,8 +112,8 @@ const userData = ref<User[]>([])
 function getUserData() {
   loading.value = true
   getAllUsersApi().then(({ data }) => {
-    console.log("获取用户数据", data.items)
-    userData.value = data.items
+    console.log("获取用户数据", data)
+    userData.value = data
   }).catch(() => {
     userData.value = []
   }).finally(() => {

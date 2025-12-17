@@ -1,4 +1,4 @@
-import type { Entity, QueryResult } from "../type"
+import type { Entity } from "../type"
 
 export interface CurrentUser {
   userName: string
@@ -49,4 +49,4 @@ export interface AssignRole {
 
 export type CurrentUserResponseData = ApiResponseData<CurrentUser>
 export type UserResponseData = ApiResponseData<User>
-export type UserListResponseData = ApiResponseData<QueryResult<User>>
+export type UserListResponseData = ApiResponseData<User[]>
