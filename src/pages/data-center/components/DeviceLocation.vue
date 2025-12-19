@@ -10,7 +10,7 @@ const {
 
 export interface LocationInfo {
   id: string
-  desc: string
+  desc?: string
   lon: number
   lat: number
   data: Map<string, string>

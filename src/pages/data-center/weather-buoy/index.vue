@@ -15,7 +15,7 @@ function getStatusClass(status: string | undefined, inverse = false) {
   return status === "0" ? "status-success" : "status-danger"
 }
 
-const deviceModelId = "5787810c-ddc6-495a-8141-a989ad7fcdc4"
+const deviceModelId = "019b3523-3ca9-7937-9c4f-ed384f822a15"
 const { devicesLoading, selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const dataLoading = ref(false)

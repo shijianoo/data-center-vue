@@ -4,8 +4,9 @@ export interface CreateOrUpdateDeviceDto {
   id?: string
   deviceModelId: string
   serialNumber: string
-  deviceName: string
-  description: string
+  deviceName?: string
+  description?: string
+  isActive: boolean
 }
 
 export interface DeviceUpgrade extends Entity<string> {
@@ -22,8 +23,8 @@ export interface DeviceUpgrade extends Entity<string> {
 export interface Device extends Entity<string> {
   deviceModelId: string
   serialNumber: string
-  deviceName: string
-  description: string
+  deviceName?: string
+  description?: string
   isActive: boolean
   modelNumber: string
   upgradeTasks?: DeviceUpgrade[]

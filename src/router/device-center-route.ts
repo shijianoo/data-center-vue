@@ -9,8 +9,7 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
     name: "DeviceCenter",
     meta: {
       title: "设备中⼼",
-      svgIcon: "device-center",
-      alwaysShow: true
+      svgIcon: "device-center"
     },
     children: [
       {
