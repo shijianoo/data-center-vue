@@ -8,11 +8,11 @@ import { useTenantStore } from "@/pinia/stores/tenant"
 const router = useRouter()
 const tenantStore = useTenantStore()
 const { tenants } = storeToRefs(tenantStore)
-const tenantList = computed(() => tenants.value!.filter(t => t.tenantNo !== "platform"))
+const tenantList = computed(() => tenants.value!.filter(t => t.tenantCode !== "platform"))
 
 function handleTenantClick(tenant: Tenant) {
   console.log("进入租户", tenant)
-  router.push(`/console/${tenant.tenantNo}`)
+  router.push(`/console/${tenant.tenantCode}`)
 }
 </script>
 
