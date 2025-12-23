@@ -2,7 +2,6 @@ import type { Tenant } from "@/common/apis/tenant/type"
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
 import { getCurrentUserTenantsApi } from "@/common/apis/tenant"
-import { PlatformTenantNo } from "@/common/constants/app-key"
 
 export const useTenantStore = defineStore("tenant", () => {
   // 当前用户的租户列表
@@ -13,7 +12,7 @@ export const useTenantStore = defineStore("tenant", () => {
 
   // 是否是内部租户
   const isInternal = computed(() =>
-    tenants.value?.some(t => t.tenantNo === PlatformTenantNo) ?? false
+    tenants.value?.some(t => t.type === 99) ?? false
   )
 
   // 获取当前用户的租户列表

@@ -201,7 +201,7 @@ function getTenantStatus(tenant: Tenant) {
       <div class="table-wrapper">
         <el-table :data="tableData" v-loading="loading" row-key="id">
           <el-table-column prop="name" label="租户名称" align="left" width="160" />
-          <el-table-column prop="tenantNo" label="租户编号" align="left" width="100" />
+          <el-table-column prop="tenantCode" label="租户编码" align="left" width="140" />
           <el-table-column prop="type" label="租户类型" align="center" width="80">
             <template #default="scope">
               <el-tag effect="plain">

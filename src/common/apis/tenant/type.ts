@@ -23,7 +23,7 @@ export interface Tenant {
   id: string
   createdAt: string
   name: string
-  tenantNo: string
+  tenantCode: string
   type: number
   status: number
   plan: number

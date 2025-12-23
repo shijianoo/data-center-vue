@@ -92,7 +92,7 @@ export function registerNavigationGuard(router: Router) {
       const identifier = to.params.tenantIdentifier as string
       console.log("进入租户", identifier)
       const targetTenant = tenantStore.tenants!.find(t =>
-        t.slug === identifier || t.tenantNo === identifier
+        t.slug === identifier || t.tenantCode === identifier
       )
 
       // 如果找不到租户，重定向到403
@@ -109,7 +109,7 @@ export function registerNavigationGuard(router: Router) {
     // /console 自动补租户
     if (to.path === "/console" || to.path === "/console/") {
       if (tenantStore.activeTenant) {
-        return `/console/${tenantStore.activeTenant!.tenantNo}`
+        return `/console/${tenantStore.activeTenant!.tenantCode}`
       }
     }
     return true

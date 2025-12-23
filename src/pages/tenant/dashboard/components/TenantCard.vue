@@ -13,7 +13,7 @@ const desc = computed(() => {
   return activeTenant.value?.description || "无"
 })
 const accountId = computed(() => {
-  return activeTenant.value?.tenantNo || "无"
+  return activeTenant.value?.tenantCode || "无"
 })
 const contact = computed(() => {
   return activeTenant.value?.contactName || "无"

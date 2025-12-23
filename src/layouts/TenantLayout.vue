@@ -5,9 +5,9 @@ import TenantHeader from "./components/TenantHeader/index.vue"
 
 const tenantStore = useTenantStore()
 const navLinks: Links[] = [
-  { name: "首页", path: `/console/${tenantStore.activeTenant!.tenantNo}`, exact: true },
-  { name: "设备管理", path: `/console/${tenantStore.activeTenant!.tenantNo}/devices` },
-  { name: "设置", path: `/console/${tenantStore.activeTenant!.tenantNo}/settings` }
+  { name: "首页", path: `/console/${tenantStore.activeTenant!.tenantCode}`, exact: true },
+  { name: "设备管理", path: `/console/${tenantStore.activeTenant!.tenantCode}/devices` },
+  { name: "设置", path: `/console/${tenantStore.activeTenant!.tenantCode}/settings` }
 ]
 </script>
 

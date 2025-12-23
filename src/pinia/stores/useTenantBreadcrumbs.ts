@@ -23,7 +23,7 @@ export const useTenantBreadcrumbsStore = defineStore("tenant-breadcrumbs", () =>
     name: "首页",
     onClick: () => {
       if (tenantStore.activeTenant) {
-        router.push(`/console/${tenantStore.activeTenant.tenantNo}`)
+        router.push(`/console/${tenantStore.activeTenant.tenantCode}`)
       } else {
         router.push("/console/")
       }
@@ -38,7 +38,7 @@ export const useTenantBreadcrumbsStore = defineStore("tenant-breadcrumbs", () =>
       name: finalName,
       onClick: () => {
         setBreadcrumbs([home, project()])
-        router.push(`/console/${tenantStore.activeTenant!.tenantNo}/project/${id || ""}`)
+        router.push(`/console/${tenantStore.activeTenant!.tenantCode}/project/${id || ""}`)
       }
     }
   }
@@ -48,7 +48,7 @@ export const useTenantBreadcrumbsStore = defineStore("tenant-breadcrumbs", () =>
     const finalName = sn ? `设备列表 ${sn}` : "设备列表" // 这里可以使用 fetchDeviceListName
     return {
       name: finalName,
-      onClick: () => router.push(`/console/${tenantStore.activeTenant!.tenantNo}/device-list/${sn || ""}`)
+      onClick: () => router.push(`/console/${tenantStore.activeTenant!.tenantCode}/device-list/${sn || ""}`)
     }
   }
 
