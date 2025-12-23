@@ -13,7 +13,7 @@ defineOptions({
   name: "WaveBuoyIndex"
 })
 
-const deviceModelId = "019b3521-4982-7b44-85aa-d76afa382219"
+const deviceModelId = "019b4a4f-303a-773d-b9d4-008ce510f3b1"
 const { devicesLoading, devices } = useSerialNumberSelection(deviceModelId)
 
 const latestData = ref<Map<string, any>>(new Map())

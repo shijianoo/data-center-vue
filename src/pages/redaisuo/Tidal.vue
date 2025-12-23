@@ -4,7 +4,7 @@ import { formatNumber, parseLeakStatus, parseUbatt } from "@/common/utils/data-p
 import { formatDateTime } from "@/common/utils/datetime"
 import { getTidal } from "./apis"
 
-const deviceModelId = "019b3525-756f-72c3-a6a3-cfb0bb72cc59"
+const deviceModelId = "019b4a50-1202-7c53-aa63-08e2a1caa1e7"
 const { devicesLoading, selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
 const pageIndex = ref(1)
