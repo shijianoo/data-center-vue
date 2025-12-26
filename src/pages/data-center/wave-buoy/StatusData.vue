@@ -7,7 +7,7 @@ defineOptions({
   name: "WaveBuoyStatusData"
 })
 
-const deviceModelId = "85464f2e-25e4-4dd6-a177-b1f5e5a4c6ee"
+const deviceModelId = "019b4a4f-303a-773d-b9d4-008ce510f3b1"
 const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 const { dataList, loading, pageIndex, isLastPage, goNextPage, resetToFirstPage } = useDeviceStatusQuery(selectedDevice)
 

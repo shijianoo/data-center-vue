@@ -37,9 +37,10 @@ export function getDevicesApi(modelNumberId?: string) {
 }
 
 /** 获取指定设备 */
-export function getDeviceByIdApi(id?: string) {
+export function getDeviceByIdApi(id?: string, includeNav?: boolean) {
   return dataCenterRequest<ApiResponseData<Device>>({
     url: `devices/${id}`,
-    method: "get"
+    method: "get",
+    params: { includeNav }
   })
 }

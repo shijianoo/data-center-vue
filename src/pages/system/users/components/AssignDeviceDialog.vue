@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import type { CheckboxValueType } from "element-plus"
+import type { Device } from "@/common/apis/devices/type"
 import { ElMessage } from "element-plus"
 import { computed, ref, watch } from "vue"
 import { assignDevicesApi, getAccessibleDevices } from "@/common/apis/device-access"
+import { getDevicesApi } from "@/common/apis/devices"
 import { useDeviceModels } from "@/common/hooks/useDeviceModels"
 
 interface Props {
@@ -31,11 +33,10 @@ const modelOptions = computed(() =>
 const searchKeyword = ref<string>("")
 
 // 当前型号的设备列表
-const currentModelDevices = computed(() => {
-  const model = deviceModels.value.find(m => m.id === selectedModelId.value)
-  console.log("当前型号的所有设备", model?.devices)
-  // return model?.devices || []
-  return model?.devices
+const currentModelDevices = ref<Device[]>([])
+watch(selectedModelId, async () => {
+  const { data } = await getDevicesApi(selectedModelId.value)
+  currentModelDevices.value = data
 })
 
 // 过滤后的设备列表

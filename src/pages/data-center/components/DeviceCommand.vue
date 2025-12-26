@@ -146,7 +146,7 @@ const upgradeStatusDialog = ref(false)
 const upgradeStatusList = ref<any[]>([])
 async function upgradeStatusDialogOpened() {
   upgradeStatusList.value = []
-  const { data } = await getDeviceByIdApi(device.value?.id)
+  const { data } = await getDeviceByIdApi(device.value?.id, true)
   console.log("设备升级状态", data)
   upgradeStatusList.value = data.upgradeTasks!
 }

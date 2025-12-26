@@ -15,8 +15,9 @@ const { deviceModels, fetchDeviceModels } = useDeviceModels()
 // #region 增 + 改 表单逻辑
 const defaultForm: CreateOrUpdateDeviceModelDto = {
   id: undefined,
+  productCode: "",
   modelNumber: "",
-  modelName: ""
+  isActive: true
 }
 
 const dialogVisible = ref(false)
@@ -24,8 +25,8 @@ const formRef = useTemplateRef("formRef")
 const formData = ref<CreateOrUpdateDeviceModelDto>(cloneDeep(defaultForm))
 
 const formRules: FormRules<CreateOrUpdateDeviceModelDto> = {
-  modelNumber: [{ required: true, trigger: "blur", message: "请输入设备型号" }],
-  modelName: [{ required: true, trigger: "blur", message: "请输入设备名称" }]
+  productCode: [{ required: true, trigger: "blur", message: "请输入产品编码" }],
+  modelNumber: [{ required: true, trigger: "blur", message: "请输入设备型号" }]
 }
 function handleCreateOrUpdate() {
   formRef.value?.validate(async (valid) => {
@@ -74,9 +75,11 @@ function handleUpdate(row: DeviceModel) {
   dialogVisible.value = true
   formData.value = {
     id: row.id,
+    productCode: row.productCode,
     modelNumber: row.modelNumber,
     modelName: row.modelName,
-    description: row.description
+    description: row.description,
+    isActive: row.isActive
   }
 }
 // #endregion
@@ -125,7 +128,7 @@ onMounted(() => {
           <el-table-column prop="modelNumber" label="设备型号" align="center" />
           <el-table-column prop="modelName" label="设备名称" align="center" />
           <el-table-column prop="description" label="设备描述" align="center" />
-          <el-table-column prop="devices.length" label="设备数量" align="center" />
+          <el-table-column prop="deviceCount" label="设备数量" align="center" />
           <el-table-column fixed="right" label="操作" width="200" align="center">
             <template #default="scope">
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
@@ -150,14 +153,27 @@ onMounted(() => {
       @closed="resetForm"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+        <el-form-item prop="productCode" label="产品编码">
+          <el-input v-model="formData.productCode" placeholder="请输入产品编码" />
+        </el-form-item>
         <el-form-item prop="modelNumber" label="设备型号">
-          <el-input v-model="formData.modelNumber" placeholder="请输入" />
+          <el-input v-model="formData.modelNumber" placeholder="请输入设备型号" />
         </el-form-item>
         <el-form-item prop="modelName" label="设备名称">
-          <el-input v-model="formData.modelName" placeholder="请输入" />
+          <el-input v-model="formData.modelName" placeholder="请输入设备名称" />
         </el-form-item>
         <el-form-item prop="description" label="设备描述">
-          <el-input v-model="formData.description" placeholder="请输入" />
+          <el-input v-model="formData.description" placeholder="请输入设备描述" />
+        </el-form-item>
+        <el-form-item prop="isActive" label="是否启用">
+          <el-radio-group v-model="formData.isActive">
+            <el-radio :value="true">
+              是
+            </el-radio>
+            <el-radio :value="false">
+              否
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>

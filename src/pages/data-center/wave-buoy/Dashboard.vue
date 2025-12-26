@@ -13,7 +13,7 @@ defineOptions({
   name: "WaveBuoyIndex"
 })
 
-const deviceModelId = "85464f2e-25e4-4dd6-a177-b1f5e5a4c6ee"
+const deviceModelId = "019b4a4f-303a-773d-b9d4-008ce510f3b1"
 const { devicesLoading, devices } = useSerialNumberSelection(deviceModelId)
 
 const latestData = ref<Map<string, any>>(new Map())
@@ -90,7 +90,7 @@ const selectedDevice = ref<Device | null>(null)
           <el-table-column label="上传周期(分钟)" min-width="120" align="center">
             <template #default="scope">
               {{
-                scope.row.properties.find((p:any) => p.key === "UploadInterval").value
+                scope.row.properties.UploadInterval
               }}
             </template>
           </el-table-column>
@@ -102,7 +102,7 @@ const selectedDevice = ref<Device | null>(null)
           <el-table-column label="固件版本" min-width="80" align="center">
             <template #default="scope">
               {{
-                scope.row.properties.find((p:any) => p.key === "FirmwareVersion").value
+                scope.row.properties.FirmwareVersion
               }}
             </template>
           </el-table-column>
@@ -117,7 +117,7 @@ const selectedDevice = ref<Device | null>(null)
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" v-permission="['CTRL']" align="center">
+          <el-table-column label="操作" align="center">
             <template #default="scope">
               <el-button @click="() => { controlDialog = true; selectedDevice = scope.row }" type="primary" text bg size="small">
                 控制

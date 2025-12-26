@@ -14,7 +14,7 @@ const loading = ref<boolean>(false)
 const { deviceModels, fetchDeviceModels } = useDeviceModels()
 const modelOptions = computed(() =>
   deviceModels.value.map(m => ({
-    label: m.modelName ? `${m.modelNumber}-${m.modelName}(${m.devices.length})` : `${m.modelNumber}(${m.devices.length})`,
+    label: m.modelName ? `${m.modelNumber}-${m.modelName}(${m.deviceCount})` : `${m.modelNumber}(${m.deviceCount})`,
     value: m.id
   }))
 )
@@ -29,8 +29,7 @@ const defaultForm: CreateOrUpdateDeviceDto = {
   id: undefined,
   deviceModelId: "",
   serialNumber: "",
-  deviceName: "",
-  description: ""
+  isActive: true
 }
 
 const dialogVisible = ref(false)
@@ -85,8 +84,9 @@ function handleUpdate(row: Device) {
     id: row.id,
     deviceModelId: row.deviceModelId,
     serialNumber: row.serialNumber,
-    deviceName: row.deviceName || "",
-    description: row.description || ""
+    deviceName: row.deviceName,
+    description: row.description,
+    isActive: row.isActive
   }
 }
 // #endregion
@@ -218,6 +218,16 @@ onMounted(() => {
         </el-form-item>
         <el-form-item prop="description" label="设备描述">
           <el-input v-model="formData.description" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="isActive" label="是否启用">
+          <el-radio-group v-model="formData.isActive">
+            <el-radio :value="true">
+              是
+            </el-radio>
+            <el-radio :value="false">
+              否
+            </el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
