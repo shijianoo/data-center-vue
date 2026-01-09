@@ -199,11 +199,16 @@ async function updateChart() {
   hideMessage()
   try {
     const { data } = await queryDeviceFieldData(params)
-    const deduplicatedData = deduplicateByTime(data.items)
 
     // 检查是否有数据
-    if (!deduplicatedData || deduplicatedData.length === 0) {
+    if (!data || data.length === 0) {
       showMessage("暂无数据", "no-data")
+      chart.value.setOption({
+        series: [{
+          name: selectedField.value!.label,
+          data: []
+        }]
+      })
       return
     }
 
@@ -217,9 +222,9 @@ async function updateChart() {
     chart.value.setOption({
       series: [{
         name: selectedField.value!.label,
-        data: deduplicatedData.map(item => [
+        data: data.map(item => [
           item.time,
-          item[selectedField.value!.name] != null ? Number(item[selectedField.value!.name]).toFixed(4) : null
+          item.value != null ? Number(item.value).toFixed(4) : null
         ])
       }]
     })
@@ -229,18 +234,6 @@ async function updateChart() {
   } finally {
     loading.value = false
   }
-}
-
-/** 根据时间去重数据 */
-function deduplicateByTime(items: any[]) {
-  const seen = new Set<string>()
-  return items.filter((item) => {
-    if (seen.has(item.time)) {
-      return false
-    }
-    seen.add(item.time)
-    return true
-  })
 }
 
 // 保存图片功能
