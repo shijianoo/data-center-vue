@@ -69,6 +69,11 @@ export interface PagedResult {
   items: any[]
 }
 
+export interface HistoryField {
+  time: string
+  value: number
+}
+
 export type BeidouDataListResponse = ApiResponseData<BeidouData[]>
 
 export type IridiumDataListResponse = ApiResponseData<IridiumData[]>
