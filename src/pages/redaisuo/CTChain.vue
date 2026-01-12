@@ -7,16 +7,18 @@ import { getCTChain } from "./apis"
 const deviceModelId = "019b4a4f-e11e-7af2-b06a-ccdd0b95681d"
 const { devicesLoading, selectedDevice, selectedDeviceId, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
 
+const total = ref(1)
 const pageIndex = ref(1)
-const pageSize = ref(50)
+const pageSize = ref(30)
 const dataList = ref<any[]>([])
 const loading = ref(false)
 
 async function fetchCTChain() {
   loading.value = true
   try {
-    const res = await getCTChain(selectedDevice.value!.serialNumber!, pageIndex.value, pageSize.value)
-    dataList.value = res.data
+    const { data } = await getCTChain(selectedDevice.value!.serialNumber!, pageIndex.value, pageSize.value)
+    dataList.value = data.data.results
+    total.value = data.data.totalCount
   } catch (error) {
     console.error(error)
     ElMessage.error("查询失败")
@@ -25,28 +27,17 @@ async function fetchCTChain() {
   }
 }
 
-// 分页功能
-function goToFirstPage() {
-  if (pageIndex.value > 1) {
-    pageIndex.value = 1
+watch(
+  [pageIndex, pageSize],
+  (newValue) => {
+    console.log(newValue)
     fetchCTChain()
   }
-}
-
-function goToPreviousPage() {
-  if (pageIndex.value > 1) {
-    pageIndex.value--
-    fetchCTChain()
-  }
-}
-
-function goToNextPage() {
-  pageIndex.value++
-  fetchCTChain()
-}
+)
 
 watch(selectedDevice, () => {
   if (selectedDevice.value) {
+    pageIndex.value = 1
     fetchCTChain()
   }
 })
@@ -210,16 +201,7 @@ watch(selectedDevice, () => {
       </el-table>
     </div>
     <div class="pagination-bar">
-      <el-button :disabled="pageIndex === 1" @click="goToFirstPage">
-        首页
-      </el-button>
-      <el-button :disabled="pageIndex === 1" @click="goToPreviousPage">
-        上一页
-      </el-button>
-      <span class="current-page">第 {{ pageIndex }} 页</span>
-      <el-button @click="goToNextPage">
-        下一页
-      </el-button>
+      <el-pagination background layout="total, prev, pager, next, jumper" :total="total" v-model:current-page="pageIndex" v-model:page-size="pageSize" />
     </div>
   </div>
 </template>
@@ -260,14 +242,10 @@ watch(selectedDevice, () => {
 }
 
 .pagination-bar {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 5px;
   text-align: right;
-
-  .current-page {
-    padding: 0 12px;
-    font-size: 14px;
-    color: var(--el-text-color-primary);
-  }
 }
 
 .data-item {
