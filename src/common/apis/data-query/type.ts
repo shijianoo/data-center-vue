@@ -49,7 +49,7 @@ export interface PageListQueryParams {
 
 export interface DeviceFieldDataQueryParams {
   /** 设备型号 */
-  modelNumber: string
+  modelNumber?: string
   /** 设备序列号 */
   serialNumber: string
   /** 查询字段 */
@@ -62,6 +62,7 @@ export interface DeviceFieldDataQueryParams {
   window?: string
   /** 聚合方式 */
   agg?: string
+  bucket?: string
 }
 
 export interface PagedResult {

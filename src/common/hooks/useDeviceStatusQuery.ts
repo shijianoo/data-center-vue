@@ -22,7 +22,7 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
     try {
       const params: DeviceStatusQueryParams = {
         anchorTime: anchorTime.value || new Date().toISOString(),
-        modelNumber: device.value.modelNumber,
+        modelNumber: device.value.modelNumber!,
         serialNumber: device.value.serialNumber,
         limit: limit.value
       }

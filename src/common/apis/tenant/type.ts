@@ -1,4 +1,6 @@
 export interface TenantExtra {
+  uiProfile?: string
+
   // --- 品牌与展示 ---
   shortName?: string
   logoURL?: string
@@ -46,7 +48,7 @@ export interface TenantForm {
   id?: string
   adminUsername?: string
   name?: string
-  tenantNo?: string
+  tenantCode?: string
   type: number
   status: number
   plan: number
@@ -59,6 +61,38 @@ export interface TenantForm {
   description?: string
   isActive: boolean
   sortOrder: number
+}
+
+export interface TenantSummary {
+  id: string
+  name: string
+  tenantCode: string
+  type: number
+  slug?: string
+  customDomain?: string
+  memberName?: string
+  isOwner: boolean
+}
+
+export interface UserTenantSelection {
+  id: string
+  name: string
+  tenantCode: string
+  type: number
+  slug?: string
+  customDomain?: string
+  memberName?: string
+  isOwner: boolean
+}
+
+export interface UserTenantExtra {
+}
+
+export interface MemberProfileDto {
+  memberName: string
+  isOwner: boolean
+  assignedAt: string
+  memberTypeIcon: UserTenantExtra
 }
 
 export type TenantListResponseData = ApiResponseData<Tenant[]>

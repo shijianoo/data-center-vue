@@ -32,3 +32,14 @@ export function refreshTokenApi(refreshToken: string) {
     }
   })
 }
+
+/** 切换租户 */
+export function switchTenantApi(targetTenantId: string) {
+  return authCenterRequest<Auth.LoginResponseData>({
+    url: "auth/switch-tenant",
+    method: "post",
+    params: {
+      targetTenantId
+    }
+  })
+}

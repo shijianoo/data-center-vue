@@ -24,7 +24,7 @@ watch(
     for (const device of newDevices) {
       // 没缓存过才去请求
       if (!latestData.value.has(device.serialNumber)) {
-        const res = await queryDeviceLatestData(device.modelNumber, device.serialNumber)
+        const res = await queryDeviceLatestData(device.modelNumber!, device.serialNumber)
         latestData.value.set(device.serialNumber, res.data)
       }
     }

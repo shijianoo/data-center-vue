@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue"
 import { useRouter } from "vue-router"
-import { useTenantStore } from "@/pinia/stores/tenant"
+import TenantSelectionDialog from "@/common/components/TenantSelectionDialog/index.vue"
 import { useUserStore } from "@/pinia/stores/user"
+import UserProfileDialog from "./UserProfileDialog.vue"
 
 const userStore = useUserStore()
-const tenantStore = useTenantStore()
 const router = useRouter()
 const showUserMenu = ref(false)
+const showProfileDialog = ref(false)
+const tenantSelectionDialog = ref(false)
 
 // 切换菜单显示
 function toggleMenu() {
@@ -16,6 +18,11 @@ function toggleMenu() {
 
 // 点击空白处关闭菜单
 function closeMenu() {
+  showUserMenu.value = false
+}
+
+function openProfile() {
+  showProfileDialog.value = true
   showUserMenu.value = false
 }
 
@@ -31,7 +38,7 @@ function handleInternal() {
 }
 
 // 注册全局点击事件以关闭下拉菜单
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener("click", closeMenu)
 })
 
@@ -44,11 +51,11 @@ onUnmounted(() => {
   <div class="user-trigger" @click.stop="toggleMenu" :class="{ active: showUserMenu }">
     <div class="user-info">
       <div class="user-name">
-        {{ userStore.user!.userName }}
+        {{ userStore.user!.realName || userStore.user!.nickName || userStore.user!.userName }}
       </div>
-      <!-- <div class="user-role">
-        {{ userStore.user!.extra!.role }}
-      </div> -->
+      <div class="user-sub-info">
+        {{ userStore.memberProfile?.memberName ?? '成员' }}
+      </div>
     </div>
 
     <div class="avatar">
@@ -59,15 +66,19 @@ onUnmounted(() => {
     <transition name="fade">
       <div v-show="showUserMenu" class="dropdown-menu">
         <div class="menu-header">
-          <h4>当前身份: {{ userStore.user!.nickName }}</h4>
-          <p>权限等级: </p>
+          <h4>当前身份: {{ userStore.memberProfile?.memberName || userStore.user?.realName || userStore.user?.nickName }}</h4>
+          <p>{{ userStore.user?.email || userStore.user?.userName }}</p>
         </div>
         <div class="dd-divider" />
-        <div class="dd-item">
+        <div class="dd-item" @click="openProfile">
           <i class="fas fa-user-cog" /> 个人设置
         </div>
-        <div class="dd-item" v-if="tenantStore.isInternal" @click="handleInternal">
+        <div class="dd-item" v-if="userStore.isPlatformAdmin" @click="handleInternal">
           <i class="fas fa-user-cog" /> 进入后台管理
+        </div>
+        <div class="dd-divider" v-if="userStore.tenants.length > 1" />
+        <div class="dd-item" v-if="userStore.tenants.length > 1" @click="tenantSelectionDialog = true">
+          <i class="fas fa-user-friends" /> 切换组织
         </div>
         <div class="dd-divider" />
         <div class="dd-item text-danger" @click="handleLogout">
@@ -75,6 +86,8 @@ onUnmounted(() => {
         </div>
       </div>
     </transition>
+    <TenantSelectionDialog :close-on-click-modal="true" v-model:visible="tenantSelectionDialog" />
+    <UserProfileDialog v-model:visible="showProfileDialog" />
   </div>
 </template>
 
@@ -103,6 +116,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 4px;
 
   .user-name {
     display: block;
@@ -110,10 +124,14 @@ onUnmounted(() => {
     font-weight: 600;
     text-align: right;
   }
-  .user-role {
+  .user-sub-info {
     display: block;
     font-size: 11px;
     color: #94a3b8;
+    padding: 0 2px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-left: auto;
   }
 }
 
@@ -157,7 +175,7 @@ onUnmounted(() => {
   }
 
   p {
-    margin: 2px 0 0 0;
+    margin: 3px 0 0 0;
     font-size: 12px;
     color: var(--text-sub);
   }

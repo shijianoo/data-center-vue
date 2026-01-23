@@ -37,7 +37,7 @@ async function dataExport() {
   const data = await selectDateRange({ maxDays: 30 })
   if (data) {
     const url = buildExcelQuickExportUrl({
-      model: selectedDevice.value!.modelNumber,
+      model: selectedDevice.value!.modelNumber!,
       sn: selectedDevice.value!.serialNumber,
       ch: uploadChannel.value,
       start: data.startDate,

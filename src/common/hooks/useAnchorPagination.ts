@@ -22,7 +22,7 @@ export function useAnchorPagination(selectedDevice: Ref<Device | undefined>) {
     try {
       const params: DeviceDataQueryParams = {
         anchorTime: anchorTime.value,
-        modelNumber: selectedDevice.value.modelNumber,
+        modelNumber: selectedDevice.value.modelNumber!,
         serialNumber: selectedDevice.value.serialNumber,
         uploadChannel: uploadChannel.value === 0 ? "" : uploadChannel.value.toString(),
         limit: limit.value

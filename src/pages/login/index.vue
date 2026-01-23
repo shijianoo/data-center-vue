@@ -3,6 +3,7 @@ import type { CheckboxValueType, FormRules } from "element-plus"
 import type { LoginRequestData } from "../../common/apis/auth/type"
 import ThemeSwitch from "@@/components/ThemeSwitch/index.vue"
 import { Key, Loading, Lock, Picture, User } from "@element-plus/icons-vue"
+import TenantSelectionDialog from "@/common/components/TenantSelectionDialog/index.vue"
 import { useAppStore } from "@/pinia/stores/app"
 import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
@@ -23,6 +24,9 @@ const loading = ref(false)
 
 /** 验证码图片 Base64 */
 const codeBase64 = ref("")
+
+/** 租户选择弹窗 */
+const tenantSelectionVisible = ref(false)
 
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
@@ -53,10 +57,22 @@ function handleLogin() {
       return
     }
     loading.value = true
-    loginApi(loginFormData).then(({ data }) => {
+    loginApi(loginFormData).then(async ({ data }) => {
       userStore.setToken(data.accessToken)
       userStore.setRefreshToken(data.refreshToken)
-      router.push(route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/")
+      await userStore.getTenantInfo()
+      await userStore.getInfo()
+      userStore.isInit = true
+      if (userStore.tenants?.length === 1) {
+        if (route.query.redirect) {
+          router.push(decodeURIComponent(route.query.redirect as string))
+        } else {
+          console.log("租户只有一个，自动切换租户:", userStore.tenants[0].name)
+          router.push(`/console/${userStore.tenants[0]!.tenantCode}`)
+        }
+      } else {
+        tenantSelectionVisible.value = true
+      }
     }).catch(() => {
       createCode()
       loginFormData.password = ""
@@ -173,6 +189,7 @@ createCode()
         </el-form>
       </div>
     </div>
+    <TenantSelectionDialog v-model:visible="tenantSelectionVisible" />
   </div>
 </template>
 

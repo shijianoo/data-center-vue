@@ -1,6 +1,7 @@
 <script lang="ts"  setup>
 import type { Device } from "@/common/apis/devices/type"
 import { Picture } from "@element-plus/icons-vue"
+import dayjs from "dayjs"
 import { LineChart } from "echarts/charts"
 import {
   DataZoomComponent,
@@ -185,6 +186,23 @@ watch([selectedField, window], ([newField, newWindow], [oldField, oldWindow]) =>
 
 // 更新图表数据
 async function updateChart() {
+  // 根据时间范围动态设置 window 和 agg，防止数据量过大导致卡顿
+  const diffDays = dayjs(end.value).diff(dayjs(start.value), "day")
+  let windowParam = window.value
+
+  if (diffDays > 30) {
+    windowParam = "1h"
+  } else if (diffDays > 15) {
+    windowParam = "30m"
+  } else if (diffDays > 7) {
+    windowParam = "10m"
+  }
+
+  // 如果自动计算的 window 与当前不同，则更新（这会触发 watch 但由于值相同不会无限循环）
+  if (windowParam !== window.value) {
+    window.value = windowParam
+  }
+
   const params = {
     modelNumber: device.modelNumber,
     serialNumber: device.serialNumber,

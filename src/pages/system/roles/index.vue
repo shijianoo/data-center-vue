@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import type { FormRules } from "element-plus"
 import type { Role, RoleForm } from "@/common/apis/roles/type"
+import type { TenantSummary } from "@/common/apis/tenant/type"
 import { ArrowDown, CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
 import { createRoleApi, deleteRoleApi, getAllRolesApi, updateRoleApi } from "@/common/apis/roles"
-import { useTenantStore } from "@/pinia/stores/tenant"
+import { getTenantSummaryListApi } from "@/common/apis/tenant"
 import AssignMenusDialog from "./components/AssignMenusDialog.vue"
 import AssignPermissionsDialog from "./components/AssignPermissionsDialog.vue"
 
@@ -12,9 +13,23 @@ defineOptions({
   name: "Roles"
 })
 
-const tenantStore = useTenantStore()
-const currentSelectedTenantId = ref("")
 const loading = ref(false)
+const currentSelectedTenantId = ref("")
+const tenantList = ref<TenantSummary[]>([])
+
+async function getTenantList() {
+  loading.value = true
+  try {
+    const { data } = await getTenantSummaryListApi()
+    tenantList.value = data || []
+  } catch (error) {
+    console.error("获取租户列表失败:", error)
+    tenantList.value = []
+    ElMessage.error("获取租户数据失败")
+  } finally {
+    loading.value = false
+  }
+}
 
 // #region 增 + 改 表单逻辑
 const defaultForm: RoleForm = {
@@ -131,6 +146,7 @@ function handleAssignPermissions(row: Role) {
 
 onMounted(() => {
   getRoleData()
+  getTenantList()
 })
 
 watch(() => currentSelectedTenantId.value, () => {
@@ -147,7 +163,7 @@ watch(() => currentSelectedTenantId.value, () => {
             新增角色
           </el-button>
           <el-select :style="{ marginLeft: '10px' }" clearable v-model="currentSelectedTenantId" placeholder="请选择租户" style="width: 200px;">
-            <el-option v-for="tenant in tenantStore.tenants" :key="tenant.id" :label="tenant.name" :value="tenant.id" />
+            <el-option v-for="tenant in tenantList" :key="tenant.id" :label="tenant.name" :value="tenant.id" />
           </el-select>
         </div>
         <div>
@@ -254,7 +270,7 @@ watch(() => currentSelectedTenantId.value, () => {
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
         <el-form-item prop="tenantId" label="租户">
           <el-select v-model="formData.tenantId" placeholder="请选择">
-            <el-option v-for="item in tenantStore.tenants" :key="item.id" :label="item.name" :value="item.id" />
+            <el-option v-for="item in tenantList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item prop="scope" label="角色作用域">

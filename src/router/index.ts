@@ -2,7 +2,6 @@ import type { RouteRecordRaw } from "vue-router"
 import { createRouter } from "vue-router"
 import { routerConfig } from "@/router/config"
 import { registerNavigationGuard } from "@/router/guard"
-import { dataCenterRoutes } from "./data-center-route"
 import { deviceCenterRoutes } from "./device-center-route"
 import { flatMultiLevelRoutes } from "./helper"
 
@@ -13,7 +12,7 @@ const Layouts = () => import("@/layouts/index.vue")
  * @description 用来放置租户级别的路由
  */
 export const tenantRoutes: RouteRecordRaw = {
-  path: "/console/:tenantIdentifier",
+  path: "/console/:tenantKey",
   component: () => import("@/layouts/TenantLayout.vue"),
   meta: {
     hidden: true
@@ -22,27 +21,31 @@ export const tenantRoutes: RouteRecordRaw = {
   [
     {
       path: "",
-      component: () => import("@/pages/tenant/dashboard/index.vue")
+      component: () => import("@/pages/tenants/TenantEntry.vue")
     },
     {
-      path: "project/:id",
-      component: () => import("@/pages/tenant/project/index.vue")
+      path: "platform/tenants",
+      component: () => import("@/pages/tenants/platform-tenant/Tenants.vue")
     },
     {
-      path: "device-list/:model",
-      component: () => import("@/pages/tenant/device-list/index.vue")
+      path: "platform/settings",
+      component: () => import("@/pages/tenants/platform-tenant/Settings.vue")
     },
     {
-      path: "device/:sn",
-      component: () => import("@/pages/tenant/device/index.vue")
+      path: "devices",
+      component: () => import("@/pages/tenants/default-tenant/Devices.vue")
     },
     {
-      path: "reports",
-      component: () => import("@/pages/tenant/device/index.vue") // Placeholder
+      path: "projects/:projectKey",
+      component: () => import("@/pages/projects/ProjectEntry.vue")
     },
     {
-      path: "settings",
-      component: () => import("@/pages/tenant/device/index.vue") // Placeholder
+      path: "projects/:projectKey/devices/:deviceCode",
+      component: () => import("@/pages/devices/DeviceEntry.vue")
+    },
+    {
+      path: "projects/:projectKey/devices/:deviceCode/history",
+      component: () => import("@/pages/devices/HistoryEntry.vue")
     }
   ]
 }
@@ -88,10 +91,11 @@ export const constantRoutes: RouteRecordRaw[] = [
     }
   },
   {
-    path: "/platform",
-    component: () => import("@/pages/platform/index.vue"),
+    path: "/",
+    component: () => import("@/layouts/TenantLayout.vue"),
     meta: {
-      title: "进入平台前端"
+      title: "进入平台前台",
+      breadcrumb: false
     }
   },
   tenantRoutes
@@ -103,8 +107,6 @@ export const constantRoutes: RouteRecordRaw[] = [
  * @description 必须带有唯一的 Name 属性
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
-  ...dataCenterRoutes,
-  ...deviceCenterRoutes,
   {
     path: "/admin",
     component: Layouts,
@@ -121,6 +123,15 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         meta: {
           title: "租户管理",
           svgIcon: "tenant-mgr"
+        }
+      },
+      {
+        path: "projects",
+        component: () => import("@/pages/system/projects/index.vue"),
+        name: "Projects",
+        meta: {
+          title: "项目管理",
+          svgIcon: "project-mgr"
         }
       },
       {
@@ -158,7 +169,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           title: "权限管理",
           svgIcon: "permissions-mgr"
         }
-      }
+      },
+      ...deviceCenterRoutes
     ]
   }
 ]

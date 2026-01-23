@@ -42,3 +42,11 @@ export function getDeviceModelByIdApi(id: string) {
     method: "get"
   })
 }
+
+/** 获取通过key设备型号 */
+export function getDeviceModelByKeyApi(value: string) {
+  return dataCenterRequest<ApiResponseData<DeviceModel>>({
+    url: `device-models/resolve/${value}`,
+    method: "get"
+  })
+}

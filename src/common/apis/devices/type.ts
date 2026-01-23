@@ -9,6 +9,12 @@ export interface CreateOrUpdateDeviceDto {
   isActive: boolean
 }
 
+export interface UpdateDeviceProfileDto {
+  deviceName?: string
+  displayName?: string
+  description?: string
+}
+
 export interface DeviceUpgrade extends Entity<string> {
   deviceId: string
   commandId: string
@@ -22,11 +28,22 @@ export interface DeviceUpgrade extends Entity<string> {
 
 export interface Device extends Entity<string> {
   deviceModelId: string
+  deviceCode: string
   serialNumber: string
   deviceName?: string
+  displayName: string
+  status: number
+  firmwareVersion: string
+  hardwareVersion: string
+  uploadInterval: number
+  lastUploadTime: string
+  lastOnlineTime: string
+  lastOfflineTime: string
+  isOnline: boolean
   description?: string
   isActive: boolean
-  modelNumber: string
+  modelNumber?: string
+  modelName?: string
   upgradeTasks?: DeviceUpgrade[]
 }
 

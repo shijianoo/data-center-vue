@@ -184,7 +184,8 @@ onMounted(() => {
       <div class="table-wrapper">
         <el-card shadow="never">
           <el-table :data="devices">
-            <el-table-column prop="serialNumber" label="设备编号" align="center" />
+            <el-table-column prop="serialNumber" label="设备序列号" align="center" />
+            <el-table-column prop="deviceCode" label="内部编号" align="center" />
             <el-table-column prop="deviceName" label="设备名称" align="center" />
             <el-table-column prop="description" label="备注" align="center" />
             <el-table-column fixed="right" label="操作" width="200" align="center">

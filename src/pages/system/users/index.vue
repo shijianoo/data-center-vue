@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import type { FormRules } from "element-plus"
+import type { TenantSummary } from "@/common/apis/tenant/type"
 import type { User, UserForm } from "@/common/apis/users/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { cloneDeep } from "lodash-es"
+import { getTenantSummaryListApi } from "@/common/apis/tenant"
 import { createUserApi, deleteUserApi, getAllUsersApi, resetPasswordApi, updateUserApi } from "@/common/apis/users"
-import { useTenantStore } from "@/pinia/stores/tenant"
 import AssignDeviceDialog from "./components/AssignDeviceDialog.vue"
 import AssignRoleDialog from "./components/AssignRoleDialog.vue"
 
@@ -12,9 +13,23 @@ defineOptions({
   name: "Users"
 })
 
-const tenantStore = useTenantStore()
 const currentSelectedTenantId = ref("")
 const loading = ref(false)
+const tenantList = ref<TenantSummary[]>([])
+
+async function getTenantList() {
+  loading.value = true
+  try {
+    const { data } = await getTenantSummaryListApi()
+    tenantList.value = data || []
+  } catch (error) {
+    console.error("获取租户列表失败:", error)
+    tenantList.value = []
+    ElMessage.error("获取租户数据失败")
+  } finally {
+    loading.value = false
+  }
+}
 
 // #region 增 + 改 表单逻辑
 const defaultForm: UserForm = {
@@ -161,6 +176,7 @@ function handleAssignRoles(row: User) {
 
 onMounted(() => {
   getUserData()
+  getTenantList()
 })
 
 watch(() => currentSelectedTenantId.value, () => {
@@ -177,7 +193,7 @@ watch(() => currentSelectedTenantId.value, () => {
             新增用户
           </el-button>
           <el-select :style="{ marginLeft: '10px' }" clearable v-model="currentSelectedTenantId" placeholder="请选择租户" style="width: 200px;">
-            <el-option v-for="tenant in tenantStore.tenants" :key="tenant.id" :label="tenant.name" :value="tenant.id" />
+            <el-option v-for="tenant in tenantList" :key="tenant.id" :label="tenant.name" :value="tenant.id" />
           </el-select>
         </div>
         <div>

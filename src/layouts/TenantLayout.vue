@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import type { Links } from "./components/TenantHeader/type"
-import { useTenantStore } from "@/pinia/stores/tenant"
+import { watch } from "vue"
+import { useRoute } from "vue-router"
+import { useTenantContext } from "@/common/hooks/useTenantContext"
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import TenantHeader from "./components/TenantHeader/index.vue"
 
-const tenantStore = useTenantStore()
-const navLinks: Links[] = [
-  { name: "首页", path: `/console/${tenantStore.activeTenant!.tenantCode}`, exact: true },
-  { name: "设备管理", path: `/console/${tenantStore.activeTenant!.tenantCode}/devices` },
-  { name: "设置", path: `/console/${tenantStore.activeTenant!.tenantCode}/settings` }
-]
+const route = useRoute()
+const { fetchData } = useTenantContext()
+const tenantStore = useTenantContextStore()
+
+watch(
+  () => route.fullPath,
+  () => {
+    fetchData()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
-  <TenantHeader :links="navLinks" :show-back-button="tenantStore.isInternal" />
+  <TenantHeader :links="tenantStore.customNavLinks" />
   <div class="console-layout">
     <main class="container-main">
       <router-view v-slot="{ Component }">
@@ -40,8 +47,7 @@ const navLinks: Links[] = [
 }
 
 .container-main {
-  max-width: 1400px;
-  padding: 30px;
+  padding: 20px;
   margin: 0 auto;
   width: 100%;
 }

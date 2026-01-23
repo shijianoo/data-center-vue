@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Links } from "./type"
 import { ref } from "vue"
-import { useTenantStore } from "@/pinia/stores/tenant"
+import { useUserStore } from "@/pinia/stores/user"
 import DesktopNav from "./DesktopNav.vue"
 import MobileMenu from "./MobileMenu.vue"
 import TenantLogo from "./TenantLogo.vue"
@@ -10,14 +10,19 @@ import UserMenu from "./UserMenu.vue"
 defineProps<{
   links?: Links[]
 }>()
-const tenantStore = useTenantStore()
+const userStore = useUserStore()
 const showMobileMenu = ref(false)
+
+const tenantCode = computed(() => {
+  const tenant = userStore.tenants.find(tenant => tenant.type === 99)
+  return tenant?.tenantCode
+})
 </script>
 
 <template>
   <nav class="navbar" :class="{ 'has-links': links && links.length > 0 }">
     <div class="nav-left">
-      <router-link v-if="tenantStore.isInternal" to="/platform" custom v-slot="{ isExactActive, navigate, href }">
+      <router-link v-if="userStore.isPlatformUser" :to="`/console/${tenantCode}`" custom v-slot="{ isExactActive, navigate, href }">
         <a v-if="!isExactActive" :href="href" @click="navigate" class="back-link">
           <i class="fa-solid fa-arrow-left" />
           <span class="back-text">返回</span>

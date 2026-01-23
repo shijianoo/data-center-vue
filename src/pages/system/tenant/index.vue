@@ -11,13 +11,13 @@ import {
   getTenantListApi,
   updateTenantApi
 } from "@/common/apis/tenant"
-import { useTenantStore } from "@/pinia/stores/tenant"
+import AssignDeviceDialog from "./components/AssignDeviceDialog.vue"
 import AssignUserDialog from "./components/AssignUserDialog.vue"
+import TenantExtraDialog from "./components/TenantExtraDialog.vue"
 
 defineOptions({
   name: "Tenant"
 })
-const tenantStore = useTenantStore()
 const loading = ref<boolean>(false)
 const submitLoading = ref<boolean>(false)
 
@@ -25,7 +25,7 @@ const submitLoading = ref<boolean>(false)
 const defaultForm: TenantForm = {
   adminUsername: "",
   name: "",
-  tenantNo: "",
+  tenantCode: "",
   type: 1,
   status: 1,
   isActive: true,
@@ -113,7 +113,6 @@ async function handleCreateOrUpdate() {
     ElMessage.error("操作失败")
   } finally {
     submitLoading.value = false
-    tenantStore.getTenantList()
   }
 }
 
@@ -144,10 +143,23 @@ onMounted(() => {
 })
 
 const assignUserDialogVisible = ref(false)
+const assignDeviceDialogVisible = ref(false)
+const tenantExtraDialogVisible = ref(false)
 const currentTenantId = ref<string | null>(null)
+
 function handleAssignUsers(tenant: Tenant) {
   currentTenantId.value = tenant.id
   assignUserDialogVisible.value = true
+}
+
+function handleAssignDevices(tenant: Tenant) {
+  currentTenantId.value = tenant.id
+  assignDeviceDialogVisible.value = true
+}
+
+function handleExtra(tenant: Tenant) {
+  currentTenantId.value = tenant.id
+  tenantExtraDialogVisible.value = true
 }
 
 function getTenantType(tenant: Tenant) {
@@ -259,7 +271,7 @@ function getTenantStatus(tenant: Tenant) {
                     <el-dropdown-item @click="handleAssignUsers(scope.row)">
                       分配用户
                     </el-dropdown-item>
-                    <el-dropdown-item>
+                    <el-dropdown-item @click="handleAssignDevices(scope.row)">
                       分配设备
                     </el-dropdown-item>
                   </el-dropdown-menu>
@@ -267,6 +279,9 @@ function getTenantStatus(tenant: Tenant) {
               </el-dropdown>
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
                 修改
+              </el-button>
+              <el-button type="primary" text bg size="small" @click="handleExtra(scope.row)">
+                扩展信息
               </el-button>
               <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)" :disabled="scope.row.isSystem">
                 删除
@@ -413,6 +428,8 @@ function getTenantStatus(tenant: Tenant) {
       </template>
     </el-dialog>
     <AssignUserDialog :tenant-id="currentTenantId!" v-model:visible="assignUserDialogVisible" />
+    <AssignDeviceDialog :tenant-id="currentTenantId!" v-model:visible="assignDeviceDialogVisible" />
+    <TenantExtraDialog :tenant-id="currentTenantId!" v-model:visible="tenantExtraDialogVisible" />
   </div>
 </template>
 

@@ -19,7 +19,7 @@ export function useDeviceDataPagination(selectedDevice: Ref<Device | undefined>)
 
     try {
       const params: PageListQueryParams = {
-        model: selectedDevice.value.modelNumber,
+        model: selectedDevice.value.modelNumber!,
         sn: selectedDevice.value.serialNumber,
         ch: uploadChannel.value,
         page: pageIndex.value,
