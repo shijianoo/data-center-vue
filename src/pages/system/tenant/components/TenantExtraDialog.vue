@@ -4,7 +4,7 @@ import { ElMessage } from "element-plus"
 import { getTenantApi, updateTenantExtraApi } from "@/common/apis/tenant"
 
 interface Props {
-  tenantId: string
+  tenantId?: string
 }
 
 const props = defineProps<Props>()
@@ -130,7 +130,7 @@ function closed() {
               <el-input-number v-model="formData.maxUserCount" :min="0" />
             </el-form-item>
             <el-form-item label="是否 VIP">
-              <el-switch v-underline v-model="formData.isVip" />
+              <el-switch v-model="formData.isVip" />
             </el-form-item>
             <el-form-item label="备注">
               <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注" />

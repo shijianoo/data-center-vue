@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useRouter } from "vue-router"
+import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
 
 const router = useRouter()
 </script>
@@ -7,6 +8,7 @@ const router = useRouter()
 <template>
   <div class="project-not-found-page">
     <div class="page-container">
+      <TenantBreadcrumb />
       <div class="content-wrapper">
         <div class="info-card">
           <div class="warning-header">

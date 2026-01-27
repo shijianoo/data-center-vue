@@ -1,10 +1,20 @@
 <script lang="ts" setup>
+import AsyncLoading from "@/common/components/AsyncLoading.vue"
 import { useUserStore } from "@/pinia/stores/user"
 
 const pageMap: Record<string, any> = {
-  Platform: defineAsyncComponent(() => import("./platform-tenant/Overview.vue")),
-  Default: defineAsyncComponent(() => import("./default-tenant/Overview.vue")),
-  NotFound: defineAsyncComponent(() => import("./NotFound.vue"))
+  Platform: defineAsyncComponent({
+    loader: () => import("./platform-tenant/Overview.vue"),
+    loadingComponent: AsyncLoading
+  }),
+  Default: defineAsyncComponent({
+    loader: () => import("./default-tenant/Overview.vue"),
+    loadingComponent: AsyncLoading
+  }),
+  NotFound: defineAsyncComponent({
+    loader: () => import("./NotFound.vue"),
+    loadingComponent: AsyncLoading
+  })
 }
 
 function getTenantPage(key: string) {
@@ -20,7 +30,7 @@ watch(() => userStore.activeTenant, (tenant) => {
     } else {
       tenantComponent.value = getTenantPage(tenant.extra!.uiProfile!)
     }
-  } else {
+  } else if (tenant === null) {
     tenantComponent.value = pageMap.NotFound
   }
 }, { immediate: true })

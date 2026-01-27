@@ -6,7 +6,7 @@ import { assignUsersApi, getTenantApi, getTenantUserIdsApi } from "@/common/apis
 import { getAllUsersApi } from "@/common/apis/users"
 
 interface Props {
-  tenantId: string
+  tenantId?: string
 }
 
 const props = defineProps<Props>()
@@ -82,7 +82,7 @@ async function getAllUsers() {
 async function getTenantUsers() {
   loading.value = true
   try {
-    const { data } = await getTenantUserIdsApi(props.tenantId)
+    const { data } = await getTenantUserIdsApi(props.tenantId!)
     selectedUserIds.value = data
     console.log("获取当前租户已有用户", selectedUserIds.value)
   } catch (error) {
@@ -97,7 +97,7 @@ async function getTenantUsers() {
 async function handleSubmit() {
   loading.value = true
   try {
-    await assignUsersApi(props.tenantId, selectedUserIds.value)
+    await assignUsersApi(props.tenantId!, selectedUserIds.value)
     ElMessage.success("分配用户成功")
     visible.value = false
   } catch (error) {
@@ -126,7 +126,7 @@ function handleDialogOpen() {
 async function handleDialogOpened() {
   getAllUsers()
   getTenantUsers()
-  const { data } = await getTenantApi(props.tenantId)
+  const { data } = await getTenantApi(props.tenantId!)
   currentTenant.value = data
 }
 

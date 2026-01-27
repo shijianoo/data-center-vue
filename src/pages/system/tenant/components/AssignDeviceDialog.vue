@@ -15,7 +15,7 @@ import { getDevicesApi } from "@/common/apis/devices"
 import { getTenantApi } from "@/common/apis/tenant"
 
 interface Props {
-  tenantId: string
+  tenantId?: string
 }
 
 const props = defineProps<Props>()
@@ -118,7 +118,7 @@ async function handleAssign(deviceOrIds: Device | string[]) {
   if (ids.length === 0) return
 
   try {
-    await addDevicesToTenant(props.tenantId, ids)
+    await addDevicesToTenant(props.tenantId!, ids)
     ElMessage.success("分配成功")
     assignedDeviceIds.value.push(...ids)
     ids.forEach(id => globalSelectedIds.value.delete(id))
@@ -141,7 +141,7 @@ async function handleRemove(deviceOrIds: Device | string[]) {
     type: "warning"
   }).then(async () => {
     try {
-      await removeDevicesFromTenant(props.tenantId, ids)
+      await removeDevicesFromTenant(props.tenantId!, ids)
       ElMessage.success("移除成功")
       assignedDeviceIds.value = assignedDeviceIds.value.filter(id => !ids.includes(id))
       ids.forEach(id => globalSelectedIds.value.delete(id))

@@ -15,29 +15,30 @@ export function useTenantContext() {
     console.log("当前租户Key", tenantKey)
 
     try {
-      if (userStore.activeTenant !== null
+      // 判断当前租户是否发生变化
+      if ((userStore.activeTenant !== undefined && userStore.activeTenant !== null)
         && (userStore.activeTenant.id === tenantKey
           || userStore.activeTenant.tenantCode === tenantKey
           || userStore.activeTenant.slug === tenantKey
           || userStore.activeTenant.customDomain === tenantKey)) {
         console.log(`当前租户未发生变化`)
       } else {
+        // 判断是否有权限访问该租户
         const tenant = userStore.tenants.find(t => t.id === tenantKey
           || t.tenantCode === tenantKey
           || t.slug === tenantKey
           || t.customDomain === tenantKey)
-
         if (tenant) {
           console.log(`切换到以加入的租户 ${tenant.name}`)
           await userStore.switchTenant(tenant.id)
         } else {
+          // 判断是否为平台管理员
           if (userStore.roles.includes("platform_admin") || userStore.roles.includes("platform_ops")) {
-            console.log(`切换到未加入的租户，且用户是平台用户 ${tenantKey}`)
             const { data } = await getTenantByKeyApi(tenantKey)
-            console.log("切换到未加入的租户，且用户是平台用户", data)
+            console.log(`切换到未加入的租户，且用户是平台用户，${tenantKey}`, data)
             await userStore.switchTenant(data.id)
           } else {
-            console.log(`切换到未加入的租户，且用户不是平台用户 ${tenantKey}`)
+            console.log(`切换到未加入的租户，且用户不是平台用户，${tenantKey}`)
             userStore.activeTenant = null
           }
         }
@@ -57,7 +58,7 @@ export function useTenantContext() {
 
     try {
       console.log("当前项目Key", projectKey)
-      if (store.currentProject !== null
+      if ((store.currentProject !== undefined && store.currentProject !== null)
         && (store.currentProject.id === projectKey
           || store.currentProject.projectCode === projectKey
           || store.currentProject.projectNo === projectKey)) {
@@ -99,7 +100,7 @@ export function useTenantContext() {
 
     try {
       console.log("当前设备Key", deviceCode)
-      if (store.currentDevice !== null
+      if ((store.currentDevice !== undefined && store.currentDevice !== null)
         && (store.currentDevice.id === deviceCode
           || store.currentDevice.deviceCode === deviceCode)) {
         console.log("当前设备未发生变化")

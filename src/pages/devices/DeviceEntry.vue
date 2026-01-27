@@ -1,10 +1,17 @@
 <script lang="ts" setup>
 import { defineAsyncComponent } from "vue"
+import AsyncLoading from "@/common/components/AsyncLoading.vue"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
 const pageMap: Record<string, any> = {
-  SOB23BS: defineAsyncComponent(() => import("./sob23bs/Device.vue")),
-  NotFound: defineAsyncComponent(() => import("./NotFound.vue"))
+  SOB23BS: defineAsyncComponent({
+    loader: () => import("./sob23bs/Device.vue"),
+    loadingComponent: AsyncLoading
+  }),
+  NotFound: defineAsyncComponent({
+    loader: () => import("./NotFound.vue"),
+    loadingComponent: AsyncLoading
+  })
 }
 
 function getDevicePage(modelCode: string) {
@@ -16,7 +23,7 @@ const deviceComponent = shallowRef()
 watch(() => tenantContextStore.currentDevice, (device) => {
   if (device) {
     deviceComponent.value = getDevicePage(device.modelNumber!)
-  } else {
+  } else if (device === null) {
     deviceComponent.value = pageMap.NotFound
   }
 }, { immediate: true })

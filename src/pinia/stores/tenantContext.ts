@@ -10,9 +10,11 @@ export const useTenantContextStore = defineStore("tenantContext", () => {
   const route = useTenantRoute()
   const userStore = useUserStore()
   const currentTenant = computed(() => userStore.activeTenant)
-  const currentProject = ref<Project | null>(null)
-  const currentModel = ref<DeviceModel | null>(null)
-  const currentDevice = ref<Device | null>(null)
+
+  /// undefined:未初始化，null:没有权限
+  const currentProject = ref<Project | null | undefined>(undefined)
+  const currentModel = ref<DeviceModel | null | undefined>(undefined)
+  const currentDevice = ref<Device | null | undefined>(undefined)
 
   const customNavLinks = ref<any[]>([])
   const setNavLinks = (links: any[]) => {

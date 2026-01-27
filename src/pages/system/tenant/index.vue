@@ -145,7 +145,7 @@ onMounted(() => {
 const assignUserDialogVisible = ref(false)
 const assignDeviceDialogVisible = ref(false)
 const tenantExtraDialogVisible = ref(false)
-const currentTenantId = ref<string | null>(null)
+const currentTenantId = ref<string | undefined>(undefined)
 
 function handleAssignUsers(tenant: Tenant) {
   currentTenantId.value = tenant.id
@@ -427,9 +427,9 @@ function getTenantStatus(tenant: Tenant) {
         </el-button>
       </template>
     </el-dialog>
-    <AssignUserDialog :tenant-id="currentTenantId!" v-model:visible="assignUserDialogVisible" />
-    <AssignDeviceDialog :tenant-id="currentTenantId!" v-model:visible="assignDeviceDialogVisible" />
-    <TenantExtraDialog :tenant-id="currentTenantId!" v-model:visible="tenantExtraDialogVisible" />
+    <AssignUserDialog :tenant-id="currentTenantId" v-model:visible="assignUserDialogVisible" />
+    <AssignDeviceDialog :tenant-id="currentTenantId" v-model:visible="assignDeviceDialogVisible" />
+    <TenantExtraDialog :tenant-id="currentTenantId" v-model:visible="tenantExtraDialogVisible" />
   </div>
 </template>
 

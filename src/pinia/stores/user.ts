@@ -29,7 +29,8 @@ export const useUserStore = defineStore("user", () => {
 
   const tenants = ref<UserTenantSelection[]>([])
 
-  const activeTenant = ref<Tenant | null>(null)
+  /// undefined:未初始化，null:没有权限
+  const activeTenant = ref<Tenant | null | undefined>(undefined)
 
   const memberProfile = ref<MemberProfileDto | null>(null)
 
@@ -86,13 +87,12 @@ export const useUserStore = defineStore("user", () => {
   // 切换当前租户
   const switchTenant = async (tenantId: string) => {
     const { data } = await switchTenantApi(tenantId)
-    console.log("切换租户成功:", activeTenant.value)
     setToken(data.accessToken)
     setRefreshToken(data.refreshToken)
 
     const { data: tenant } = await getTenantApi(tenantId)
     activeTenant.value = tenant
-
+    console.log("切换租户成功:", activeTenant.value)
     const { data: profile } = await getCurrentMemberProfileApi()
     memberProfile.value = profile
     console.log("切换租户成功-成员信息:", profile)
@@ -131,7 +131,7 @@ export const useUserStore = defineStore("user", () => {
     resetRouter()
     resetTagsView()
     user.value = null
-    activeTenant.value = null
+    activeTenant.value = undefined
     tenantContextStore.clear()
   }
 
