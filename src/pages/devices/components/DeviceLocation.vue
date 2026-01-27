@@ -1,78 +1,29 @@
 <script lang="ts" setup>
-import AMapLoader from "@amap/amap-jsapi-loader"
-import { onMounted, onUnmounted, shallowRef, watch } from "vue"
-import { wgs84togcj02 } from "@/common/utils/lnglat-convert"
-
 const props = defineProps<{
   longitude: number
   latitude: number
 }>()
 
 /** 地图实例 */
-const map = shallowRef<any>(null)
-/** 高德地图 API */
-let AMap: any = null
+let map: any = null
 /** 标记点 */
 let marker: any = null
 
-/** 初始化地图 */
-async function initMap() {
-  try {
-    window._AMapSecurityConfig = {
-      securityJsCode: "315e9072c6e3433a437aede3570020c9"
-    }
-
-    AMap = await AMapLoader.load({
-      key: "ad4165a2acd181970b0f8313af6b7a0b",
-      version: "2.0",
-      plugins: ["AMap.Marker"]
-    })
-
-    const center = wgs84togcj02(props.longitude, props.latitude)
-
-    // 创建地图实例
-    map.value = new AMap.Map("device-location-map", {
-      viewMode: "3D",
-      zoom: 6,
-      center,
-      mapStyle: "amap://styles/normal"
-    })
-
-    // 添加标记点
-    marker = new AMap.Marker({
-      position: center,
-      map: map.value
-    })
-  } catch (error) {
-    console.error("地图加载失败:", error)
-  }
-}
-
 // 监听坐标变化
 watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
-  if (map.value && AMap) {
-    const newCenter: [number, number] = [Number(lng), Number(lat)]
-    map.value.setCenter(newCenter)
-    if (marker) {
-      marker.setPosition(newCenter)
-    } else {
-      marker = new AMap.Marker({
-        position: newCenter,
-        map: map.value
-      })
-    }
+  const T = window.T
+  if (map === null) {
+    map = new T.Map("device-location-map")
   }
-})
 
-onMounted(() => {
-  initMap()
-})
-
-onUnmounted(() => {
-  map.value?.destroy()
-  map.value = null
-  AMap = null
-  marker = null
+  const lng_lat = new T.LngLat(lng, lat)
+  if (marker === null) {
+    marker = new T.Marker(lng_lat)
+    map.addOverLay(marker)
+  } else {
+    marker.setLngLat (lng_lat)
+  }
+  map.centerAndZoom(lng_lat, 6)
 })
 </script>
 
@@ -123,12 +74,8 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 
-  :deep(.amap-logo) {
+  :deep(.tdt-control-copyright) {
     display: none !important;
-    opacity: 0 !important;
-  }
-
-  :deep(.amap-copyright) {
     opacity: 0 !important;
   }
 }
