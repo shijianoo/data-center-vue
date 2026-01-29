@@ -127,6 +127,7 @@ watch(() => device.deviceCode, () => {
 .device-container {
   max-width: 1280px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .device-header {
@@ -330,6 +331,9 @@ watch(() => device.deviceCode, () => {
 
 // Mobile
 @media (max-width: 900px) {
+  .device-container {
+    padding: 10px;
+  }
   .layout-grid {
     grid-template-columns: 1fr;
     margin-top: 10px;

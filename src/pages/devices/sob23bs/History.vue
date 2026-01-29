@@ -310,6 +310,7 @@ const {
 .history-container {
   max-width: 1600px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .page-header {
@@ -478,6 +479,12 @@ const {
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
+  }
+}
+
+@media (max-width: 900px) {
+  .history-container {
+    padding: 10px;
   }
 }
 </style>

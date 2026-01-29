@@ -1,10 +1,18 @@
-import type { Device } from "../devices/type"
+import type { Device, DeviceSummary } from "../devices/type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 获取指定项目设备 */
 export function getDeviceIdsFromProject(projectId: string) {
   return dataCenterRequest<ApiResponseData<string[]>>({
     url: `/projects/${projectId}/devices/ids`,
+    method: "get"
+  })
+}
+
+/** 获取指定项目设备摘要 */
+export function getDeviceSummaryFromProject(projectId: string) {
+  return dataCenterRequest<ApiResponseData<DeviceSummary[]>>({
+    url: `/projects/${projectId}/devices/summary`,
     method: "get"
   })
 }
@@ -39,6 +47,14 @@ export function getDevicesFromTenant(tenantId: string) {
 export function getDeviceIdsFromTenant(tenantId: string) {
   return dataCenterRequest<ApiResponseData<string[]>>({
     url: `/tenants/${tenantId}/devices/ids`,
+    method: "get"
+  })
+}
+
+/** 获取指定租户设备摘要 */
+export function getDeviceSummaryFromTenant(tenantId: string) {
+  return dataCenterRequest<ApiResponseData<DeviceSummary[]>>({
+    url: `/tenants/${tenantId}/devices/summary`,
     method: "get"
   })
 }

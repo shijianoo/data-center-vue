@@ -47,4 +47,17 @@ export interface Device extends Entity<string> {
   upgradeTasks?: DeviceUpgrade[]
 }
 
+export interface DeviceSummary {
+  id: string
+  serialNumber: string
+  deviceCode: string
+  deviceName?: string
+  displayName: string
+  status: number
+  firmwareVersion: string
+  hardwareVersion: string
+  lastUploadTime: string
+  isOnline: boolean
+}
+
 export type DeviceListResponse = ApiResponseData<Device[]>

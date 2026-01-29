@@ -1,4 +1,4 @@
-import type { Project, ProjectExtra, ProjectForm, ProjectListResponseData } from "./type"
+import type { Project, ProjectExtra, ProjectForm, ProjectListResponseData, ProjectSummary } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 创建项目 */
@@ -40,6 +40,15 @@ export function updateProjectExtraApi(id: string, data: ProjectExtra) {
 export function getProjectListApi(tenantId?: string) {
   return dataCenterRequest<ProjectListResponseData>({
     url: "/projects",
+    method: "get",
+    params: { tenantId }
+  })
+}
+
+/** 获取项目的简单摘要列表 */
+export function getProjectSummaryApi(tenantId?: string) {
+  return dataCenterRequest<ApiResponseData<ProjectSummary[]>>({
+    url: "/projects/summary",
     method: "get",
     params: { tenantId }
   })

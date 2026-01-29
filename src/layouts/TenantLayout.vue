@@ -47,7 +47,6 @@ watch(
 }
 
 .container-main {
-  padding: 20px;
   margin: 0 auto;
   width: 100%;
 }
@@ -59,11 +58,5 @@ watch(
 .fade-page-enter-from,
 .fade-page-leave-to {
   opacity: 0;
-}
-
-@media (max-width: 900px) {
-  .container-main {
-    padding: 10px;
-  }
 }
 </style>

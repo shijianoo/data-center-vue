@@ -49,6 +49,7 @@ watch(() => tenantContextStore.currentProject, async (project) => {
   min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
+  padding: 20px;
   width: 100%;
 }
 
@@ -75,6 +76,9 @@ watch(() => tenantContextStore.currentProject, async (project) => {
 }
 
 @media (max-width: 900px) {
+  .project-dashboard {
+    padding: 10px;
+  }
   .project-hero-card {
     margin-bottom: 10px;
   }

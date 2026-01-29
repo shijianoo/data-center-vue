@@ -36,4 +36,11 @@ export interface ProjectForm {
   sortOrder: number
 }
 
+export interface ProjectSummary {
+  id: string
+  projectNo: string
+  name: string
+  projectCode: string
+}
+
 export type ProjectListResponseData = ApiResponseData<Project[]>

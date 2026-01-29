@@ -2,7 +2,6 @@
 import type { ProjectWithStats } from "@/common/apis/statistics/tenants/type"
 import { useRouter } from "vue-router"
 import { getTenantProjectStatsApi } from "@/common/apis/statistics/tenants"
-import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import { useUserStore } from "@/pinia/stores/user"
 import ProjectCard from "./components/ProjectCard.vue"
@@ -27,7 +26,6 @@ function goToProject(project: ProjectWithStats) {
 
 <template>
   <div class="tenant-container">
-    <TenantBreadcrumb />
     <TenantCard :tenant="userStore.activeTenant!" />
 
     <SectionBar title="项目列表" :count="projectCount" />
@@ -45,9 +43,9 @@ function goToProject(project: ProjectWithStats) {
 
 <style lang="scss" scoped>
 .tenant-container {
-  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
+  padding: 20px;
   width: 100%;
 }
 
@@ -85,6 +83,9 @@ function goToProject(project: ProjectWithStats) {
 }
 
 @media (max-width: 900px) {
+  .tenant-container {
+    padding: 10px;
+  }
   .tenant-breadcrumb {
     margin-bottom: 10px;
   }

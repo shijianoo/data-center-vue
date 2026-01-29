@@ -54,9 +54,9 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .tenant-container {
-  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
+  padding-top: 20px;
   width: 100%;
 }
 

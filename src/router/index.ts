@@ -36,6 +36,10 @@ export const tenantRoutes: RouteRecordRaw = {
       component: () => import("@/pages/tenants/default-tenant/Devices.vue")
     },
     {
+      path: "devices/tracks",
+      component: () => import("@/pages/tracks/TracksEntry.vue")
+    },
+    {
       path: "projects/:projectKey",
       component: () => import("@/pages/projects/ProjectEntry.vue")
     },
