@@ -19,6 +19,15 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
           title: "气象浮标",
           roles: ["data-center:weather-buoy"]
         }
+      },
+      {
+        path: "drift-buoy-v1-t1",
+        component: () => import("@/pages/data-center/sob10v1t1/index.vue"),
+        name: "DriftBuoyV1T1",
+        meta: {
+          title: "小型漂流浮标",
+          roles: ["data-center:drift-buoy-v1-t1"]
+        }
       }
     ]
   },
