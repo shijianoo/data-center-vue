@@ -1,5 +1,5 @@
 import type { QueryResult } from "../type"
-import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, IridiumData, IridiumRawQueryParams, PagedResultResponse, PageListQueryParams } from "./type"
+import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 查询设备数据 */
@@ -65,5 +65,14 @@ export function queryDeviceLatestData(modelNumber: string, serialNumber: string)
       modelNumber,
       serialNumber
     }
+  })
+}
+
+/** 分页数据查询 */
+export function pagedDataQuery(params: PagedQueryRequest) {
+  return dataCenterRequest<ApiResponseData<PagedQueryResult>>({
+    url: "query/device/page",
+    method: "get",
+    params
   })
 }

@@ -174,7 +174,48 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           svgIcon: "permissions-mgr"
         }
       },
-      ...deviceCenterRoutes
+      ...deviceCenterRoutes,
+      {
+        path: "data-check",
+        name: "DataCheck",
+        meta: {
+          title: "数据检查"
+        },
+        children: [
+          {
+            path: "data-source",
+            name: "DataSource",
+            component: () => import("@/pages/system/data-check/data-source/index.vue"),
+            meta: {
+              title: "数据源"
+            }
+          },
+          {
+            path: "data-point",
+            name: "DataPoint",
+            component: () => import("@/pages/system/data-check/data-point/index.vue"),
+            meta: {
+              title: "数据点"
+            }
+          },
+          {
+            path: "rule-definition",
+            name: "RuleDefinition",
+            component: () => import("@/pages/system/data-check/rule-definition/index.vue"),
+            meta: {
+              title: "规则定义"
+            }
+          },
+          {
+            path: "rule-binding",
+            name: "RuleBinding",
+            component: () => import("@/pages/system/data-check/rule-binding/index.vue"),
+            meta: {
+              title: "规则绑定"
+            }
+          }
+        ]
+      }
     ]
   }
 ]

@@ -1,4 +1,4 @@
-import type { CreateOrUpdateDeviceDto, Device, DeviceListResponse, UpdateDeviceProfileDto } from "@/common/apis/devices/type"
+import type { CreateOrUpdateDeviceDto, Device, DeviceListResponse, DeviceSummary, UpdateDeviceProfileDto } from "@/common/apis/devices/type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 创建设备 */
@@ -51,6 +51,15 @@ export function getDeviceByIdApi(id?: string, includeNav?: boolean) {
     url: `devices/${id}`,
     method: "get",
     params: { includeNav }
+  })
+}
+
+/** 获取设备信息汇总 */
+export function getDeviceSummariesApi(modelNumberId: string) {
+  return dataCenterRequest<ApiResponseData<DeviceSummary[]>>({
+    url: "devices/summary",
+    method: "get",
+    params: { modelNumberId }
   })
 }
 

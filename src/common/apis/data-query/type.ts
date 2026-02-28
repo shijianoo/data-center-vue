@@ -75,6 +75,26 @@ export interface HistoryField {
   value: number
 }
 
+export interface PagedQueryRequest {
+  model: string
+  version: number
+  dataType: number
+  serialNumber: string
+  uploadChannel: number
+  page: number
+  size: number
+}
+
+export interface PagedQueryResult {
+  schema: {
+    key: string
+    displayName: string
+    unit: string
+  }[]
+  records: any[]
+  totalCount: number
+}
+
 export type BeidouDataListResponse = ApiResponseData<BeidouData[]>
 
 export type IridiumDataListResponse = ApiResponseData<IridiumData[]>

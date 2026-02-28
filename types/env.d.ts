@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_BASE_URL: string
   readonly VITE_AUTH_CENTER_BASE_URL: string
   readonly VITE_DATA_CENTER_BASE_URL: string
+  readonly VITE_DATA_CHECK_BASE_URL: string
   readonly VITE_ROUTER_HISTORY: "hash" | "html5"
   readonly VITE_PUBLIC_PATH: string
 }
