@@ -20,4 +20,11 @@ export interface DeviceModel extends Entity<string> {
   devices: Device[]
 }
 
+export interface DeviceModelSummary {
+  id: string
+  productCode: string
+  modelNumber: string
+  modelName?: string
+}
+
 export type DeviceModelListResponse = ApiResponseData<DeviceModel[]>

@@ -30,4 +30,13 @@ export interface Device extends Entity<string> {
   upgradeTasks?: DeviceUpgrade[]
 }
 
+export interface DeviceSummary {
+  id: string
+  deviceModelId: string
+  serialNumber: string
+  deviceCode: string
+  deviceName?: string
+  displayName?: string
+}
+
 export type DeviceListResponse = ApiResponseData<Device[]>
