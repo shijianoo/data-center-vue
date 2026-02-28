@@ -19,7 +19,7 @@ async function fetchData() {
   }
   try {
     const { data } = await pagedDataQuery({
-      model: selectedDevice.value!.modelNumber,
+      model: selectedDevice.value!.modelNumber!,
       version: 1,
       dataType: 1,
       serialNumber: selectedDevice.value!.serialNumber,
