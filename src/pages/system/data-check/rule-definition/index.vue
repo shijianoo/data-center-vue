@@ -196,8 +196,10 @@ const operatorOptions = [
   { label: "≤ 小于等于", value: 4 },
   { label: "= 等于", value: 5 },
   { label: "≠ 不等于", value: 6 },
-  { label: "[] 之间", value: 7 },
-  { label: "∈ 子集", value: 8 }
+  { label: "[] 在区间内", value: 7 },
+  { label: "() 在区间外", value: 8 },
+  { label: "∈ 在集合内", value: 9 },
+  { label: "∉ 在集合外", value: 10 }
 ]
 
 // 使用规则值字段 Hook
