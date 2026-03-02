@@ -76,7 +76,7 @@ export function useRuleValueFields(
   const showValue2 = computed(() => {
     const { ruleType, operator } = getConfig()
     // 数值规则 - 之间运算符
-    if (ruleType === 3 && operator === 7) {
+    if (ruleType === 3 && (operator === 7 || operator === 8)) {
       return true
     }
     // 位置规则
@@ -97,13 +97,19 @@ export function useRuleValueFields(
       return "经纬度坐标"
     }
     if (ruleType === 3) {
-      if (operator === 7) {
+      // 数值规则的普通运算符
+      if (operator >= 1 && operator <= 6) {
+        return "阈值"
+      }
+      /// 数值规则的区间运算符
+      if (operator === 7 || operator === 8) {
         return "最小值"
       }
-      if (operator === 8) {
-        return "子集"
+      // 集合运算符
+      if (operator === 9 || operator === 10) {
+        return "集合"
       }
-      return "阈值"
+      return "值1"
     }
     return "值1"
   })
@@ -115,7 +121,7 @@ export function useRuleValueFields(
     if (ruleType === 2) {
       return "半径（米）"
     }
-    if (ruleType === 3 && operator === 7) {
+    if (ruleType === 3 && (operator === 7 || operator === 8)) {
       return "最大值"
     }
     return "值2"
@@ -137,8 +143,11 @@ export function useRuleValueFields(
       if (ruleType === 2) {
         return "可选，请输入经纬度，如: 116.404,39.915"
       }
-      if (ruleType === 3 && operator === 8) {
-        return "可选，请输入逗号分隔的值，如: 1,2,3,4"
+      if (ruleType === 3 && (operator === 7 || operator === 8)) {
+        return "可选，请输入最小值"
+      }
+      if (ruleType === 3 && (operator === 9 || operator === 10)) {
+        return "请输入逗号分隔的值，如: 1,2,3,4"
       }
       return "可选，不填则使用规则定义的默认值"
     }
@@ -150,11 +159,11 @@ export function useRuleValueFields(
     if (ruleType === 2) {
       return "经纬度，如: 116.404,39.915"
     }
-    if (ruleType === 3 && operator === 7) {
+    if (ruleType === 3 && (operator === 7 || operator === 8)) {
       return "请输入最小值"
     }
-    if (ruleType === 3 && operator === 8) {
-      return "逗号分隔的值，如: 1,2,3,4"
+    if (ruleType === 3 && (operator === 9 || operator === 10)) {
+      return "请输入逗号分隔的值，如: 1,2,3,4"
     }
     return "阈值"
   })
@@ -182,7 +191,7 @@ export function useRuleValueFields(
     if (ruleType === 2) {
       return "请输入半径(米)"
     }
-    if (ruleType === 3 && operator === 7) {
+    if (ruleType === 3 && (operator === 7 || operator === 8)) {
       return "请输入最大值"
     }
     return "请输入值2"
