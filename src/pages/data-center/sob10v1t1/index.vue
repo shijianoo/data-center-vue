@@ -1,8 +1,11 @@
 <script lang="ts" setup>
+import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
 import { pagedDataQuery } from "@/common/apis/data-query"
+import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { parseLatHem, parseLeakStatus, parseLonHem } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
+import { downloadFile } from "@/common/utils/download"
 
 const deviceModelId = "019c2c62-d292-7c50-af4f-a423023bf63f"
 const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
@@ -42,6 +45,26 @@ watch([selectedDevice, pageIndex], async ([device]) => {
     fetchData()
   }
 })
+
+async function dataExport() {
+  if (!selectedDevice) {
+    ElMessage.warning("请先选择设备")
+    return
+  }
+  const data = await selectDateRange({ maxDays: 30 })
+  if (data) {
+    const url = buildDownloadExcelByRangeUrl({
+      model: selectedDevice.value!.modelNumber,
+      version: 1,
+      dataType: 1,
+      serialNumber: selectedDevice.value!.serialNumber,
+      uploadChannel: 0,
+      startTime: data.startDate,
+      endTime: data.endDate
+    })
+    downloadFile(url)
+  }
+}
 </script>
 
 <template>
@@ -57,6 +80,9 @@ watch([selectedDevice, pageIndex], async ([device]) => {
       </el-select>
       <el-button type="primary" @click="fetchData" style="margin: 0;">
         查询
+      </el-button>
+      <el-button style="margin: 0;" @click="dataExport">
+        下载
       </el-button>
     </div>
 
