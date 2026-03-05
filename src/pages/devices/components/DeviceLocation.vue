@@ -11,6 +11,7 @@ let marker: any = null
 
 // 监听坐标变化
 watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
+  if (!lng || !lat) return
   const T = window.T
   if (map === null) {
     map = new T.Map("device-location-map")
@@ -21,7 +22,7 @@ watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
     marker = new T.Marker(lng_lat)
     map.addOverLay(marker)
   } else {
-    marker.setLngLat (lng_lat)
+    marker.setLngLat(lng_lat)
   }
   map.centerAndZoom(lng_lat, 6)
 })
@@ -34,9 +35,12 @@ watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
     </div>
     <div class="card-body">
       <div id="device-location-map" class="map-container" />
+      <div class="no-data" v-if="longitude === 0 && latitude === 0">
+        暂无设备位置信息
+      </div>
     </div>
     <div class="map-footer">
-      <i class="fas fa-map-pin" /> E {{ longitude }}, N {{ latitude }}
+      <i class="fas fa-map-pin" /> E {{ longitude || 0 }}, N {{ latitude || 0 }}
     </div>
   </div>
 </template>
@@ -67,6 +71,21 @@ watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
     flex: 1;
     min-height: 300px;
     position: relative;
+
+    .no-data {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      color: var(--text-sub);
+      font-size: 14px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
   }
 }
 

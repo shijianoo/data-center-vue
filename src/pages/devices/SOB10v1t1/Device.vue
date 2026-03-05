@@ -42,6 +42,8 @@ async function fetchLatestData() {
       monitorItems.value = [
         { label: "无数据", value: "无数据" }
       ]
+      lon.value = 0
+      lat.value = 0
       console.log("设备没有数据")
     }
   } catch (error) {

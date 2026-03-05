@@ -29,15 +29,25 @@ async function fetchLatestData() {
       { modelNumber: device.modelNumber!, version: 1, dataType: 1 },
       device.serialNumber
     )
-    monitorItems.value = [
-      { label: "平均波高", value: data.data.hm, unit: "m" },
-      { label: "平均波周期", value: data.data.tm, unit: "s" },
-      { label: "1/3波高", value: data.data.h13, unit: "m" },
-      { label: "1/3波周期", value: data.data.t13, unit: "s" }
-    ]
-    csq.value = data.data.csq
-    lon.value = data.data.lon
-    lat.value = data.data.lat
+    if (data.data) {
+      monitorItems.value = [
+        { label: "平均波高", value: data.data.hm, unit: "m" },
+        { label: "平均波周期", value: data.data.tm, unit: "s" },
+        { label: "1/3波高", value: data.data.h13, unit: "m" },
+        { label: "1/3波周期", value: data.data.t13, unit: "s" }
+      ]
+      csq.value = data.data.csq
+      lon.value = data.data.lon
+      lat.value = data.data.lat
+      console.log("设备最新数据", data.data)
+    } else {
+      monitorItems.value = [
+        { label: "无数据", value: "无数据" }
+      ]
+      lon.value = 0
+      lat.value = 0
+      console.log("设备没有数据")
+    }
   } catch (error) {
     console.error("获取最新数据失败:", error)
   }

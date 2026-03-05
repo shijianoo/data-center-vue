@@ -51,7 +51,7 @@ onUnmounted(() => {
   <div class="user-trigger" @click.stop="toggleMenu" :class="{ active: showUserMenu }">
     <div class="user-info">
       <div class="user-name">
-        {{ userStore.user!.realName || userStore.user!.nickName || userStore.user!.userName }}
+        {{ userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName }}
       </div>
       <div class="user-sub-info">
         {{ userStore.memberProfile?.memberName ?? '成员' }}

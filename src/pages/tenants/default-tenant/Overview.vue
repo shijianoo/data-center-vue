@@ -13,10 +13,14 @@ const userStore = useUserStore()
 const router = useRouter()
 const projectStats = ref<ProjectWithStats[]>()
 const projectCount = computed(() => projectStats.value?.length || 0)
-watch(() => userStore.activeTenant, async () => {
-  const { data } = await getTenantProjectStatsApi()
-  console.log("当前租户的项目统计信息", data.map(d => d.name).join(","))
-  projectStats.value = data
+watch(() => userStore.activeTenant, async (tenant) => {
+  if (tenant) {
+    const { data } = await getTenantProjectStatsApi()
+    console.log("当前租户的项目统计信息", data.map(d => d.name).join(","))
+    projectStats.value = data
+  } else {
+    console.log("当前没有激活的租户")
+  }
 }, { immediate: true })
 
 function goToProject(project: ProjectWithStats) {

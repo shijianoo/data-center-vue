@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import type { CheckboxValueType, FormRules } from "element-plus"
 import type { LoginRequestData } from "../../common/apis/auth/type"
 import ThemeSwitch from "@@/components/ThemeSwitch/index.vue"
-import { Key, Loading, Lock, Picture, User } from "@element-plus/icons-vue"
 import TenantSelectionDialog from "@/common/components/TenantSelectionDialog/index.vue"
-import { useAppStore } from "@/pinia/stores/app"
+import { CacheKey } from "@/common/constants/cache-key"
 import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
 import { getCaptchaApi, loginApi } from "../../common/apis/auth"
@@ -12,12 +10,8 @@ import { getCaptchaApi, loginApi } from "../../common/apis/auth"
 const route = useRoute()
 const router = useRouter()
 
-const appStore = useAppStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
-
-/** 登录表单元素的引用 */
-const loginFormRef = useTemplateRef("loginFormRef")
 
 /** 登录按钮 Loading */
 const loading = ref(false)
@@ -28,57 +22,44 @@ const codeBase64 = ref("")
 /** 租户选择弹窗 */
 const tenantSelectionVisible = ref(false)
 
+/** 是否记住账户 */
+const isRememberAccount = ref<boolean>(localStorage.getItem(CacheKey.REMEMBER_ACCOUNT_KEY) === "true")
+
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
-  username: appStore.rememberAccount,
+  username: localStorage.getItem(CacheKey.SAVED_USERNAME_KEY) || "",
   password: "",
   code: "",
   codeId: ""
 })
 
-/** 登录表单校验规则 */
-const loginFormRules: FormRules = {
-  username: [
-    { required: true, message: "请输入用户名", trigger: "blur" }
-  ],
-  password: [
-    { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 0, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
-  ],
-  code: [
-    { required: true, message: "请输入验证码", trigger: "blur" }
-  ]
-}
-
 /** 登录 */
 function handleLogin() {
-  loginFormRef.value?.validate((valid) => {
-    if (!valid) {
-      return
-    }
-    loading.value = true
-    loginApi(loginFormData).then(async ({ data }) => {
-      userStore.setToken(data.accessToken)
-      userStore.setRefreshToken(data.refreshToken)
-      await userStore.getTenantInfo()
-      await userStore.getInfo()
-      userStore.isInit = true
-      if (userStore.tenants?.length === 1) {
-        if (route.query.redirect) {
-          router.push(decodeURIComponent(route.query.redirect as string))
-        } else {
-          console.log("租户只有一个，自动切换租户:", userStore.tenants[0].name)
-          router.push(`/console/${userStore.tenants[0]!.tenantCode}`)
-        }
+  if (!loginFormData.username || !loginFormData.password || !loginFormData.code) {
+    return
+  }
+  loading.value = true
+  loginApi(loginFormData).then(async ({ data }) => {
+    userStore.setToken(data.accessToken)
+    userStore.setRefreshToken(data.refreshToken)
+    await userStore.getTenantInfo()
+    await userStore.getInfo()
+    userStore.isInit = true
+    if (userStore.tenants?.length === 1) {
+      if (route.query.redirect) {
+        router.push(decodeURIComponent(route.query.redirect as string))
       } else {
-        tenantSelectionVisible.value = true
+        console.log("租户只有一个，自动切换租户:", userStore.tenants[0].name)
+        router.push(`/console/${userStore.tenants[0]!.tenantCode}`)
       }
-    }).catch(() => {
-      createCode()
-      loginFormData.password = ""
-    }).finally(() => {
-      loading.value = false
-    })
+    } else {
+      tenantSelectionVisible.value = true
+    }
+  }).catch(() => {
+    createCode()
+    loginFormData.password = ""
+  }).finally(() => {
+    loading.value = false
   })
 }
 
@@ -95,11 +76,13 @@ function createCode() {
   })
 }
 
-function handleRefdsfs(val: CheckboxValueType) {
-  if (val && loginFormData.username) {
-    appStore.saveRememberedAccount(loginFormData.username)
+function handleRememberChange() {
+  if (isRememberAccount.value) {
+    localStorage.setItem(CacheKey.REMEMBER_ACCOUNT_KEY, "true")
+    localStorage.setItem(CacheKey.SAVED_USERNAME_KEY, loginFormData.username)
   } else {
-    appStore.saveRememberedAccount(null)
+    localStorage.removeItem(CacheKey.REMEMBER_ACCOUNT_KEY)
+    localStorage.removeItem(CacheKey.SAVED_USERNAME_KEY)
   }
 }
 
@@ -112,99 +95,55 @@ createCode()
     <ThemeSwitch v-if="settingsStore.showThemeSwitch" class="theme-switch" />
 
     <div class="login-box">
-      <div class="login-left">
-        <div class="image-container">
-          <img src="@@/assets/images/layouts/login-bg.jpeg" alt="地球数据监测" class="ocean-image">
+      <h2>系统登录</h2>
+      <form @submit.prevent="handleLogin">
+        <div class="input-group">
+          <label for="username">用户名</label>
+          <input type="text" id="username" name="username" v-model.trim="loginFormData.username" placeholder="请输入您的用户名" required>
         </div>
-      </div>
-      <div class="login-right">
-        <div class="form-header">
-          <h1 class="system-title">
-            浅海科技-海洋数据中心
-          </h1>
-          <p class="system-slogan">
-            海洋数据管理平台
-          </p>
+
+        <div class="input-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" v-model.trim="loginFormData.password" placeholder="请输入您的密码" required minlength="0" maxlength="16">
         </div>
-        <el-form ref="loginFormRef" :model="loginFormData" :rules="loginFormRules" @keyup.enter="handleLogin" class="login-form">
-          <el-form-item prop="username">
-            <el-input
-              v-model.trim="loginFormData.username"
-              placeholder="请输入用户名"
-              type="text"
-              tabindex="1"
-              :prefix-icon="User"
-              size="default"
-            />
-          </el-form-item>
-          <el-form-item prop="password">
-            <el-input
-              v-model.trim="loginFormData.password"
-              placeholder="请输入密码"
-              type="password"
-              tabindex="2"
-              :prefix-icon="Lock"
-              size="default"
-              show-password
-            />
-          </el-form-item>
-          <el-form-item prop="code">
-            <el-input
-              v-model.trim="loginFormData.code"
-              placeholder="请输入验证码"
-              type="text"
-              tabindex="3"
-              :prefix-icon="Key"
-              maxlength="7"
-              size="default"
-            >
-              <template #append>
-                <el-image :src="codeBase64" draggable="false" @click="createCode" title="点击刷新验证码">
-                  <template #placeholder>
-                    <el-icon>
-                      <Picture />
-                    </el-icon>
-                  </template>
-                  <template #error>
-                    <el-icon>
-                      <Loading />
-                    </el-icon>
-                  </template>
-                </el-image>
-              </template>
-            </el-input>
-          </el-form-item>
 
-          <!-- 记住账户复选框 -->
-          <el-form-item class="remember-account-item">
-            <el-checkbox @change="handleRefdsfs" v-model="appStore.isRememberAccount" size="default">
-              记住账户
-            </el-checkbox>
-          </el-form-item>
+        <div class="input-group">
+          <label for="captcha">验证码</label>
+          <div class="captcha-group">
+            <input type="text" id="captcha" name="captcha" v-model.trim="loginFormData.code" placeholder="输入验证码" required maxlength="7">
+            <img v-if="codeBase64" :src="codeBase64" @click="createCode" alt="验证码" title="点击刷新验证码" class="captcha-img">
+            <div v-else class="captcha-img-placeholder" @click="createCode">
+              加载中...
+            </div>
+          </div>
+        </div>
 
-          <el-button :loading="loading" type="primary" size="default" @click.prevent="handleLogin" class="login-button">
-            <span v-if="!loading">登 录</span>
-            <span v-else>验证中...</span>
-          </el-button>
-        </el-form>
-      </div>
+        <div class="input-group remember-group">
+          <input type="checkbox" id="remember" v-model="isRememberAccount" @change="handleRememberChange">
+          <label for="remember">记住账户</label>
+        </div>
+
+        <button type="submit" class="login-btn" :disabled="loading">
+          <span v-if="!loading">登 录</span>
+          <span v-else>验证中...</span>
+        </button>
+      </form>
     </div>
+
     <TenantSelectionDialog v-model:visible="tenantSelectionVisible" />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .login-container {
+  background-color: #2c3e50; /* 专业的深蓝灰纯色背景 */
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a4f7a 0%, #2d8fd5 100%);
   position: relative;
-  padding: 20px;
-  overflow: hidden;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
   .theme-switch {
     position: fixed;
@@ -214,256 +153,127 @@ createCode()
     z-index: 10;
   }
 
+  /* 登录框主体 */
   .login-box {
-    display: flex;
-    width: 900px;
-    max-width: 100%;
-    min-height: 600px;
-    background-color: var(--el-bg-color);
-    border-radius: 0;
-    overflow: hidden;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    animation: fadeIn 0.8s ease-out;
-  }
+    background-color: #ffffff;
+    width: 90%; /* 移动端适配 */
+    max-width: 400px; /* PC端最大宽度 */
+    padding: 40px 30px;
+    border-radius: 6px; /* 微微的圆角 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* 添加轻微阴影提升立体感 */
 
-  .login-left {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-
-    .image-container {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-
-      .ocean-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 0;
-        box-shadow: none;
-      }
-    }
-  }
-
-  .login-right {
-    width: 400px;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-
-    .form-header {
+    /* 标题样式 */
+    h2 {
       text-align: center;
-      margin-bottom: 25px;
-
-      .system-title {
-        font-size: 1.7rem;
-        font-weight: 700;
-        margin-bottom: 5px;
-      }
-
-      .system-slogan {
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 20px;
-      }
-
-      .welcome-text {
-        font-size: 1.5rem;
-        color: var(--el-color-primary-light-3);
-        margin: 0;
-        font-weight: 600;
-      }
+      color: #333333;
+      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: 0;
     }
 
-    .login-form {
-      flex: 1;
+    /* 表单组布局 */
+    .input-group {
+      margin-bottom: 20px;
 
-      :deep(.el-input) {
-        margin-bottom: 15px;
-
-        .el-input__wrapper {
-          border-radius: 0px;
-          height: 42px;
-          box-shadow: none;
-          border: 1px solid #dcdfe6;
-          transition: all 0.3s;
-
-          &:hover {
-            border-color: var(--el-color-primary-light-3);
-          }
-
-          &.is-focus {
-            border-color: var(--el-color-primary);
-            box-shadow: 0 0 0 2px rgba(45, 143, 213, 0.2);
-          }
-        }
-
-        .el-input__icon {
-          color: var(--el-color-primary);
-          font-size: 18px;
-        }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555555;
+        font-size: 14px;
       }
 
-      :deep(.el-input-group__append) {
-        padding: 0;
-        border: 1px solid #dcdfe6;
-        border-left: none;
-
-        .el-image {
-          width: 100px;
-          height: 40px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &:hover {
-            opacity: 0.8;
-          }
-        }
-      }
-
-      :deep(.el-form-item) {
-        margin-bottom: 30px;
-
-        &.is-error {
-          animation: shake 0.5s;
-
-          .el-form-item__error {
-            padding-top: 2px;
-            margin-top: -10px;
-          }
-        }
-
-        &.remember-account-item {
-          margin-bottom: 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          .el-form-item__content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-          }
-        }
-      }
-
-      .login-tips {
-        font-size: 12px;
-        color: var(--el-text-color-secondary);
-        font-style: italic;
-        opacity: 0.8;
-      }
-
-      :deep(.el-checkbox) {
-        .el-checkbox__label {
-          font-size: 14px;
-          color: var(--el-text-color-regular);
-        }
-
-        &.is-checked .el-checkbox__label {
-          color: var(--el-color-primary);
-        }
-      }
-
-      .el-button {
+      /* 输入框通用样式 */
+      input[type="text"],
+      input[type="password"] {
         width: 100%;
-        margin-top: 15px;
-        border-radius: 0px;
-        height: 44px;
-        font-size: 16px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        padding: 12px;
+        border: 1px solid #cccccc;
+        border-radius: 4px; /* 微微的圆角 */
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
 
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(45, 143, 213, 0.4);
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+        }
+      }
+
+      /* 验证码特殊布局 (Flexbox) */
+      .captcha-group {
+        display: flex;
+        gap: 10px;
+
+        input {
+          flex: 1; /* 输入框占据剩余空间 */
+        }
+
+        .captcha-img {
+          height: 42px;
+          width: 100px;
+          border-radius: 4px;
+          cursor: pointer;
+          border: 1px solid #cccccc;
+          object-fit: cover;
+        }
+
+        .captcha-img-placeholder {
+          height: 42px;
+          width: 100px;
+          border-radius: 4px;
+          cursor: pointer;
+          border: 1px solid #cccccc;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: #999;
+          font-size: 12px;
+          background-color: #f2f2f2;
+        }
+      }
+
+      /* 记住密码布局 */
+      &.remember-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+
+        label {
+          margin-bottom: 0;
+          cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+          cursor: pointer;
+          width: 16px;
+          height: 16px;
         }
       }
     }
-  }
-}
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-5px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(5px);
-  }
-}
-
-@media (max-width: 992px) {
-  .login-container {
-    .login-box {
-      flex-direction: column;
-      width: 450px;
-      max-width: 100%;
-    }
-
-    .login-left {
-      display: none;
-    }
-
-    .login-right {
+    /* 登录按钮样式 */
+    .login-btn {
       width: 100%;
-    }
-  }
-}
+      padding: 12px;
+      background-color: #3498db; /* 经典专业蓝 */
+      color: white;
+      border: none;
+      border-radius: 4px; /* 微微的圆角 */
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
 
-@media (max-width: 480px) {
-  .login-container {
-    padding: 15px;
+      &:hover:not(:disabled) {
+        background-color: #2980b9; /* 鼠标悬停加深颜色 */
+      }
 
-    .login-box {
-      width: 100%;
-      border-radius: 0;
-    }
-
-    .login-right {
-      padding: 25px 20px;
-
-      .form-header {
-        margin-bottom: 20px;
-
-        .system-title {
-          font-size: 1.4rem;
-        }
-
-        .system-slogan {
-          font-size: 0.8rem;
-          margin-bottom: 15px;
-        }
-
-        .welcome-text {
-          font-size: 1.2rem;
-        }
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
       }
     }
   }
