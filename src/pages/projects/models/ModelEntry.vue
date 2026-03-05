@@ -1,15 +1,12 @@
 <script lang="ts" setup>
 import type { DeviceModelStatistics, DeviceStatisticsDto } from "@/common/apis/statistics/projects/type"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
-import SOB23BSTable from "./SOB23BSTable.vue"
+import DefaultTable from "./DefaultTable.vue"
 
 const props = defineProps<DeviceModelStatistics>()
-const modelMap: Record<string, any> = {
-  SOB23BS: SOB23BSTable
-}
 const router = useRouter()
 const currentTable = computed(() => {
-  return modelMap[props.modelNumber]
+  return DefaultTable
 })
 
 const onlineCount = computed(() => {

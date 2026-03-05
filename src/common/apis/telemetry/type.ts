@@ -3,24 +3,14 @@ export interface HistoryPoint {
   value: number
 }
 
-export interface LatestTelemetryDataQuery {
+export interface TelemetryDataQuery {
   modelNumber: string
-  serialNumber: string[]
+  version: number
+  dataType: number
 }
 
-export interface TelemetryData<T> {
+export interface TelemetryData {
   serialNumber: string
   modelNumber: string
-  data: T
-}
-
-export interface WaveBuoyLatestTelemetryData {
-  lon: number
-  lat: number
-  csq: number
-  ubatt: number
-  hm: number
-  tm: number
-  h13: number
-  t13: number
+  data: any
 }

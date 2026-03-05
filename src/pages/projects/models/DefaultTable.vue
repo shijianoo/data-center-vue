@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import type { DeviceStatisticsDto } from "@/common/apis/statistics/projects/type"
-import type { WaveBuoyLatestTelemetryData } from "@/common/apis/telemetry/type"
-import { getLatestTelemetryDataBatch } from "@/common/apis/telemetry"
+import { formatHybridAgo } from "@/common/utils/datetime"
 
-const props = defineProps<{
+const { devices } = defineProps<{
   devices: DeviceStatisticsDto[]
 }>()
 
@@ -11,7 +10,6 @@ const emit = defineEmits<{
   (e: "action", row: any): void
 }>()
 
-const latestsMap = ref<Record<string, WaveBuoyLatestTelemetryData>>({})
 function getStatusClass(status: boolean) {
   return status ? "sb-green" : "sb-red"
 }
@@ -20,57 +18,44 @@ function getStatusText(status: boolean) {
   return status ? "正常" : "离线"
 }
 
-async function getTelemetryData() {
-  const { data } = await getLatestTelemetryDataBatch<WaveBuoyLatestTelemetryData>({
-    modelNumber: "SOB23BS",
-    serialNumber: props.devices.map(item => item.serialNumber)
-  })
-  data.forEach((s) => {
-    latestsMap.value[s.serialNumber] = s.data
-  })
-
-  console.log(latestsMap.value)
+function getDeviceName(device: DeviceStatisticsDto) {
+  const name = device.displayName ?? device.deviceName
+  if (name) {
+    return `${name} | ${device.serialNumber}`
+  } else {
+    return device.serialNumber
+  }
 }
-
-onMounted(() => {
-  getTelemetryData()
-})
 </script>
 
 <template>
   <div class="table-container">
     <table class="custom-table">
       <thead>
-        <th width="15%">
-          设备 / SN
+        <th width="25%">
+          设备名称 / SN
         </th>
         <th width="10%">
           状态
         </th>
         <th width="10%">
-          平均波高 (m)
+          上报周期
+        </th>
+        <th width="20%">
+          最后上报
+        </th>
+        <th width="20%">
+          备注
         </th>
         <th width="10%">
-          平均周期 (s)
-        </th>
-        <th width="10%">
-          1/3波高 (m)
-        </th>
-        <th width="10%">
-          1/3波周期 (s)
-        </th>
-        <th width="10%">
-          电池 (V)
-        </th>
-        <th width="15%">
           操作
         </th>
       </thead>
       <tbody>
         <tr @click="emit('action', row)" v-for="(row, rIdx) in devices" :key="rIdx" :class="{ 'bg-danger-light': row.isOnline === false }">
-          <td>
+          <td class="device-name">
             <div style="font-weight: 600; color: var(--text-main);">
-              {{ row.serialNumber }}
+              {{ getDeviceName(row) }}
             </div>
             <div style="font-size: 12px; color: var(--text-sub);">
               ID: {{ row.deviceCode }}
@@ -81,11 +66,11 @@ onMounted(() => {
               <span class="dot" /> {{ getStatusText(row.isOnline) }}
             </span>
           </td>
-          <td>{{ latestsMap[row.serialNumber]?.hm || "-" }}</td>
-          <td>{{ latestsMap[row.serialNumber]?.tm || "-" }}</td>
-          <td>{{ latestsMap[row.serialNumber]?.h13 || "-" }}</td>
-          <td>{{ latestsMap[row.serialNumber]?.t13 || "-" }}</td>
-          <td>{{ latestsMap[row.serialNumber]?.ubatt / 1000 || "-" }}</td>
+          <td>{{ row.uploadInterval }}</td>
+          <td>
+            {{ formatHybridAgo(row.lastUploadTime) }}
+          </td>
+          <td>{{ row.description }}</td>
           <td><a class="link-primary">详情</a></td>
         </tr>
       </tbody>
@@ -130,6 +115,12 @@ onMounted(() => {
   tr:hover td {
     background: #f8fafc;
   }
+}
+
+.device-name {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .status-badge {

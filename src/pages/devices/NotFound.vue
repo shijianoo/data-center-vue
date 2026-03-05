@@ -74,6 +74,7 @@ const { device } = defineProps<{
 
 .page-container {
   max-width: 1280px;
+  padding: 20px;
   margin: 0 auto;
   width: 100%;
 }
@@ -184,8 +185,8 @@ const { device } = defineProps<{
 }
 
 @media (max-width: 600px) {
-  .device-not-found-page {
-    padding: 15px;
+  .page-container {
+    padding: 10px;
   }
   .info-card {
     padding: 24px;

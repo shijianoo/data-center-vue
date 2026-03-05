@@ -5,7 +5,11 @@ import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
 const pageMap: Record<string, any> = {
   SOB23BS: defineAsyncComponent({
-    loader: () => import("./sob23bs/History.vue"),
+    loader: () => import("./SOB23BSv1t1/History.vue"),
+    loadingComponent: AsyncLoading
+  }),
+  SOB10: defineAsyncComponent({
+    loader: () => import("./SOB10v1t1/History.vue"),
     loadingComponent: AsyncLoading
   }),
   NotFound: defineAsyncComponent({

@@ -36,7 +36,6 @@ watch(() => tenantContextStore.currentProject, async (project) => {
           />
         </template>
         <div v-else-if="!loading" class="empty-state">
-          <i class="fas fa-folder-open" />
           <span>该项目暂无设备数据</span>
         </div>
       </div>
@@ -46,7 +45,6 @@ watch(() => tenantContextStore.currentProject, async (project) => {
 
 <style lang="scss" scoped>
 .project-dashboard {
-  min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
   padding: 20px;

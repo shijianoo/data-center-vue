@@ -93,7 +93,6 @@ async function fetchHistory() {
   loading.value = true
   try {
     const { data } = await queryDeviceFieldData({
-      modelNumber: device.modelNumber!,
       bucket,
       serialNumber: device.serialNumber!,
       field: selectedField.value,
@@ -262,10 +261,10 @@ const chartOption = computed(() => {
       </div>
       <div class="chart-footer">
         <template v-if="queryMode === 'hours'">
-          最新数据前 {{ selectedHours }} 小时采样点
+          最新数据前 {{ selectedHours }} 小时数据
         </template>
         <template v-else>
-          {{ timeRange[0] }} 至 {{ timeRange[1] }} 数据采样点
+          {{ timeRange[0] }} 至 {{ timeRange[1] }} 数据
         </template>
       </div>
     </div>
@@ -428,7 +427,7 @@ const chartOption = computed(() => {
 
 .chart-footer {
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
   margin-top: 10px;
 }

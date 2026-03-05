@@ -41,12 +41,6 @@ function handleConfigure(device: Device) {
 
 <template>
   <div class="devices-container">
-    <div class="section-bar">
-      <h2 style="margin:0">
-        设备资产
-      </h2>
-    </div>
-
     <div class="toolbar">
       <input type="text" v-model="searchKey" class="search-box" placeholder="输入 SN 或 设备名称...">
       <select class="filter-select" v-model="modelFilter">
@@ -120,6 +114,7 @@ function handleConfigure(device: Device) {
 .devices-container {
   min-height: 100vh;
   max-width: 1280px;
+  padding: 20px;
   margin: 0 auto;
   width: 100%;
 }

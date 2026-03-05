@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import type { MonitorItem } from "../components/MonitorGrid.vue"
 import type { Device } from "@/common/apis/devices/type"
-import type { WaveBuoyLatestTelemetryData } from "@/common/apis/telemetry/type"
-import { useRouter } from "vue-router"
 import { getLatestTelemetryData } from "@/common/apis/telemetry"
 import { formatHybridAgo } from "@/common/utils/datetime"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
@@ -13,29 +11,39 @@ import TelemetryChart from "../components/TelemetryChart.vue"
 const { device } = defineProps<{
   device: Device
 }>()
-
 const route = useRoute()
 const router = useRouter()
 
 const displayTitle = computed(() => device.displayName || device.deviceName || device.serialNumber)
 
 const monitorItems = ref<MonitorItem[]>([])
-const csq = ref(0)
 const lon = ref(0)
 const lat = ref(0)
+
 async function fetchLatestData() {
   try {
     monitorItems.value = []
-    const { data } = await getLatestTelemetryData<WaveBuoyLatestTelemetryData>(device.modelNumber!, device.serialNumber)
-    monitorItems.value = [
-      { label: "平均波高", value: data.data.hm, unit: "m" },
-      { label: "平均波周期", value: data.data.tm, unit: "s" },
-      { label: "1/3波高", value: data.data.h13, unit: "m" },
-      { label: "1/3波周期", value: data.data.t13, unit: "s" }
-    ]
-    csq.value = data.data.csq
-    lon.value = data.data.lon
-    lat.value = data.data.lat
+    const { data } = await getLatestTelemetryData(
+      { modelNumber: device.modelNumber!, version: 1, dataType: 1 },
+      device.serialNumber
+    )
+    if (data.data) {
+      monitorItems.value = [
+        { label: "水温", value: data.data.temp_wat, unit: "℃" },
+        { label: "湿度", value: data.data.humid },
+        { label: "主板温度", value: data.data.temp_mb, unit: "℃" },
+        { label: "倾角", value: data.data.tilt_ang },
+        { label: "电池", value: data.data.ubatt, unit: "V" }
+      ]
+      lon.value = data.data.lon
+      lat.value = data.data.lat
+      console.log("设备最新数据", data.data)
+    } else {
+      monitorItems.value = [
+        { label: "无数据", value: "无数据" }
+      ]
+      console.log("设备没有数据")
+    }
   } catch (error) {
     console.error("获取最新数据失败:", error)
   }
@@ -73,7 +81,6 @@ watch(() => device.deviceCode, () => {
           <span class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
           <span class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
           <span class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
-          <span class="meta-item"><i class="fas fa-signal" /> 信号: <strong>{{ csq }}</strong></span>
         </div>
       </div>
       <div class="dh-actions">
@@ -85,40 +92,19 @@ watch(() => device.deviceCode, () => {
 
     <div class="layout-grid">
       <MonitorGrid :items="monitorItems" />
-
-      <div class="card remote-control-card">
-        <div class="card-header">
-          远程控制
-        </div>
-        <div class="card-body">
-          <div class="control-grid">
-            <div class="ctrl-btn" :disabled="true">
-              <i class="fas fa-power-off" :style="{ color: 'var(--danger)' }" />
-              <span>重启</span>
-            </div>
-            <div class="ctrl-btn" :disabled="true">
-              <i class="fas fas fa-upload" :style="{ color: 'var(--warning)' }" />
-              <span>上报周期</span>
-            </div>
-          </div>
-        </div>
+      <div class="layout-grid-data">
+        <TelemetryChart
+          bucket="sob10_v1_t1_data"
+          :device="device"
+          :fields="[
+            { label: '水温', field: 'temp_wat', unit: 'm' },
+          ]"
+        />
+        <DeviceLocation
+          :longitude="lon"
+          :latitude="lat"
+        />
       </div>
-
-      <TelemetryChart
-        :bucket="device.modelNumber!"
-        :device="device"
-        :fields="[
-          { label: '平均波高', field: 'hm', unit: 'm' },
-          { label: '平均波周期', field: 'tm', unit: 's' },
-          { label: '1/3波高', field: 'h13', unit: 'm' },
-          { label: '1/3波周期', field: 't13', unit: 's' },
-        ]"
-      />
-
-      <DeviceLocation
-        :longitude="lon"
-        :latitude="lat"
-      />
     </div>
   </div>
 </template>
@@ -257,12 +243,11 @@ watch(() => device.deviceCode, () => {
   }
 }
 
-.data-view-container {
-  margin-top: 24px;
+.layout-grid {
+  margin-top: 20px;
 }
 
-// --- Layout ---
-.layout-grid {
+.layout-grid-data {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 20px;
@@ -274,73 +259,21 @@ watch(() => device.deviceCode, () => {
   }
 }
 
-// --- Cards ---
-.card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.card-header {
-  padding: 16px 20px;
-  height: 50px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 700;
-  background: #fcfcfc;
-}
-.card-body {
-  padding: 20px;
-}
-
-.control-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.ctrl-btn {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  &:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
-  }
-  i {
-    font-size: 20px;
-  }
-  span {
-    font-size: 13px;
-    font-weight: 500;
-  }
-}
-
 // Mobile
 @media (max-width: 900px) {
   .device-container {
     padding: 10px;
   }
-  .layout-grid {
-    grid-template-columns: 1fr;
-    margin-top: 10px;
-    gap: 10px;
-  }
   .device-header {
     flex-direction: column;
+    gap: 10px;
+  }
+  .layout-grid {
+    margin-top: 10px;
+  }
+  .layout-grid-data {
+    grid-template-columns: 1fr;
+    margin-top: 10px;
     gap: 10px;
   }
   .dh-actions {

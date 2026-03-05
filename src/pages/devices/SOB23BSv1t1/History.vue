@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { Device } from "@/common/apis/devices/type"
-import { useDeviceDataPagination } from "@/common/hooks/useDeviceDataPagination"
+import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
+import { selectDateRange } from "@/common/composables/useDateRangeSelector"
+import { useHistoryDataQuery } from "@/common/hooks/useHistoryDataQuery"
 import { formatNumber, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
+import { downloadFile } from "@/common/utils/download"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
 
 const props = defineProps<{
@@ -18,7 +21,23 @@ const {
   uploadChannel,
   total,
   fetchFirstPageData
-} = useDeviceDataPagination(deviceRef)
+} = useHistoryDataQuery(deviceRef, 1, 1)
+
+async function handleDownload() {
+  const data = await selectDateRange({ maxDays: 30 })
+  if (data) {
+    const url = buildDownloadExcelByRangeUrl({
+      model: deviceRef.value.modelNumber!,
+      version: 1,
+      dataType: 1,
+      serialNumber: deviceRef.value.serialNumber,
+      uploadChannel: 0,
+      startTime: data.startDate,
+      endTime: data.endDate
+    })
+    downloadFile(url)
+  }
+}
 </script>
 
 <template>
@@ -51,8 +70,8 @@ const {
           <button class="btn" @click="fetchFirstPageData">
             <i class="fas fa-search" /> 查询
           </button>
-          <button class="btn btn-primary">
-            <i class="fas fa-file-download" /> 导出
+          <button class="btn btn-primary" @click="handleDownload">
+            <i class="fas fa-file-download" />下载
           </button>
         </div>
       </div>
@@ -77,7 +96,7 @@ const {
               <td>
                 <div class="data-row">
                   <span class="label">采样时间</span>
-                  <span class="value">{{ formatDateTime(row.time) }}</span>
+                  <span class="value">{{ formatDateTime(row.samp_time) }}</span>
                 </div>
                 <div class="data-row">
                   <span class="label">接收时间</span>
@@ -167,49 +186,49 @@ const {
                 </div>
               </td>
               <td>
-                <div class="data-row">
+                <div title="涌浪谱平均周期" class="data-row">
                   <span class="label">谱平均周期</span>
                   <span class="value">{{ row.sw_tm }} s</span>
                 </div>
-                <div class="data-row">
+                <div title="涌浪谱峰周期" class="data-row">
                   <span class="label">谱峰周期</span>
                   <span class="value">{{ row.sw_tp }} s</span>
                 </div>
-                <div class="data-row">
+                <div title="涌浪谱峰波向" class="data-row">
                   <span class="label">谱峰波向</span>
                   <span class="value">{{ row.sw_dp }}°</span>
                 </div>
-                <div class="data-row">
+                <div title="涌浪波向扩散度" class="data-row">
                   <span class="label">波向扩散度</span>
                   <span class="value">{{ row.sw_dspr }}°</span>
                 </div>
-                <div class="data-row">
+                <div title="涌浪平均波向" class="data-row">
                   <span class="label">平均波向</span>
                   <span class="value">{{ row.sw_dmean }}°</span>
                 </div>
               </td>
               <td>
-                <div class="data-row">
+                <div title="风浪谱有效波高" class="data-row">
                   <span class="label">有效波高</span>
                   <span class="value">{{ row.ws_hm }} m</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪谱平均周期" class="data-row">
                   <span class="label">谱平均周期</span>
                   <span class="value">{{ row.ws_tm }} s</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪谱峰周期" class="data-row">
                   <span class="label">谱峰周期</span>
                   <span class="value">{{ row.ws_tp }} s</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪谱峰波向" class="data-row">
                   <span class="label">谱峰波向</span>
                   <span class="value">{{ row.ws_dp }}°</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪波向扩散度" class="data-row">
                   <span class="label">波向扩散度</span>
                   <span class="value">{{ row.ws_dspr }}°</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪平均波向" class="data-row">
                   <span class="label">平均波向</span>
                   <span class="value">{{ row.ws_dmean }}°</span>
                 </div>
@@ -257,11 +276,11 @@ const {
                   <span class="label">平均波向</span>
                   <span class="value">{{ row.dmean }}°</span>
                 </div>
-                <div class="data-row">
+                <div title="风浪涌浪分离频率" class="data-row">
                   <span class="label">分频</span>
                   <span class="value">{{ formatNumber(row.sep_f, 3) }} Hz</span>
                 </div>
-                <div class="data-row">
+                <div title="涌浪谱有效波高" class="data-row">
                   <span class="label">涌浪有效</span>
                   <span class="value">{{ formatNumber(row.sw_hm, 3) }} m</span>
                 </div>
@@ -309,8 +328,9 @@ const {
 <style lang="scss" scoped>
 .history-container {
   max-width: 1600px;
+  min-height: calc(100vh - var(--header-h));
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 0 0 0;
 }
 
 .page-header {

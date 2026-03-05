@@ -4,7 +4,10 @@ export interface DeviceStatisticsDto {
   serialNumber: string
   deviceName?: string
   displayName?: string
+  uploadInterval?: string
+  lastUploadTime?: string
   isOnline: boolean
+  description?: string
 }
 
 export interface DeviceModelStatistics {

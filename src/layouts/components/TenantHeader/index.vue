@@ -23,7 +23,7 @@ const tenantCode = computed(() => {
   <nav class="navbar" :class="{ 'has-links': links && links.length > 0 }">
     <div class="nav-left">
       <router-link v-if="userStore.isPlatformUser" :to="`/console/${tenantCode}`" custom v-slot="{ isExactActive, navigate, href }">
-        <a v-if="!isExactActive" :href="href" @click="navigate" class="back-link">
+        <a title="返回平台总览页面" v-if="!isExactActive" :href="href" @click="navigate" class="back-link">
           <i class="fa-solid fa-arrow-left" />
           <span class="back-text">返回</span>
         </a>
