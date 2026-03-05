@@ -136,7 +136,7 @@ createCode()
 
 <style lang="scss" scoped>
 .login-container {
-  background-color: #2c3e50; /* 专业的深蓝灰纯色背景 */
+  background: url("@/common/assets/images/login_back.png") center/cover no-repeat;
   height: 100vh;
   display: flex;
   justify-content: center;
