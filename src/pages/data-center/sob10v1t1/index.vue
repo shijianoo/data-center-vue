@@ -54,7 +54,7 @@ async function dataExport() {
   const data = await selectDateRange({ maxDays: 30 })
   if (data) {
     const url = buildDownloadExcelByRangeUrl({
-      model: selectedDevice.value!.modelNumber,
+      model: selectedDevice.value!.modelNumber!,
       version: 1,
       dataType: 1,
       serialNumber: selectedDevice.value!.serialNumber,
