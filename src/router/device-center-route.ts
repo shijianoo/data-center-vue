@@ -31,6 +31,15 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: "device-control",
+        component: () => import("@/pages/device-center/device-control/index.vue"),
+        name: "DeviceControl",
+        meta: {
+          title: "设备控制",
+          roles: ["device-mgr:devices"]
+        }
+      },
+      {
         path: "firmwares",
         component: () => import("@/pages/device-center/firmwares/index.vue"),
         name: "Firmwares",
