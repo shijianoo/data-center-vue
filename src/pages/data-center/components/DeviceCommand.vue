@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import type { DeviceCommand } from "@/common/apis/device-command/type"
+import type { DeviceCommand } from "@/common/apis/device-control/type"
 import type { Device } from "@/common/apis/devices/type"
 import type { DeviceFirmware } from "@/common/apis/firmwares/type"
-import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-command"
+import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-control"
 import { getDeviceByIdApi } from "@/common/apis/devices"
 import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
 import { formatDateTime } from "@/common/utils/datetime"
+import { commandStatusText, upgradeStatusText } from "@/common/utils/device-control"
 
 const loading = ref<boolean>(false)
 const visible = defineModel<boolean>("visible") // v-model:visible
@@ -51,23 +52,25 @@ async function fetchCommandData() {
   loading.value = false
 }
 
-function sendDeviceCommand(dcommand: string, parameter?: string) {
-  return createDeviceCommandApi(device.value!.id, dcommand, parameter)
-    .then(() => {
-      ElMessage.success(`命令【${dcommand}${parameter ? `,${parameter}` : ""}】下发成功`)
+async function sendDeviceCommand(dcommand: string, parameter?: string) {
+  try {
+    await createDeviceCommandApi({
+      deviceId: device.value!.id,
+      command: dcommand,
+      parameter,
+      dispatchMode: 1,
+      requiresAck: false,
+      requiresResponse: false
     })
-    .catch((error: any) => {
-      ElMessage.error(`命令【${dcommand}${parameter ? `,${parameter}` : ""}】下发失败: ${error.message}`)
-      throw error
-    })
+    ElMessage.success(`命令【${dcommand}${parameter ? `,${parameter}` : ""}】下发成功`)
+  } catch (error) {
+    ElMessage.error(`命令【${dcommand}${parameter ? `,${parameter}` : ""}】下发失败: ${error}`)
+  }
 }
 
-function handleRestart() {
-  sendDeviceCommand("Reset").then(() => {
-    fetchCommandData()
-  }).catch((error) => {
-    ElMessage.error(`命令发下发失败: ${error.message}`)
-  })
+async function handleRestart() {
+  await sendDeviceCommand("Reset")
+  fetchCommandData()
 }
 
 function handleCustomCommandDialog() {
@@ -81,12 +84,11 @@ function handleCustomCommandDialog() {
       inputErrorMessage: "格式错误，只能有一个逗号，参数可选",
       inputPlaceholder: "如：Restart 或 SetTemp,25"
     }
-  ).then(({ value }) => {
+  ).then(async ({ value }) => {
     // 提取命令和参数
     const [cmd, param] = value.split(",")
-    sendDeviceCommand(cmd, param).then(() => {
-      fetchCommandData()
-    }).catch(() => {})
+    await sendDeviceCommand(cmd, param)
+    fetchCommandData()
   }).catch(() => {})
 }
 
@@ -100,25 +102,24 @@ function handleCycleCommandDialog() {
       inputType: "number",
       inputPlaceholder: "请输入数字（分钟）"
     }
-  ).then(({ value }) => {
+  ).then(async ({ value }) => {
     if (Number(value) === 0) {
       ElMessage.error("周期不能为0")
       return
     }
-    sendDeviceCommand("Setuploadcycle", `${value},m`).then(() => {
-      fetchCommandData()
-    }).catch(() => {})
+    await sendDeviceCommand("Setuploadcycle", `${value},m`)
+    fetchCommandData()
   }).catch(() => {})
 }
 
-function handleUpgrade() {
+async function handleUpgrade() {
   if (!selectedFirmware.value) {
     ElMessage.error("请先选择固件")
     return
   }
-  sendDeviceCommand("Upgrade", selectedFirmware.value).then(() => {
-    fetchCommandData()
-  }).catch(() => {})
+
+  await sendDeviceCommand("Upgrade", selectedFirmware.value)
+  fetchCommandData()
 }
 
 function handleDeleteCommand(commandId: string) {
@@ -200,13 +201,10 @@ async function upgradeStatusDialogOpened() {
         <div>
           <el-table :data="commandData" v-loading="loading">
             <el-table-column prop="command" label="命令" align="center" />
-            <el-table-column prop="isSentToDevice" label="状态" align="center">
-              <template #default="scope">
-                <el-tag v-if="scope.row.isSentToDevice === true" type="primary" effect="plain" disable-transitions>
-                  已接收
-                </el-tag>
-                <el-tag v-else type="warning" effect="plain" disable-transitions>
-                  未接收
+            <el-table-column prop="status" label="状态" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag size="small">
+                  {{ commandStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -231,29 +229,14 @@ async function upgradeStatusDialogOpened() {
       <div>
         <el-table width="100%" :data="upgradeStatusList">
           <el-table-column prop="targetFirmwareVersion" label="目标固件版本" align="center" />
-          <el-table-column prop="status" label="升级状态" align="center">
-            <template #default="scope">
-              <el-tag v-if="scope.row.status === -1" type="danger" effect="plain" disable-transitions>
-                升级失败
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 0" type="info" effect="plain" disable-transitions>
-                待升级
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 1" type="info" effect="plain" disable-transitions>
-                升级信息已查询
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 2" type="primary" effect="plain" disable-transitions>
-                固件下载中
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 3" type="warning" effect="plain" disable-transitions>
-                升级中
-              </el-tag>
-              <el-tag v-else-if="scope.row.status === 4" type="success" effect="plain" disable-transitions>
-                升级成功
+          <el-table-column prop="status" label="状态" width="100" align="center">
+            <template #default="{ row }">
+              <el-tag size="small">
+                {{ upgradeStatusText(row.status) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="downloadCount" label="下载次数" align="center" />
+          <el-table-column prop="extra.downloadCount" label="下载次数" align="center" />
         </el-table>
       </div>
     </el-dialog>

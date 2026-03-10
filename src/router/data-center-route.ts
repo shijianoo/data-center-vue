@@ -112,7 +112,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
       },
       {
         path: "detail-data",
-        component: () => import("@/pages/raw-data/bei-dou/index.vue"),
+        component: () => import("@/pages/raw-data/iridium/index.vue"),
         name: "DetailData",
         meta: {
           title: "铱星数据"

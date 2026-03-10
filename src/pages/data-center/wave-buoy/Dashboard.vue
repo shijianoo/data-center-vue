@@ -90,7 +90,7 @@ const selectedDevice = ref<Device | null>(null)
           <el-table-column label="上传周期(分钟)" min-width="120" align="center">
             <template #default="scope">
               {{
-                scope.row.properties.UploadInterval
+                scope.row.samplingInterval
               }}
             </template>
           </el-table-column>
@@ -102,7 +102,7 @@ const selectedDevice = ref<Device | null>(null)
           <el-table-column label="固件版本" min-width="80" align="center">
             <template #default="scope">
               {{
-                scope.row.properties.FirmwareVersion
+                scope.row.firmwareVersion
               }}
             </template>
           </el-table-column>
