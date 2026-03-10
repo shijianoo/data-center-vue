@@ -117,8 +117,10 @@ watch([
   () => timeRange.value
 ], () => {
   if (queryMode.value === "hours") {
-    end.value = dayjs(device.lastUploadTime).utc().toISOString()
-    start.value = dayjs(end.value).add(-selectedHours.value, "hour").utc().toISOString()
+    if (device.lastUploadTime) {
+      end.value = dayjs(device.lastUploadTime).utc().toISOString()
+      start.value = dayjs(end.value).add(-selectedHours.value, "hour").utc().toISOString()
+    }
   } else {
     if (timeRange.value && timeRange.value.length === 2) {
       start.value = dayjs(timeRange.value[0]).startOf("day").utc().toISOString()
