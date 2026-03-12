@@ -2,8 +2,9 @@
 import type { DeviceStatisticsDto } from "@/common/apis/statistics/projects/type"
 import { formatHybridAgo } from "@/common/utils/datetime"
 
-const { devices } = defineProps<{
+const props = defineProps<{
   devices: DeviceStatisticsDto[]
+  searchQuery?: string
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +27,14 @@ function getDeviceName(device: DeviceStatisticsDto) {
     return device.serialNumber
   }
 }
+
+const filteredDevices = computed(() => {
+  if (!props.searchQuery) return props.devices
+  const query = props.searchQuery.toLowerCase()
+  return props.devices.filter(device =>
+    device.serialNumber && device.serialNumber.toLowerCase().includes(query)
+  )
+})
 </script>
 
 <template>
@@ -54,7 +63,7 @@ function getDeviceName(device: DeviceStatisticsDto) {
         </tr>
       </thead>
       <tbody>
-        <tr @click="emit('action', row)" v-for="(row, rIdx) in devices" :key="rIdx" :class="{ 'bg-danger-light': row.isOnline === false }">
+        <tr @click="emit('action', row)" v-for="(row, rIdx) in filteredDevices" :key="rIdx" :class="{ 'bg-danger-light': row.isOnline === false }">
           <td class="device-name">
             <div style="font-weight: 600; color: var(--text-main);">
               {{ getDeviceName(row) }}
@@ -98,12 +107,14 @@ function getDeviceName(device: DeviceStatisticsDto) {
     color: var(--text-sub);
     background: white;
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
   }
   td {
     padding: 16px 24px;
     font-size: 14px;
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
+    white-space: nowrap;
   }
   tr {
     background: white;

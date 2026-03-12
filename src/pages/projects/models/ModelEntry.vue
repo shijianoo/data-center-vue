@@ -5,6 +5,7 @@ import DefaultTable from "./DefaultTable.vue"
 
 const props = defineProps<DeviceModelStatistics>()
 const router = useRouter()
+const searchQuery = ref("")
 const currentTable = computed(() => {
   return DefaultTable
 })
@@ -24,7 +25,7 @@ function handleAction(row: DeviceStatisticsDto) {
     <div class="group-header">
       <div class="model-info">
         <div class="model-icon">
-          <i class="fas fa-microchip" />
+          <i class="fas fa-diagram-project" />
         </div>
         <div class="model-name">
           <h3>{{ props.displayName || props.modelName }} <span class="text-sub">({{ props.modelNumber }})</span></h3>
@@ -32,6 +33,14 @@ function handleAction(row: DeviceStatisticsDto) {
         </div>
       </div>
       <div class="group-stats">
+        <div class="search-box">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索设备SN..."
+            clearable
+            prefix-icon="Search"
+          />
+        </div>
         <div class="gs-item">
           数量: <strong>{{ props.devices.length }}</strong>
         </div>
@@ -43,7 +52,7 @@ function handleAction(row: DeviceStatisticsDto) {
       </div>
     </div>
 
-    <component v-if="currentTable" :is="currentTable" :devices="props.devices" @action="handleAction" />
+    <component v-if="currentTable" :is="currentTable" :devices="props.devices" :search-query="searchQuery" @action="handleAction" />
     <div v-else class="not-adapted">
       <i class="fas fa-tools" /> 该设备型号暂未完成页面适配
     </div>
@@ -100,9 +109,13 @@ function handleAction(row: DeviceStatisticsDto) {
     }
     .group-stats {
       display: flex;
+      align-items: center;
       gap: 20px;
       font-size: 13px;
       color: var(--text-sub);
+      .search-box {
+        width: 200px;
+      }
       .gs-item strong {
         color: var(--text-main);
         font-weight: 600;
@@ -155,6 +168,28 @@ function handleAction(row: DeviceStatisticsDto) {
 @media (max-width: 900px) {
   .model-group {
     margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .model-group .group-header {
+    flex-direction: column;
+    height: auto;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+
+    .group-stats {
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 12px;
+
+      .search-box {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
   }
 }
 </style>
