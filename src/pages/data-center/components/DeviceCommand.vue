@@ -6,7 +6,7 @@ import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi } 
 import { getDeviceByIdApi } from "@/common/apis/devices"
 import { getFirmwaresByDeviceApi } from "@/common/apis/firmwares"
 import { formatDateTime } from "@/common/utils/datetime"
-import { commandStatusText, upgradeStatusText } from "@/common/utils/device-control"
+import { commandStatusText, upgradeStatusText } from "@/common/utils/device-control-constants"
 
 const loading = ref<boolean>(false)
 const visible = defineModel<boolean>("visible") // v-model:visible

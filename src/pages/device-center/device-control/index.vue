@@ -9,7 +9,7 @@ import { deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/devi
 import { getDeviceModelSummariesApi } from "@/common/apis/device-models"
 import { getDeviceSummariesApi } from "@/common/apis/devices"
 import { formatDateTime } from "@/common/utils/datetime"
-import { commandStatusText, dispatchModeText } from "@/common/utils/device-control"
+import { commandStatusText, dispatchModeText } from "@/common/utils/device-control-constants"
 import DeviceControlEditDialog from "./components/DeviceControlEditDialog.vue"
 
 const models = ref<DeviceModelSummary[]>([])
