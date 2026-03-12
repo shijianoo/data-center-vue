@@ -46,6 +46,15 @@ export function updateUserApi(dto: Users.UserForm) {
   })
 }
 
+/** 更新用户扩展信息（仅ADMIN） */
+export function updateUserExtraApi(dto: Users.UserExtra) {
+  return authCenterRequest({
+    url: `/users/${dto.id}/extra`,
+    method: "put",
+    data: dto
+  })
+}
+
 /** 删除用户（仅ADMIN） */
 export function deleteUserApi(id: string) {
   return authCenterRequest({

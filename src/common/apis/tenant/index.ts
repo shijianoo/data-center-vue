@@ -112,6 +112,15 @@ export function getTenantUserIdsApi(id: string) {
   })
 }
 
+/** 批量获取指定租户列表下所有的用户Id */
+export function getTenantUserIdsByTenantIdsApi(tenantIds: string[]) {
+  return authCenterRequest<ApiResponseData<Record<string, string[]>>>({
+    url: `/tenants/user-ids/batch`,
+    method: "post",
+    data: tenantIds
+  })
+}
+
 /** 给指定租户分配用户 */
 export function assignUsersApi(id: string, userIds: string[]) {
   return authCenterRequest({

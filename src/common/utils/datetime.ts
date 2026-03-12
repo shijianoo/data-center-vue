@@ -8,6 +8,12 @@ export function formatDateTime(datetime: string | number | Date = "", template: 
   return day.isValid() ? day.format(template) : INVALID_DATE
 }
 
+/** 格式化日期 */
+export function formatDate(datetime: string | number | Date = "", template: string = "YYYY-MM-DD") {
+  const day = dayjs(datetime)
+  return day.isValid() ? day.format(template) : INVALID_DATE
+}
+
 /** 格式化时间为 HH:mm */
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0")

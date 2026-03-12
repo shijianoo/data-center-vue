@@ -1,13 +1,15 @@
 <script lang="ts" setup>
-import type { FormRules } from "element-plus"
 import type { TenantSummary } from "@/common/apis/tenant/type"
-import type { User, UserForm } from "@/common/apis/users/type"
+import type { User } from "@/common/apis/users/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
-import { cloneDeep } from "lodash-es"
+import { ElMessage, ElMessageBox } from "element-plus"
+import { onMounted, ref, watch } from "vue"
 import { getTenantSummaryListApi } from "@/common/apis/tenant"
-import { createUserApi, deleteUserApi, getAllUsersApi, resetPasswordApi, updateUserApi } from "@/common/apis/users"
+import { deleteUserApi, getAllUsersApi, resetPasswordApi } from "@/common/apis/users"
 import AssignDeviceDialog from "./components/AssignDeviceDialog.vue"
 import AssignRoleDialog from "./components/AssignRoleDialog.vue"
+import UserEditDialog from "./components/UserEditDialog.vue"
+import UserExtraDialog from "./components/UserExtraDialog.vue"
 
 defineOptions({
   name: "Users"
@@ -31,61 +33,8 @@ async function getTenantList() {
   }
 }
 
-// #region 增 + 改 表单逻辑
-const defaultForm: UserForm = {
-  id: undefined,
-  userName: "",
-  isActive: true,
-  sortOrder: 0
-}
-
-const dialogVisible = ref(false)
-const formRef = useTemplateRef("formRef")
-const formData = ref<UserForm>(cloneDeep(defaultForm))
-
-const formRules: FormRules<UserForm> = {
-  userName: [
-    { required: true, trigger: "blur", message: "请输入用户名称" },
-    { min: 3, max: 20, message: "用户名长度应在3-20个字符之间", trigger: "blur" }
-  ],
-  password: [
-    { required: true, trigger: "blur", message: "请输入用户密码" },
-    { min: 6, message: "密码长度不能少于6个字符", trigger: "blur" }
-  ],
-  email: [
-    { type: "email", message: "请输入正确的邮箱格式", trigger: "blur" }
-  ],
-  phone: [
-    { pattern: /^1[3-9]\d{9}$/, message: "请输入正确的手机号格式", trigger: "blur" }
-  ]
-}
-function handleCreateOrUpdate() {
-  formRef.value?.validate(async (valid) => {
-    if (!valid) {
-      ElMessage.error("表单校验不通过")
-      return
-    }
-
-    loading.value = true
-    try {
-      if (formData.value.id) {
-        await updateUserApi(formData.value)
-      } else {
-        await createUserApi(formData.value)
-      }
-      ElMessage.success("操作成功")
-      dialogVisible.value = false
-    } finally {
-      loading.value = false
-      getUserData()
-    }
-  })
-}
-function resetForm() {
-  formRef.value?.clearValidate()
-  formData.value = cloneDeep(defaultForm)
-}
-// #endregion
+const editDialogVisible = ref(false)
+const currentEditId = ref<string | undefined>(undefined)
 
 // #region 删除
 function handleDelete(row: User) {
@@ -102,19 +51,14 @@ function handleDelete(row: User) {
 // #endregion
 
 // #region 编辑
+function handleCreate() {
+  currentEditId.value = undefined
+  editDialogVisible.value = true
+}
+
 function handleUpdate(row: User) {
-  dialogVisible.value = true
-  formData.value = {
-    id: row.id,
-    userName: row.userName,
-    nickName: row.nickName,
-    realName: row.realName,
-    email: row.email,
-    phone: row.phone,
-    description: row.description,
-    isActive: row.isActive,
-    sortOrder: row.sortOrder
-  }
+  currentEditId.value = row.id
+  editDialogVisible.value = true
 }
 // #endregion
 
@@ -131,6 +75,15 @@ function getUserData() {
   }).finally(() => {
     loading.value = false
   })
+}
+// #endregion
+
+// #region 扩展信息
+const userExtraDialogVisible = ref(false)
+
+function handleExtra(row: User) {
+  currentUserId.value = row.id
+  userExtraDialogVisible.value = true
 }
 // #endregion
 
@@ -189,7 +142,7 @@ watch(() => currentSelectedTenantId.value, () => {
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
         <div>
-          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">
+          <el-button type="primary" :icon="CirclePlus" @click="handleCreate">
             新增用户
           </el-button>
           <el-select :style="{ marginLeft: '10px' }" clearable v-model="currentSelectedTenantId" placeholder="请选择租户" style="width: 200px;">
@@ -204,9 +157,49 @@ watch(() => currentSelectedTenantId.value, () => {
       </div>
       <div class="table-wrapper">
         <el-table :data="userData">
-          <el-table-column prop="userName" label="用户名称" align="left" width="140" />
-          <el-table-column prop="nickName" label="用户昵称" align="left" width="140" />
-          <el-table-column prop="realName" label="真实姓名" align="left" width="140" />
+          <el-table-column type="expand">
+            <template #default="scope">
+              <div style="padding: 0 30px;">
+                <el-descriptions size="small" title="用户详细信息" :column="3" border>
+                  <el-descriptions-item label="邮箱">
+                    {{ scope.row.email || '-' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="邮箱验证时间">
+                    {{ scope.row.emailVerifiedAt || '未验证' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="手机号">
+                    {{ scope.row.phone || '-' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="手机验证时间">
+                    {{ scope.row.phoneVerifiedAt || '未验证' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="创建时间">
+                    {{ scope.row.createdAt || '-' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="排序">
+                    {{ scope.row.sortOrder }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="系统用户">
+                    <el-tag v-if="scope.row.isSystem" type="warning" effect="dark" size="small">
+                      是
+                    </el-tag>
+                    <el-tag v-else type="success" effect="plain" size="small">
+                      否
+                    </el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="描述" :span="2">
+                    {{ scope.row.description || '-' }}
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="userName" label="用户名称" align="left" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="nickName" label="用户昵称" align="left" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="realName" label="真实姓名" align="left" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="phone" label="手机号" align="center" width="120" show-overflow-tooltip />
+          <el-table-column prop="email" label="邮箱" align="left" min-width="140" show-overflow-tooltip />
           <el-table-column prop="isActive" label="状态" align="center" width="80">
             <template #default="scope">
               <el-tag v-if="scope.row.isActive" type="success" effect="plain">
@@ -217,8 +210,6 @@ watch(() => currentSelectedTenantId.value, () => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="description" label="描述" align="left" />
-
           <el-table-column prop="isSuperAdmin" label="超级管理员" align="center" width="100px">
             <template #default="scope">
               <el-tag :type="scope.row.isSuperAdmin ? 'warning' : 'info'">
@@ -226,104 +217,45 @@ watch(() => currentSelectedTenantId.value, () => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="sortOrder" label="排序" align="center" width="80" />
-          <el-table-column prop="isSystem" label="系统用户" align="center" width="80">
+          <el-table-column fixed="right" label="操作" width="160" align="center">
             <template #default="scope">
-              <el-tag v-if="scope.row.isSystem" type="warning" effect="dark">
-                是
-              </el-tag>
-              <el-tag v-else type="success" effect="plain">
-                否
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column fixed="right" label="操作" width="220" align="center">
-            <template #default="scope">
-              <el-dropdown trigger="click">
-                <el-button type="primary" text bg size="small">
-                  用户管理
+              <el-button type="primary" link size="small" @click="handleUpdate(scope.row)">
+                修改
+              </el-button>
+              <el-button type="danger" link size="small" @click="handleDelete(scope.row)" :disabled="scope.row.isSystem">
+                删除
+              </el-button>
+              <el-dropdown trigger="click" style="margin-left: 12px; vertical-align: middle;">
+                <el-button type="primary" link size="small">
+                  更多
                   <el-icon class="el-icon--right">
                     <ArrowDown />
                   </el-icon>
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item @click="handleAssignRoles(scope.row)">
+                    <el-dropdown-item @click="handleExtra(scope.row)">
+                      扩展信息
+                    </el-dropdown-item>
+                    <el-dropdown-item divided @click="handleAssignRoles(scope.row)">
                       分配角色
                     </el-dropdown-item>
                     <!-- <el-dropdown-item @click="handleAssignDevice(scope.row)">
                       分配设备
                     </el-dropdown-item> -->
-                    <el-dropdown-item @click="handleResetPassword(scope.row)">
+                    <el-dropdown-item divided @click="handleResetPassword(scope.row)">
                       重置密码
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
-                修改
-              </el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
-                删除
-              </el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
     </el-card>
 
-    <!-- 新增/修改 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="formData.id === undefined ? '新增用户' : '修改用户'"
-      width="400px"
-      @closed="resetForm"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="userName" label="用户名称">
-          <el-input v-model="formData.userName" placeholder="请输入用户名称" />
-        </el-form-item>
-        <el-form-item prop="password" v-if="formData.id === undefined" label="密码">
-          <el-input v-model="formData.password" placeholder="请输入密码" />
-        </el-form-item>
-        <el-form-item prop="nickName" label="昵称">
-          <el-input v-model="formData.nickName" placeholder="请输入昵称" />
-        </el-form-item>
-        <el-form-item prop="realName" label="真实姓名">
-          <el-input v-model="formData.realName" placeholder="请输入真实姓名" />
-        </el-form-item>
-        <el-form-item prop="email" label="邮箱">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item prop="phone" label="手机号">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item prop="description" label="描述">
-          <el-input v-model="formData.description" type="textarea" placeholder="请输入描述" />
-        </el-form-item>
-        <el-form-item prop="isActive" label="状态">
-          <el-radio-group v-model="formData.isActive">
-            <el-radio :label="true">
-              启用
-            </el-radio>
-            <el-radio :label="false">
-              禁用
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item prop="sortOrder" label="排序">
-          <el-input-number v-model="formData.sortOrder" :min="0" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreateOrUpdate">
-          确认
-        </el-button>
-      </template>
-    </el-dialog>
+    <UserEditDialog v-model:visible="editDialogVisible" :user-id="currentEditId" @success="getUserData" />
 
     <!-- 分配角色对话框 -->
     <AssignRoleDialog
@@ -338,6 +270,12 @@ watch(() => currentSelectedTenantId.value, () => {
       v-model:visible="assignDeviceDialogVisible"
       :user-id="currentUserId"
       :user-name="currentUserName"
+    />
+
+    <!-- 用户扩展信息对话框 -->
+    <UserExtraDialog
+      v-model:visible="userExtraDialogVisible"
+      :user-id="currentUserId"
     />
   </div>
 </template>

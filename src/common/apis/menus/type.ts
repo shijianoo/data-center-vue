@@ -1,4 +1,5 @@
 export interface MenuExtra {
+  id?: string
   svgIcon?: string
   isHidden: boolean
   roles?: string[]

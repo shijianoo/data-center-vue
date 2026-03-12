@@ -44,7 +44,7 @@ async function fetchCommandData() {
 
   try {
     const { data } = await getFirmwaresByDeviceApi(device.value!.id)
-    firmwareList.value = data.items
+    firmwareList.value = data
   } catch {
     console.error("获取设备固件失败")
   }

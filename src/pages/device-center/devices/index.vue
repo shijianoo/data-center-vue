@@ -1,10 +1,13 @@
 <script lang="ts" setup>
-import type { FormRules } from "element-plus"
-import type { CreateOrUpdateDeviceDto, Device } from "@/common/apis/devices/type"
-import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
-import { cloneDeep } from "lodash-es"
-import { createDeviceApi, deleteDeviceApi, getDevicesApi, updateDeviceApi } from "@/common/apis/devices"
+import type { DeviceModelSummary } from "@/common/apis/device-models/type"
+import type { Device } from "@/common/apis/devices/type"
+import { ArrowDown, CirclePlus, RefreshRight } from "@element-plus/icons-vue"
+import { ElMessage, ElMessageBox } from "element-plus"
+import { getDeviceModelSummariesApi } from "@/common/apis/device-models"
+import { deleteDeviceApi, getDevicesApi } from "@/common/apis/devices"
 import { useDeviceModels } from "@/common/hooks/useDeviceModels"
+import DeviceEditDialog from "./components/DeviceEditDialog.vue"
+import DeviceExtraDialog from "./components/DeviceExtraDialog.vue"
 
 defineOptions({
   name: "Devices"
@@ -12,6 +15,7 @@ defineOptions({
 
 const loading = ref<boolean>(false)
 const { deviceModels, fetchDeviceModels } = useDeviceModels()
+const deviceModelSummaryList = ref<DeviceModelSummary[]>([])
 const modelOptions = computed(() =>
   deviceModels.value.map(m => ({
     label: m.modelName ? `${m.modelNumber}-${m.modelName}(${m.deviceCount})` : `${m.modelNumber}(${m.deviceCount})`,
@@ -24,72 +28,42 @@ const searchData = ref({
 })
 const devices = ref<Device[]>([])
 
-// #region 增 + 改 表单逻辑
-const defaultForm: CreateOrUpdateDeviceDto = {
-  id: undefined,
-  deviceModelId: "",
-  serialNumber: "",
-  isActive: true
-}
-
-const dialogVisible = ref(false)
-const formRef = useTemplateRef("formRef")
-const formData = ref<CreateOrUpdateDeviceDto>(cloneDeep(defaultForm))
-
-const formRules: FormRules<CreateOrUpdateDeviceDto> = {
-  serialNumber: [{ required: true, trigger: "blur", message: "请输入设备型号" }]
-}
-function handleCreateOrUpdate() {
-  formRef.value?.validate(async (valid) => {
-    if (!valid) {
-      ElMessage.error("表单校验不通过")
-      return
-    }
-
-    loading.value = true
-    try {
-      if (formData.value.id) {
-        await updateDeviceApi(formData.value)
-      } else {
-        await createDeviceApi(formData.value)
-      }
-      ElMessage.success("操作成功")
-      dialogVisible.value = false
-    } finally {
-      fetchDevices()
-      loading.value = false
-    }
-  })
-}
-function resetForm() {
-  formRef.value?.clearValidate()
-  formData.value = cloneDeep(defaultForm)
-}
+const editDialogVisible = ref<boolean>(false)
+const extraDialogVisible = ref<boolean>(false)
+const currentDeviceId = ref<string | undefined>(undefined)
 
 function handleCreate() {
-  if (searchData.value.modelId) {
-    formData.value.deviceModelId = searchData.value.modelId
-  } else {
+  if (!searchData.value.modelId) {
     ElMessage.warning("请先选择设备型号")
     return
   }
-  dialogVisible.value = true
+  currentDeviceId.value = undefined
+  editDialogVisible.value = true
 }
-// #endregion
 
-// #region 编辑
 function handleUpdate(row: Device) {
-  dialogVisible.value = true
-  formData.value = {
-    id: row.id,
-    deviceModelId: row.deviceModelId,
-    serialNumber: row.serialNumber,
-    deviceName: row.deviceName,
-    description: row.description,
-    isActive: row.isActive
-  }
+  currentDeviceId.value = row.id
+  editDialogVisible.value = true
 }
-// #endregion
+
+function handleUpdateExtra(row: Device) {
+  currentDeviceId.value = row.id
+  extraDialogVisible.value = true
+}
+
+function handleCopyId(id: string) {
+  navigator.clipboard.writeText(id).then(() => {
+    ElMessage.success(`设备ID已复制: ${id}`)
+  }).catch(() => {
+    const textArea = document.createElement("textarea")
+    textArea.value = id
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand("copy")
+    document.body.removeChild(textArea)
+    ElMessage.success(`设备ID已复制: ${id}`)
+  })
+}
 
 // #region 删除
 async function handleDelete(device: Device) {
@@ -129,12 +103,13 @@ watch(
   () => searchData.value.modelId,
   async () => {
     await fetchDevices()
-  },
-  { immediate: true }
+  }
 )
 
-onMounted(() => {
+onMounted(async () => {
   fetchDeviceModels()
+  const { data } = await getDeviceModelSummariesApi()
+  deviceModelSummaryList.value = data
 })
 // #endregion
 </script>
@@ -184,18 +159,93 @@ onMounted(() => {
       <div class="table-wrapper">
         <el-card shadow="never">
           <el-table :data="devices">
-            <el-table-column prop="serialNumber" label="设备序列号" align="center" />
-            <el-table-column prop="deviceCode" label="内部编号" align="center" />
-            <el-table-column prop="deviceName" label="设备名称" align="center" />
-            <el-table-column prop="description" label="备注" align="center" />
-            <el-table-column fixed="right" label="操作" width="200" align="center">
+            <el-table-column type="expand">
               <template #default="scope">
-                <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">
+                <div style="padding: 0 30px;">
+                  <el-descriptions size="small" title="详细信息" :column="3" border>
+                    <el-descriptions-item label="固件版本">
+                      {{ scope.row.firmwareVersion || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="硬件版本">
+                      {{ scope.row.hardwareVersion || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="在离线状态">
+                      <el-tag v-if="scope.row.isOnline" type="success" effect="dark" size="small">
+                        在线
+                      </el-tag>
+                      <el-tag v-else type="danger" effect="plain" size="small">
+                        离线
+                      </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="采集间隔(s)">
+                      {{ scope.row.samplingInterval }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="上传间隔(s)">
+                      {{ scope.row.uploadInterval }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="启用状态">
+                      <el-tag v-if="scope.row.isActive" type="success" effect="plain" size="small">
+                        启用
+                      </el-tag>
+                      <el-tag v-else type="danger" effect="dark" size="small">
+                        禁用
+                      </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="最后上传时间" :span="1">
+                      {{ scope.row.lastUploadTime || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="备注" :span="2">
+                      {{ scope.row.description || '-' }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="serialNumber" label="序列号" align="left" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="deviceCode" label="内部编号" align="center" width="120" />
+            <el-table-column prop="deviceName" label="设备名称" align="left" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="displayName" label="显示名称" align="left" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="status" label="运行状态" align="center" width="100">
+              <template #default="scope">
+                <el-tag v-if="scope.row.status === 1" type="success">
+                  正常
+                </el-tag>
+                <el-tag v-else-if="scope.row.status === 2" type="warning">
+                  异常
+                </el-tag>
+                <el-tag v-else type="info">
+                  未知
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column fixed="right" label="操作" width="160" align="center">
+              <template #default="scope">
+                <el-button type="primary" link size="small" @click="handleUpdate(scope.row)">
                   修改
                 </el-button>
-                <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">
+                <el-button type="danger" link size="small" @click="handleDelete(scope.row)">
                   删除
                 </el-button>
+                <el-dropdown trigger="click" style="margin-left: 12px; vertical-align: middle;">
+                  <el-button type="primary" link size="small">
+                    更多
+                    <el-icon class="el-icon--right">
+                      <ArrowDown />
+                    </el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item @click="handleUpdateExtra(scope.row)">
+                        扩展配置
+                      </el-dropdown-item>
+                      <el-dropdown-item divided @click="handleCopyId(scope.row.id)">
+                        复制ID
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </template>
             </el-table-column>
           </el-table>
@@ -203,43 +253,19 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <!-- 新增/修改 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="formData.id === undefined ? '注册设备' : '修改设备'"
-      width="30%"
-      @closed="resetForm"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="serialNumber" label="序列号">
-          <el-input v-model="formData.serialNumber" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item prop="deviceName" label="设备名称">
-          <el-input v-model="formData.deviceName" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item prop="description" label="设备描述">
-          <el-input v-model="formData.description" placeholder="请输入" />
-        </el-form-item>
-        <el-form-item prop="isActive" label="是否启用">
-          <el-radio-group v-model="formData.isActive">
-            <el-radio :value="true">
-              是
-            </el-radio>
-            <el-radio :value="false">
-              否
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreateOrUpdate">
-          确认
-        </el-button>
-      </template>
-    </el-dialog>
+    <DeviceEditDialog
+      v-model:visible="editDialogVisible"
+      :device-id="currentDeviceId"
+      :device-model-id="searchData.modelId"
+      :models="deviceModelSummaryList"
+      @success="fetchDevices"
+    />
+
+    <DeviceExtraDialog
+      v-model:visible="extraDialogVisible"
+      :device-id="currentDeviceId"
+      @success="fetchDevices"
+    />
   </div>
 </template>
 

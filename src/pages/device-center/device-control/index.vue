@@ -1,15 +1,16 @@
 <script lang="ts" setup>
-import type { FormRules } from "element-plus"
-import type { CreateOrUpdateDeviceCommand, DeviceCommand } from "@/common/apis/device-control/type"
+import type { DeviceCommand } from "@/common/apis/device-control/type"
 import type { DeviceModelSummary } from "@/common/apis/device-models/type"
 import type { DeviceSummary } from "@/common/apis/devices/type"
 import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
-import { cloneDeep } from "lodash-es"
-import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi, updateDeviceCommandApi } from "@/common/apis/device-control"
+import { ElMessage, ElMessageBox } from "element-plus"
+import { onMounted, ref, watch } from "vue"
+import { deleteDeviceCommandApi, getDeviceCommandsApi } from "@/common/apis/device-control"
 import { getDeviceModelSummariesApi } from "@/common/apis/device-models"
 import { getDeviceSummariesApi } from "@/common/apis/devices"
 import { formatDateTime } from "@/common/utils/datetime"
 import { commandStatusText, dispatchModeText } from "@/common/utils/device-control"
+import DeviceControlEditDialog from "./components/DeviceControlEditDialog.vue"
 
 const models = ref<DeviceModelSummary[]>([])
 const selectedModel = ref<DeviceModelSummary | undefined>(undefined)
@@ -34,52 +35,8 @@ watch(selectedDeviceId, async () => {
   }
 })
 
-// #region 增 + 改 表单逻辑
-const defaultForm: CreateOrUpdateDeviceCommand = {
-  id: undefined,
-  deviceId: "",
-  command: "",
-  dispatchMode: 1,
-  requiresAck: false,
-  requiresResponse: false
-}
-
 const dialogVisible = ref(false)
-const formRef = useTemplateRef("formRef")
-const formData = ref<CreateOrUpdateDeviceCommand>(cloneDeep(defaultForm))
-
-const formRules: FormRules = {
-  deviceId: [{ required: true, trigger: "blur", message: "请输入设备" }],
-  command: [{ required: true, trigger: "blur", message: "请输入命令" }]
-}
-
-function handleCreateOrUpdate() {
-  formRef.value?.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("表单校验不通过")
-      return
-    }
-    loading.value = true
-    try {
-      if (formData.value.id) {
-        await updateDeviceCommandApi(formData.value)
-      } else {
-        await createDeviceCommandApi(formData.value)
-      }
-      ElMessage.success("操作成功")
-      dialogVisible.value = false
-    } finally {
-      loading.value = false
-      getDeviceCommandList()
-    }
-  })
-}
-
-function resetForm() {
-  formRef.value?.clearValidate()
-  formData.value = cloneDeep(defaultForm)
-}
-// #endregion
+const currentCommandData = ref<DeviceCommand | undefined>(undefined)
 
 // #region 查询设备命令
 const loading = ref(false)
@@ -109,9 +66,12 @@ function handleCreate() {
     return
   }
 
-  if (selectedDeviceId.value) {
-    formData.value.deviceId = selectedDeviceId.value
+  if (!selectedDeviceId.value) {
+    ElMessage.warning("请选择设备")
+    return
   }
+
+  currentCommandData.value = undefined
   dialogVisible.value = true
 }
 
@@ -131,21 +91,8 @@ function handleDelete(row: DeviceCommand) {
 
 // #region 编辑
 function handleUpdate(row: DeviceCommand) {
+  currentCommandData.value = row
   dialogVisible.value = true
-  formData.value = {
-    id: row.id,
-    deviceId: row.deviceId,
-    displayName: row.displayName,
-    command: row.command,
-    parameter: row.parameter,
-    dispatchMode: row.dispatchMode,
-    dispatchTarget: row.dispatchTarget,
-    requiresAck: row.requiresAck,
-    requiresResponse: row.requiresResponse,
-    expiredTime: row.expiredTime,
-    maxRetryCount: row.maxRetryCount,
-    description: row.description
-  }
 }
 // #endregion
 
@@ -212,6 +159,72 @@ onMounted(async () => {
       <div class="table-wrapper">
         <el-card shadow="never">
           <el-table :data="commandList">
+            <el-table-column type="expand">
+              <template #default="scope">
+                <div style="padding: 0 30px;">
+                  <!-- 基础配置信息 -->
+                  <el-descriptions size="small" title="基础扩展信息" :column="3" border style="margin-bottom: 20px;">
+                    <el-descriptions-item label="事务ID(Correlation)">
+                      {{ scope.row.correlationId || '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="过期时间">
+                      {{ scope.row.expiresAt ? formatDateTime(scope.row.expiresAt) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="最大重试次数">
+                      {{ scope.row.maxRetryCount ?? '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="需要确认">
+                      <el-tag :type="scope.row.requiresAck ? 'success' : 'info'" size="small">
+                        {{ scope.row.requiresAck ? '是' : '否' }}
+                      </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="需要响应">
+                      <el-tag :type="scope.row.requiresResponse ? 'success' : 'info'" size="small">
+                        {{ scope.row.requiresResponse ? '是' : '否' }}
+                      </el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="创建时间">
+                      {{ scope.row.createdAt ? formatDateTime(scope.row.createdAt) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="描述" :span="3">
+                      {{ scope.row.description || '-' }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+
+                  <!-- 追踪与状态信息 -->
+                  <el-descriptions size="small" title="执行与状态追踪" :column="3" border>
+                    <el-descriptions-item label="完成时间">
+                      {{ scope.row.completedTime ? formatDateTime(scope.row.completedTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="确认时间(Ack)">
+                      {{ scope.row.extra?.ackTime ? formatDateTime(scope.row.extra.ackTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="响应时间">
+                      {{ scope.row.extra?.responseTime ? formatDateTime(scope.row.extra.responseTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="失败时间">
+                      {{ scope.row.extra?.failedTime ? formatDateTime(scope.row.extra.failedTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="取消时间">
+                      {{ scope.row.extra?.canceledTime ? formatDateTime(scope.row.extra.canceledTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="过期时间(执行)">
+                      {{ scope.row.extra?.expiredTime ? formatDateTime(scope.row.extra.expiredTime) : '-' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="实际重试次数">
+                      {{ scope.row.extra?.retryCount || '0' }}
+                    </el-descriptions-item>
+                    <el-descriptions-item label="失败原因" :span="2">
+                      <span style="color: #F56C6C;">{{ scope.row.extra?.failureReason || '-' }}</span>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="命令响应内容" :span="3">
+                      {{ scope.row.extra?.response || '-' }}
+                    </el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </template>
+            </el-table-column>
+
             <el-table-column label="指令" align="left">
               <template #default="{ row }">
                 <span v-if="row.displayName">
@@ -223,7 +236,7 @@ onMounted(async () => {
               </template>
             </el-table-column>
 
-            <el-table-column prop="parameter" label="参数" align="left" />
+            <el-table-column prop="parameter" label="参数" align="left" show-overflow-tooltip />
 
             <el-table-column prop="dispatchMode" width="130" label="下发模式" align="left">
               <template #default="{ row }">
@@ -231,7 +244,7 @@ onMounted(async () => {
               </template>
             </el-table-column>
 
-            <el-table-column prop="sentTime" label="发送时间" align="center">
+            <el-table-column prop="sentTime" label="发送时间" align="center" width="180">
               <template #default="{ row }">
                 {{ row.sentTime ? formatDateTime(row.sentTime) : '-' }}
               </template>
@@ -241,26 +254,6 @@ onMounted(async () => {
               <template #default="{ row }">
                 <el-tag size="small">
                   {{ commandStatusText(row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="requiresAck" label="需要确认" width="80" align="center">
-              <template #default="{ row }">
-                <el-tag type="success" v-if="row.requiresAck">
-                  是
-                </el-tag>
-                <el-tag type="info" v-else>
-                  否
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="requiresResponse" label="需要响应" width="80" align="center">
-              <template #default="{ row }">
-                <el-tag type="success" v-if="row.requiresResponse">
-                  是
-                </el-tag>
-                <el-tag type="info" v-else>
-                  否
                 </el-tag>
               </template>
             </el-table-column>
@@ -279,80 +272,13 @@ onMounted(async () => {
       </div>
     </el-card>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="formData.id === undefined ? '下发命令' : '修改命令'"
-      width="600px"
-      @closed="resetForm"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
-        <el-form-item prop="deviceId" label="目标设备">
-          <el-select :disabled="formData.id !== undefined" v-model="formData.deviceId" placeholder="请选择目标设备" style="width: 100%">
-            <el-option
-              v-for="device in devices"
-              :key="device.id"
-              :label="device.serialNumber"
-              :value="device.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="command" label="命令编码">
-          <el-input v-model="formData.command" placeholder="请输入命令编码" />
-        </el-form-item>
-        <el-form-item prop="parameter" label="命令参数">
-          <el-input v-model="formData.parameter" placeholder="请输入命令参数" />
-        </el-form-item>
-        <el-form-item prop="displayName" label="命令名称">
-          <el-input v-model="formData.displayName" placeholder="请输入命令名称" />
-        </el-form-item>
-        <el-form-item prop="dispatchMode" label="下发方式">
-          <el-select v-model="formData.dispatchMode" placeholder="请选择下发方式" style="width: 100%">
-            <el-option label="HTTP 被动下发" :value="1" />
-            <el-option label="HTTP 主动拉取" :value="2" />
-            <el-option label="MQTT 主动推送" :value="3" />
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="dispatchTarget" label="下发目标">
-          <el-input v-model="formData.dispatchTarget" placeholder="请输入下发目标" />
-        </el-form-item>
-        <el-form-item prop="requiresAck" label="是否要确认">
-          <el-switch v-model="formData.requiresAck" />
-        </el-form-item>
-        <el-form-item prop="requiresResponse" label="是否要响应">
-          <el-switch v-model="formData.requiresResponse" />
-        </el-form-item>
-        <el-form-item prop="expiredTime" label="过期时间">
-          <el-date-picker
-            v-model="formData.expiredTime"
-            type="date"
-            aria-label="选择过期时间"
-            placeholder="选择过期时间"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item prop="sortOrder" label="最大重试次数">
-          <el-input-number v-model="formData.maxRetryCount" :min="0" />
-        </el-form-item>
-        <!-- <el-form-item prop="isActive" label="启用状态">
-          <el-switch v-model="formData.isActive" />
-        </el-form-item>
-        <el-form-item prop="sortOrder" label="排序">
-          <el-input-number v-model="formData.sortOrder" :min="0" />
-        </el-form-item> -->
-        <el-form-item prop="description" label="描述">
-          <el-input type="textarea" v-model="formData.description" placeholder="请输入描述（可选）" />
-        </el-form-item>
-      </el-form>
-
-      <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreateOrUpdate">
-          确认
-        </el-button>
-      </template>
-    </el-dialog>
+    <DeviceControlEditDialog
+      v-model:visible="dialogVisible"
+      :device-id="selectedDeviceId || undefined"
+      :command-data="currentCommandData"
+      :device-list="devices"
+      @success="getDeviceCommandList"
+    />
   </div>
 </template>
 

@@ -1,9 +1,10 @@
 export interface UserExtra {
+  id?: string
   avatarUrl?: string
   culture?: string
   timeZone?: string
   themeMode?: string
-  gender?: string
+  gender: number
   birthday?: string
 }
 

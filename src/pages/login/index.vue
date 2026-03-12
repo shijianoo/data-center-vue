@@ -43,8 +43,6 @@ function handleLogin() {
     userStore.setToken(data.accessToken)
     userStore.setRefreshToken(data.refreshToken)
     await userStore.getTenantInfo()
-    await userStore.getInfo()
-    userStore.isInit = true
     if (userStore.tenants?.length === 1) {
       if (route.query.redirect) {
         router.push(decodeURIComponent(route.query.redirect as string))

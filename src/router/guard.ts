@@ -62,7 +62,7 @@ export function registerNavigationGuard(router: Router) {
     // /admin 仅管理员用户可进
     if (to.path.startsWith("/admin")) {
       console.log("进入/admin")
-      if (userStore.isPlatformAdmin) {
+      if (userStore.isPlatformAdmin || userStore.isPlatformOps) {
         console.log("是管理员用户，允许进入")
         return true
       } else {

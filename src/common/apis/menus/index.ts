@@ -28,9 +28,9 @@ export function deleteMenu(id: string) {
 }
 
 // 更新菜单额外信息
-export function updateMenuExtra(id: string, data: Menus.MenuExtra) {
+export function updateMenuExtra(data: Menus.MenuExtra) {
   return authCenterRequest({
-    url: `/menus/extra/${id}`,
+    url: `/menus/extra/${data.id}`,
     method: "put",
     data
   })

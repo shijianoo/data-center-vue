@@ -73,7 +73,7 @@ onUnmounted(() => {
         <div class="dd-item" @click="openProfile">
           <i class="fas fa-user-cog" /> 个人设置
         </div>
-        <div class="dd-item" v-if="userStore.isPlatformAdmin" @click="handleInternal">
+        <div class="dd-item" v-if="userStore.isPlatformAdmin || userStore.isPlatformOps" @click="handleInternal">
           <i class="fas fa-user-cog" /> 进入后台管理
         </div>
         <div class="dd-divider" v-if="userStore.tenants.length > 1" />

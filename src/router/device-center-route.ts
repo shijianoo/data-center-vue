@@ -14,7 +14,8 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/device-center/device-models/index.vue"),
         name: "DeviceModels",
         meta: {
-          title: "设备型号"
+          title: "设备型号",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -22,7 +23,8 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/device-center/devices/index.vue"),
         name: "Devices",
         meta: {
-          title: "设备管理"
+          title: "设备管理",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -31,7 +33,7 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         name: "DeviceControl",
         meta: {
           title: "设备控制",
-          roles: ["device-mgr:devices"]
+          roles: ["platform_admin", "device-mgr:devices"]
         }
       },
       {

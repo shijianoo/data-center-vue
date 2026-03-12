@@ -30,7 +30,7 @@ export interface Tenant {
   status: number
   plan: number
   expireTime?: string
-  slug: string
+  slug?: string
   customDomain: string
   contactName?: string
   contactPhone?: string
@@ -48,7 +48,6 @@ export interface TenantForm {
   id?: string
   adminUsername?: string
   name?: string
-  tenantCode?: string
   type: number
   status: number
   plan: number

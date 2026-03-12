@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { TenantStatistics } from "@/common/apis/statistics/tenants/type"
 import type { Tenant } from "@/common/apis/tenant/type"
-import { Bell } from "@element-plus/icons-vue"
 import { getTenantStatistics } from "@/common/apis/statistics/tenants"
 import { getTenantPagedApi } from "@/common/apis/tenant"
 
@@ -14,7 +13,9 @@ const emit = defineEmits<Emits>()
 const router = useRouter()
 
 function handleTenantClick(tenant: Tenant) {
-  router.push(`/console/${tenant.tenantCode}`)
+  const path = tenant.customDomain || tenant.slug || tenant.tenantCode
+  console.log("进入", path)
+  router.push(`/console/${path}`)
 }
 
 const pageIndex = ref(1)
@@ -93,7 +94,7 @@ watch(pageIndex, async () => {
             <td>
               <div class="project-cell">
                 <div class="p-icon">
-                  <el-icon><Bell /></el-icon>
+                  <i class="fa fa-building" aria-hidden="true" />
                 </div>
                 <div class="p-info">
                   <span class="p-name">{{ tenant.name }}</span>
@@ -241,7 +242,7 @@ watch(pageIndex, async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 

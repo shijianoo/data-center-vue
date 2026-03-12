@@ -1,4 +1,4 @@
-import type { CreateOrUpdateDeviceModelDto, DeviceModel, DeviceModelListResponse, DeviceModelSummary } from "@/common/apis/device-models/type"
+import type { CreateOrUpdateDeviceModelDto, DeviceModel, DeviceModelExtra, DeviceModelListResponse, DeviceModelSummary } from "@/common/apis/device-models/type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 创建设备型号 */
@@ -22,6 +22,15 @@ export function deleteDeviceModelsApi(id: string) {
 export function updateDeviceModelApi(data: CreateOrUpdateDeviceModelDto) {
   return dataCenterRequest<EmptyResponse>({
     url: `device-models/${data.id}`,
+    method: "put",
+    data
+  })
+}
+
+/** 更新设备型号扩展信息 */
+export function updateDeviceModelExtraApi(data: DeviceModelExtra) {
+  return dataCenterRequest<EmptyResponse>({
+    url: `device-models/${data.id}/extra`,
     method: "put",
     data
   })

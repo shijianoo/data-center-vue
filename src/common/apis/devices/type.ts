@@ -1,10 +1,20 @@
 import type { Entity } from "@/common/apis/type"
 
+export interface DeviceExtra {
+  id?: string
+  richText?: string
+  tags?: string[]
+}
+
 export interface CreateOrUpdateDeviceDto {
   id?: string
   deviceModelId: string
   serialNumber: string
   deviceName?: string
+  firmwareVersion?: string
+  hardwareVersion?: string
+  samplingInterval?: number
+  uploadInterval?: number
   description?: string
   isActive: boolean
 }
@@ -32,14 +42,13 @@ export interface Device extends Entity<string> {
   serialNumber: string
   deviceName?: string
   displayName: string
-  status: number
   firmwareVersion: string
   hardwareVersion: string
+  samplingInterval: number
   uploadInterval: number
-  lastUploadTime: string
-  lastOnlineTime: string
-  lastOfflineTime: string
+  status: number
   isOnline: boolean
+  lastUploadTime: string
   description?: string
   isActive: boolean
   modelNumber?: string

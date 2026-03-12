@@ -1,4 +1,5 @@
 export interface ProjectExtra {
+  id?: string
   uiProfile?: string
   ownerUser?: string
   tags?: string[]

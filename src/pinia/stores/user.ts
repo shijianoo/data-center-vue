@@ -133,6 +133,7 @@ export const useUserStore = defineStore("user", () => {
     user.value = null
     activeTenant.value = undefined
     tenantContextStore.clear()
+    isInit.value = false
   }
 
   // 重置 Token

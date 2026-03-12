@@ -98,7 +98,7 @@ export const constantRoutes: RouteRecordRaw[] = [
     path: "/",
     component: () => import("@/layouts/TenantLayout.vue"),
     meta: {
-      title: "进入平台前台",
+      title: "返回平台前端",
       breadcrumb: false
     }
   },
@@ -113,10 +113,11 @@ export const constantRoutes: RouteRecordRaw[] = [
 export const dynamicRoutes: RouteRecordRaw[] = [
   {
     path: "/admin",
+    name: "admin",
     component: Layouts,
     meta: {
       title: "平台后台管理",
-      roles: ["platform_admin"],
+      roles: ["platform_admin", "platform_ops"],
       svgIcon: "sys-setting"
     },
     children: [
@@ -126,7 +127,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Tenants",
         meta: {
           title: "租户管理",
-          svgIcon: "tenant-mgr"
+          svgIcon: "tenant-mgr",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -135,7 +137,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Projects",
         meta: {
           title: "项目管理",
-          svgIcon: "project-mgr"
+          svgIcon: "project-mgr",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -144,7 +147,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Users",
         meta: {
           title: "用户管理",
-          svgIcon: "users-mgr"
+          svgIcon: "users-mgr",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -153,7 +157,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Roles",
         meta: {
           title: "角色管理",
-          svgIcon: "roles-mgr"
+          svgIcon: "roles-mgr",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -162,7 +167,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Menus",
         meta: {
           title: "菜单管理",
-          svgIcon: "menus-mgr"
+          svgIcon: "menus-mgr",
+          roles: ["platform_admin"]
         }
       },
       {
@@ -171,7 +177,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         name: "Permissions",
         meta: {
           title: "权限管理",
-          svgIcon: "permissions-mgr"
+          svgIcon: "permissions-mgr",
+          roles: ["platform_admin"]
         }
       },
       ...deviceCenterRoutes,
@@ -179,7 +186,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         path: "data-check",
         name: "DataCheck",
         meta: {
-          title: "数据检查"
+          title: "数据检查",
+          roles: ["platform_admin"]
         },
         children: [
           {

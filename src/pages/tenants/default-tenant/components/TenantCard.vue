@@ -1,25 +1,24 @@
 <script lang="ts" setup>
 import type { Tenant } from "@/common/apis/tenant/type"
+import { formatDateTime } from "@/common/utils/datetime"
 
 const { tenant } = defineProps<{
   tenant?: Tenant
 }>()
 
 const tenantName = computed(() => {
-  return tenant?.name || "无"
+  return tenant?.name || "-"
 })
 
 const desc = computed(() => {
-  return tenant?.description || "无"
+  return tenant?.description || "-"
 })
-const accountId = computed(() => {
-  return tenant?.tenantCode || "无"
-})
+
 const contact = computed(() => {
-  return tenant?.contactName || "无"
+  return tenant?.contactName || "-"
 })
 const expireTime = computed(() => {
-  return tenant?.expireTime || "无"
+  return tenant?.expireTime || "-"
 })
 </script>
 
@@ -38,16 +37,12 @@ const expireTime = computed(() => {
 
         <div class="tc-info-grid">
           <div class="info-block">
-            <label>Account ID</label>
-            <div><i class="far fa-id-card" /> {{ accountId }}</div>
-          </div>
-          <div class="info-block">
-            <label>主要联系人</label>
+            <label>联系人</label>
             <div><i class="far fa-user" /> {{ contact }}</div>
           </div>
           <div class="info-block">
             <label>服务有效期</label>
-            <div><i class="far fa-calendar-alt" /> {{ expireTime }}</div>
+            <div><i class="far fa-calendar-alt" /> {{ formatDateTime(expireTime, "YYYY-MM-DD") }}</div>
           </div>
         </div>
       </div>
