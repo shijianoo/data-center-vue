@@ -82,6 +82,7 @@ watch(() => device.deviceCode, () => {
           <span class="meta-item">ID: <strong>{{ device.deviceCode }}</strong></span>
           <span class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
           <span class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
+          <span class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} 分</strong></span>
           <span class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
         </div>
       </div>
@@ -93,7 +94,7 @@ watch(() => device.deviceCode, () => {
     </div>
 
     <div class="layout-grid">
-      <MonitorGrid :items="monitorItems" />
+      <MonitorGrid :device="device" :items="monitorItems" />
       <div class="layout-grid-data">
         <TelemetryChart
           bucket="sob10_v1_t1_data"

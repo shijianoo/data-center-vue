@@ -84,6 +84,7 @@ watch(() => device.deviceCode, () => {
           <span class="meta-item">ID: <strong>{{ device.deviceCode }}</strong></span>
           <span class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
           <span class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
+          <span class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} </strong>分钟</span>
           <span class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
           <span class="meta-item"><i class="fas fa-signal" /> 信号: <strong>{{ csq }}</strong></span>
         </div>
@@ -96,7 +97,7 @@ watch(() => device.deviceCode, () => {
     </div>
 
     <div class="layout-grid">
-      <MonitorGrid :items="monitorItems" />
+      <MonitorGrid :device="device" :items="monitorItems" />
 
       <div class="card remote-control-card">
         <div class="card-header">

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { Device } from "@/common/apis/devices/type"
+
 export interface MonitorItem {
   label: string
   value: string | number
@@ -6,6 +8,7 @@ export interface MonitorItem {
 }
 
 const props = defineProps<{
+  device: Device
   items: MonitorItem[]
 }>()
 </script>
@@ -13,7 +16,15 @@ const props = defineProps<{
 <template>
   <div class="card monitor-card">
     <div class="card-header">
-      实时监测数据
+      <div class="title">
+        实时监测数据
+      </div>
+      <div class="extra-info" v-if="props.device?.samplingInterval">
+        <div class="interval-tag">
+          <i class="fas fa-clock" />
+          采样间隔: {{ props.device.samplingInterval }} 分
+        </div>
+      </div>
     </div>
     <div class="card-body">
       <div class="monitor-grid">
@@ -53,6 +64,19 @@ const props = defineProps<{
   .card-body {
     padding: 20px;
   }
+}
+
+.interval-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-weight: normal;
 }
 
 .monitor-grid {
