@@ -14,14 +14,15 @@ const visible = defineModel<boolean>("visible")
 const loading = ref(false)
 
 const formData = ref<UpdateDeviceProfileDto>({
+  isActive: true
 })
 
 watch(() => visible.value, (val) => {
   if (val && props.device) {
     formData.value = {
       displayName: props.device.displayName,
-      deviceName: props.device.deviceName,
-      description: props.device.description
+      description: props.device.description,
+      isActive: props.device.isActive
     }
   }
 })
@@ -59,9 +60,6 @@ async function handleSubmit() {
     >
       <el-form-item label="显示名称">
         <el-input v-model="formData.displayName" placeholder="请输入显示名称" />
-      </el-form-item>
-      <el-form-item label="设备名称" prop="deviceName">
-        <el-input v-model="formData.deviceName" placeholder="请输入设备名称" />
       </el-form-item>
       <el-form-item label="描述" prop="description">
         <el-input

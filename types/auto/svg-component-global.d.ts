@@ -9,18 +9,18 @@ declare module 'vue' {
   export interface GlobalComponents {
     SvgIcon: import("vue").DefineComponent<{
         name: {
-            type: import("vue").PropType<"calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy">;
+            type: import("vue").PropType<"calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "return-frontend" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy">;
             default: string;
             required: true;
         };
     }, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, Readonly<import("vue").ExtractPropTypes<{
         name: {
-            type: import("vue").PropType<"calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy">;
+            type: import("vue").PropType<"calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "return-frontend" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy">;
             default: string;
             required: true;
         };
     }>>, {
-        name: "calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy";
+        name: "calendar" | "dashboard" | "data-base" | "data-center" | "device-center" | "fullscreen-exit" | "fullscreen" | "keyboard-down" | "keyboard-enter" | "keyboard-esc" | "keyboard-up" | "menus-mgr" | "permissions-mgr" | "project-mgr" | "return-frontend" | "roles-mgr" | "search" | "sys-setting" | "tenant-mgr" | "users-mgr" | "wave-buoy";
     }>;
   }
 }

@@ -20,9 +20,9 @@ export interface CreateOrUpdateDeviceDto {
 }
 
 export interface UpdateDeviceProfileDto {
-  deviceName?: string
   displayName?: string
   description?: string
+  isActive: boolean
 }
 
 export interface DeviceUpgrade extends Entity<string> {
