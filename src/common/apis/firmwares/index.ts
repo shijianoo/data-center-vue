@@ -2,7 +2,7 @@ import type { DeviceFirmware, UploadOrUpdateDeviceFirmware } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 根据设备型号获取固件 */
-export function getFirmwaresByModelApi(deviceModelId: string) {
+export function getFirmwaresByModelApi(deviceModelId?: string) {
   return dataCenterRequest<ApiResponseData<DeviceFirmware[]>>({
     url: `firmwares/by-model?deviceModelId=${deviceModelId}`,
     method: "get"
