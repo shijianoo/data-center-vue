@@ -99,7 +99,8 @@ export const constantRoutes: RouteRecordRaw[] = [
     component: () => import("@/layouts/TenantLayout.vue"),
     meta: {
       title: "返回平台前端",
-      breadcrumb: false
+      breadcrumb: false,
+      svgIcon: "return-frontend"
     }
   },
   tenantRoutes
@@ -116,7 +117,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
     name: "admin",
     component: Layouts,
     meta: {
-      title: "平台后台管理",
+      title: "平台管理",
       roles: ["platform_admin", "platform_ops"],
       svgIcon: "sys-setting"
     },

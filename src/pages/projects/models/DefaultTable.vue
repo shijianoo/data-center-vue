@@ -32,24 +32,26 @@ function getDeviceName(device: DeviceStatisticsDto) {
   <div class="table-container">
     <table class="custom-table">
       <thead>
-        <th width="25%">
-          设备名称 / SN
-        </th>
-        <th width="10%">
-          状态
-        </th>
-        <th width="10%">
-          上报周期
-        </th>
-        <th width="20%">
-          最后上报
-        </th>
-        <th width="20%">
-          备注
-        </th>
-        <th width="10%">
-          操作
-        </th>
+        <tr>
+          <th width="25%">
+            设备名称 / SN
+          </th>
+          <th width="10%">
+            状态
+          </th>
+          <th width="10%">
+            上报周期
+          </th>
+          <th width="20%">
+            最后上报
+          </th>
+          <th width="20%">
+            备注
+          </th>
+          <th width="10%">
+            操作
+          </th>
+        </tr>
       </thead>
       <tbody>
         <tr @click="emit('action', row)" v-for="(row, rIdx) in devices" :key="rIdx" :class="{ 'bg-danger-light': row.isOnline === false }">

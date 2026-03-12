@@ -136,16 +136,6 @@ export const useUserStore = defineStore("user", () => {
     isInit.value = false
   }
 
-  // 重置 Token
-  const resetToken = () => {
-    removeToken()
-    removeRefreshToken()
-    token.value = ""
-    refreshToken.value = ""
-    user.value = null
-    tenantContextStore.clear()
-  }
-
   // 重置 Visited Views 和 Cached Views
   const resetTagsView = () => {
     if (!settingsStore.cacheTagsView) {
@@ -154,7 +144,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { isInit, token, tenants, activeTenant, memberProfile, roles, permissions, menus, user, isPlatformAdmin, isPlatformOps, isPlatformUser, getTenantInfo, switchTenant, getDefaultTenant, setToken, setRefreshToken, getInfo, changeRoles, logout, resetToken }
+  return { isInit, token, tenants, activeTenant, memberProfile, roles, permissions, menus, user, isPlatformAdmin, isPlatformOps, isPlatformUser, getTenantInfo, switchTenant, getDefaultTenant, setToken, setRefreshToken, getInfo, changeRoles, logout }
 })
 
 /**

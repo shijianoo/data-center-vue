@@ -42,30 +42,32 @@ onMounted(() => {
   <div class="table-container">
     <table class="custom-table">
       <thead>
-        <th width="15%">
-          设备 / SN
-        </th>
-        <th width="10%">
-          状态
-        </th>
-        <th width="10%">
-          水温 (m)
-        </th>
-        <th width="10%">
-          倾角 (s)
-        </th>
-        <th width="10%">
-          经度 (m)
-        </th>
-        <th width="10%">
-          纬度 (s)
-        </th>
-        <th width="10%">
-          电池 (V)
-        </th>
-        <th width="15%">
-          操作
-        </th>
+        <tr>
+          <th width="15%">
+            设备 / SN
+          </th>
+          <th width="10%">
+            状态
+          </th>
+          <th width="10%">
+            水温 (m)
+          </th>
+          <th width="10%">
+            倾角 (s)
+          </th>
+          <th width="10%">
+            经度 (m)
+          </th>
+          <th width="10%">
+            纬度 (s)
+          </th>
+          <th width="10%">
+            电池 (V)
+          </th>
+          <th width="15%">
+            操作
+          </th>
+        </tr>
       </thead>
       <tbody>
         <tr @click="emit('action', row)" v-for="(row, rIdx) in devices" :key="rIdx" :class="{ 'bg-danger-light': row.isOnline === false }">

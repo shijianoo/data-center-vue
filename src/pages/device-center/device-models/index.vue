@@ -75,12 +75,12 @@ onMounted(() => {
   <div class="app-container">
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
-        <div>
+        <div class="toolbar-left">
           <el-button type="primary" :icon="CirclePlus" @click="handleCreate">
             新增型号
           </el-button>
         </div>
-        <div>
+        <div class="toolbar-right">
           <el-tooltip content="刷新当前页">
             <el-button type="primary" :icon="RefreshRight" circle @click="fetchDeviceModels" />
           </el-tooltip>
@@ -181,6 +181,12 @@ onMounted(() => {
 .toolbar-wrapper {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
 }
 </style>
