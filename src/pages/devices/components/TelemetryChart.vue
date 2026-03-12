@@ -131,6 +131,28 @@ watch([
   fetchHistory()
 }, { immediate: true })
 
+const formattedStartTime = computed(() => {
+  return start.value ? dayjs(start.value).local().format("YYYY-MM-DD HH:mm:ss") : ""
+})
+
+const formattedEndTime = computed(() => {
+  return end.value ? dayjs(end.value).local().format("YYYY-MM-DD HH:mm:ss") : ""
+})
+
+const displayTimeRange = computed({
+  get: () => {
+    if (queryMode.value === "hours" && start.value && end.value) {
+      return [formattedStartTime.value, formattedEndTime.value]
+    }
+    return timeRange.value
+  },
+  set: (val) => {
+    if (queryMode.value === "range") {
+      timeRange.value = val as [string, string]
+    }
+  }
+})
+
 const selectedLabel = computed(() => {
   return fields.find(f => f.field === selectedField.value)?.label || ""
 })
@@ -235,13 +257,14 @@ const chartOption = computed(() => {
           <i class="fas fa-info-circle density-icon" />
         </el-tooltip>
         <el-date-picker
-          v-if="queryMode === 'range'"
-          v-model="timeRange"
-          type="daterange"
+          v-model="displayTimeRange"
+          :type="queryMode === 'hours' ? 'datetimerange' : 'daterange'"
           size="small"
-          value-format="YYYY-MM-DD"
+          :value-format="queryMode === 'hours' ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD'"
           :clearable="false"
+          :readonly="queryMode === 'hours'"
           class="range-picker"
+          :style="{ width: queryMode === 'hours' ? '320px' : '240px' }"
         />
       </div>
       <select v-model="selectedField" class="chart-select">
