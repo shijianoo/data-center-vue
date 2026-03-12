@@ -9,7 +9,7 @@ import { createDeviceCommandApi, deleteDeviceCommandApi, getDeviceCommandsApi, u
 import { getDeviceModelSummariesApi } from "@/common/apis/device-models"
 import { getDeviceSummariesApi } from "@/common/apis/devices"
 import { formatDateTime } from "@/common/utils/datetime"
-import { commandStatusText, dispatchModeText } from "@/common/utils/device-control"
+import { commandStatusText, dispatchModeText } from "@/common/utils/device-control-constants"
 
 const models = ref<DeviceModelSummary[]>([])
 const selectedModel = ref<DeviceModelSummary | undefined>(undefined)
