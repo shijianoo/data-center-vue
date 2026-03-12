@@ -233,7 +233,7 @@ async function fetchFirmwares() {
       return
     }
     const { data } = await getFirmwaresByModelApi(searchData.value.modelId)
-    firmwares.value = data.items
+    firmwares.value = data
   } catch (error) {
     console.error("获取固件列表失败:", error)
     firmwares.value = []

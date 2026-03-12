@@ -1,10 +1,9 @@
-import type { QueryResult } from "../type"
 import type { DeviceFirmware } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 根据设备型号获取固件 */
 export function getFirmwaresByModelApi(deviceModelId?: string) {
-  return dataCenterRequest<ApiResponseData<QueryResult<DeviceFirmware>>>({
+  return dataCenterRequest<ApiResponseData<DeviceFirmware[]>>({
     url: `firmwares/by-model?deviceModelId=${deviceModelId}`,
     method: "get"
   })
@@ -12,7 +11,7 @@ export function getFirmwaresByModelApi(deviceModelId?: string) {
 
 /** 根据设备获取固件 */
 export function getFirmwaresByDeviceApi(deviceId?: string) {
-  return dataCenterRequest<ApiResponseData<QueryResult<DeviceFirmware>>>({
+  return dataCenterRequest<ApiResponseData<DeviceFirmware[]>>({
     url: `firmwares/by-device?deviceId=${deviceId}`,
     method: "get"
   })
