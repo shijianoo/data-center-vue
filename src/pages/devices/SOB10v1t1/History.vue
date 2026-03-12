@@ -3,7 +3,7 @@ import type { Device } from "@/common/apis/devices/type"
 import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useHistoryDataQuery } from "@/common/hooks/useHistoryDataQuery"
-import { parseLeakStatus, parseLonHem } from "@/common/utils/data-parse"
+import { parseLatHem, parseLeakStatus, parseLonHem } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
@@ -20,6 +20,22 @@ const {
   pageSize,
   total
 } = useHistoryDataQuery(deviceRef, 1, 1)
+
+// 计算每一行的背景色类名，按照接收时间(recv_time)分组，交替显示两种浅色
+function getRowColorClass(index: number) {
+  if (index === 0) return "row-bg-1"
+
+  let groupIndex = 0
+  for (let i = 1; i <= index; i++) {
+    const prevTime = formatDateTime(dataList.value[i - 1]?.recv_time)
+    const currTime = formatDateTime(dataList.value[i]?.recv_time)
+    if (currTime !== prevTime) {
+      groupIndex++
+    }
+  }
+
+  return groupIndex % 2 === 0 ? "row-bg-1" : "row-bg-2"
+}
 
 async function handleDownload() {
   const data = await selectDateRange({ maxDays: 30 })
@@ -63,18 +79,18 @@ async function handleDownload() {
             <tr>
               <th>采样时间</th>
               <th>接收时间</th>
-              <th>经度</th>
+              <th>经度(°)</th>
               <th>经度半球</th>
-              <th>纬度</th>
+              <th>纬度(°)</th>
               <th>纬度半球</th>
-              <th>水温</th>
-              <th>湿度</th>
-              <th>电池电压</th>
+              <th>水温(°C)</th>
+              <th>湿度(g/m^3)</th>
+              <th>电池电压(V)</th>
               <th>漏水状态</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, index) in dataList" :key="index">
+            <tr v-for="(row, index) in dataList" :key="index" :class="getRowColorClass(index)">
               <td>
                 <span class="value">
                   {{ formatDateTime(row.samp_time) }}
@@ -102,7 +118,7 @@ async function handleDownload() {
               </td>
               <td>
                 <span class="value">
-                  {{ parseLonHem(row.lat_hem) }}
+                  {{ parseLatHem(row.lat_hem) }}
                 </span>
               </td>
               <td>
@@ -268,8 +284,16 @@ async function handleDownload() {
       border-bottom: none;
     }
 
+    tr.row-bg-1 td {
+      background-color: white; /* 非常浅的偏蓝色 */
+    }
+
+    tr.row-bg-2 td {
+      background-color: #f1f5f9; /* 稍微深一点点的浅灰蓝色 */
+    }
+
     tr:hover td {
-      background-color: #fcfcfc;
+      filter: brightness(0.97);
     }
 
     .value {
