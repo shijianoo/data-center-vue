@@ -18,6 +18,7 @@ const project = computed(() => tenantContextStore.currentProject)
         <div class="tc-meta">
           <span class="meta-item"><i class="far fa-building" /> 客户: <strong>{{ tenant!.name }}</strong></span>
           <span class="meta-item"><i class="fas fa-map-marker-alt" /> 部署地: {{ project!.address }}</span>
+          <span class="meta-item"><i class="fas fa-user" /> 负责人: {{ project!.extra?.ownerUser }}</span>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { ProjectWithStats } from "@/common/apis/statistics/tenants/type"
 import { formatHybridAgo } from "@/common/utils/datetime"
+import { getProjectStatusName } from "@/common/utils/project-constants"
 
 const props = defineProps<ProjectWithStats>()
 </script>
@@ -10,10 +11,10 @@ const props = defineProps<ProjectWithStats>()
     <div class="pc-header">
       <div class="pc-title-box">
         <h3>{{ props.name }}</h3>
-        <span class="pc-id">ID: {{ props.projectCode }}</span>
+        <span title="项目编号" class="pc-id">{{ props.projectCode }}</span>
       </div>
       <div class="pc-status">
-        正常
+        {{ getProjectStatusName(props.status) }}
       </div>
     </div>
     <div class="pc-body">

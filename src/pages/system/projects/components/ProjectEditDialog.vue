@@ -6,6 +6,7 @@ import { ElMessage } from "element-plus"
 import { cloneDeep } from "lodash-es"
 import { ref } from "vue"
 import { createProjectApi, getProjectApi, updateProjectApi } from "@/common/apis/projects"
+import { PROJECT_STATUS_LIST, PROJECT_TYPE_LIST } from "@/common/utils/project-constants"
 
 interface Props {
   projectId?: string
@@ -27,6 +28,7 @@ const defaultForm: ProjectForm = {
   tenantId: "",
   name: "",
   projectCode: "",
+  type: 0,
   status: 0,
   isActive: true,
   sortOrder: 0
@@ -58,6 +60,7 @@ async function opened() {
           name: data.name,
           projectCode: data.projectCode,
           address: data.address,
+          type: data.type,
           status: data.status,
           startDate: data.startDate,
           endDate: data.endDate,
@@ -133,8 +136,11 @@ async function handleCreateOrUpdate() {
             <el-form-item prop="name" label="项目名称">
               <el-input v-model="formData.name" placeholder="请输入项目名称" />
             </el-form-item>
-            <el-form-item prop="projectCode" label="项目编码">
-              <el-input v-model="formData.projectCode" placeholder="请输入项目编码" />
+            <el-form-item prop="projectCode" label="项目编号">
+              <el-input v-model="formData.projectCode" placeholder="请输入项目编号" />
+            </el-form-item>
+            <el-form-item prop="address" label="项目地址">
+              <el-input v-model="formData.address" placeholder="请输入项目地址" />
             </el-form-item>
             <el-form-item prop="isActive" label="状态">
               <el-radio-group v-model="formData.isActive">
@@ -151,6 +157,26 @@ async function handleCreateOrUpdate() {
             </el-form-item>
           </el-tab-pane>
           <el-tab-pane label="扩展信息">
+            <el-form-item prop="type" label="项目类型">
+              <el-select v-model="formData.type" placeholder="请选择项目类型" filterable style="width: 100%;">
+                <el-option
+                  v-for="item in PROJECT_TYPE_LIST"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item prop="status" label="项目状态">
+              <el-select v-model="formData.status" placeholder="请选择项目状态" filterable style="width: 100%;">
+                <el-option
+                  v-for="item in PROJECT_STATUS_LIST"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
             <el-form-item prop="startDate" label="开始日期">
               <el-date-picker
                 v-model="formData.startDate"
@@ -166,9 +192,6 @@ async function handleCreateOrUpdate() {
                 placeholder="选择结束日期"
                 style="width: 100%;"
               />
-            </el-form-item>
-            <el-form-item prop="address" label="项目地址">
-              <el-input v-model="formData.address" placeholder="请输入项目地址" />
             </el-form-item>
             <el-form-item prop="description" label="描述">
               <el-input v-model="formData.description" placeholder="请输入项目描述" type="textarea" :rows="3" />

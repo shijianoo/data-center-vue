@@ -24,7 +24,7 @@ watch(() => [props.longitude, props.latitude], ([lng, lat]) => {
   } else {
     marker.setLngLat(lng_lat)
   }
-  map.centerAndZoom(lng_lat, 6)
+  map.centerAndZoom(lng_lat, 9)
 })
 </script>
 

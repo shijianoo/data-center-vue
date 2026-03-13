@@ -277,7 +277,7 @@ async function handleCancel() {
     align-items: center;
     gap: 32px;
     width: 100%;
-    height: 44px;
+    height: 30px;
     flex-shrink: 0;
   }
 }

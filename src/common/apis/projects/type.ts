@@ -10,16 +10,16 @@ export interface Project {
   createdAt: string
   tenantId: string
   projectNo: string
-  name: string
   projectCode: string
+  name: string
   address?: string
+  type: number
   status: number
   startDate?: string
   endDate?: string
   description?: string
   isActive: boolean
   sortOrder: number
-  createdByUserId?: string
   extra?: ProjectExtra
 }
 
@@ -29,6 +29,7 @@ export interface ProjectForm {
   name: string
   projectCode: string
   address?: string
+  type: number
   status: number
   startDate?: string
   endDate?: string

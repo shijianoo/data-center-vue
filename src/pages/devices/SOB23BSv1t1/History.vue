@@ -445,6 +445,7 @@ async function handleDownload() {
     th,
     td {
       border-right: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     th:last-child,

@@ -15,7 +15,7 @@ const showMobileMenu = ref(false)
 
 const tenantCode = computed(() => {
   const tenant = userStore.tenants.find(tenant => tenant.type === 99)
-  return tenant?.tenantCode
+  return tenant?.customDomain || tenant?.slug || tenant?.tenantCode
 })
 </script>
 
@@ -33,7 +33,7 @@ const tenantCode = computed(() => {
 
     <!-- 移动端菜单按钮 -->
     <div v-if="links && links.length > 0" class="mobile-menu-btn" @click="showMobileMenu = true">
-      <i class="fa-solid fa-arrows-down-to-line " />
+      <i class="fa-solid fa-bars" />
     </div>
 
     <!-- 移动端侧边菜单 -->
