@@ -5,6 +5,8 @@ import { useRouter } from "vue-router"
 import { getLatestTelemetryData } from "@/common/apis/telemetry"
 import { formatHybridAgo } from "@/common/utils/datetime"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
+import DynamicCmdBtn from "../components/device-ctrl/DynamicCmdBtn.vue"
+import StaticCmdBtn from "../components/device-ctrl/StaticCmdBtn.vue"
 import DeviceLocation from "../components/DeviceLocation.vue"
 import MonitorGrid from "../components/MonitorGrid.vue"
 import TelemetryChart from "../components/TelemetryChart.vue"
@@ -105,14 +107,22 @@ watch(() => device.deviceCode, () => {
         </div>
         <div class="card-body">
           <div class="control-grid">
-            <div class="ctrl-btn" :disabled="true">
-              <i class="fas fa-power-off" :style="{ color: 'var(--danger)' }" />
-              <span>重启</span>
-            </div>
-            <div class="ctrl-btn" :disabled="true">
-              <i class="fas fas fa-upload" :style="{ color: 'var(--warning)' }" />
-              <span>上报周期</span>
-            </div>
+            <StaticCmdBtn
+              :device="device"
+              command="Reset"
+              command-name="重启"
+              btn-icon="fas fa-power-off"
+              btn-color="var(--danger)"
+            />
+            <DynamicCmdBtn
+              :device="device"
+              command="SetReportInterval"
+              command-name="设置上报间隔"
+              btn-icon="fas fa-clock"
+              btn-color="var(--primary)"
+              param-type="numeric"
+              unit="分钟"
+            />
           </div>
         </div>
       </div>
