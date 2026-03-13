@@ -22,18 +22,28 @@ const tenantCode = computed(() => {
 <template>
   <nav class="navbar" :class="{ 'has-links': links && links.length > 0 }">
     <div class="nav-left">
-      <router-link v-if="userStore.isPlatformUser" :to="`/console/${tenantCode}`" custom v-slot="{ isExactActive, navigate, href }">
-        <a title="返回平台总览页面" v-if="!isExactActive" :href="href" @click="navigate" class="back-link">
+      <router-link
+        v-if="userStore.isPlatformUser"
+        :to="`/console/${tenantCode}`"
+        custom
+        v-slot="{ isExactActive, navigate, href }"
+      >
+        <a
+          title="返回平台总览页面"
+          v-if="!isExactActive"
+          :href="href"
+          @click="navigate"
+          class="back-link"
+        >
           <i class="fa-solid fa-arrow-left" />
           <span class="back-text">返回</span>
         </a>
       </router-link>
-      <TenantLogo />
-    </div>
-
-    <!-- 移动端菜单按钮 -->
-    <div v-if="links && links.length > 0" class="mobile-menu-btn" @click="showMobileMenu = true">
-      <i class="fa-solid fa-bars" />
+      <!-- 移动端菜单按钮 -->
+      <div v-if="links && links.length > 0" class="mobile-menu-btn" @click="showMobileMenu = true">
+        <i class="fa-solid fa-bars" />
+      </div>
+      <TenantLogo class="desktop-logo" />
     </div>
 
     <!-- 移动端侧边菜单 -->
@@ -121,9 +131,12 @@ const tenantCode = computed(() => {
 }
 
 @media (max-width: 768px) {
-  .navbar.has-links .nav-left {
-    display: none;
+  .navbar.has-links {
+    .desktop-logo {
+      display: none;
+    }
   }
+
   .mobile-menu-btn {
     display: flex;
     align-items: center;
