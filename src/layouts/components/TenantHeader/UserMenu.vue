@@ -59,15 +59,36 @@ onUnmounted(() => {
     </div>
 
     <div class="avatar">
-      O
+      {{ (userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName || 'U')[0].toUpperCase() }}
     </div>
     <i class="fas fa-chevron-down" />
 
     <transition name="fade">
       <div v-show="showUserMenu" class="dropdown-menu">
         <div class="menu-header">
-          <h4>当前身份: {{ userStore.memberProfile?.memberName || userStore.user?.realName || userStore.user?.nickName }}</h4>
-          <p>{{ userStore.user?.email || userStore.user?.userName }}</p>
+          <div class="header-avatar">
+            {{ (userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName || 'U')[0].toUpperCase() }}
+          </div>
+          <div class="header-info">
+            <div class="name-row">
+              <span class="header-name" :title="userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName">
+                {{ userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName }}
+              </span>
+              <span v-if="userStore.isPlatformAdmin" class="tag-badge tag-admin" title="平台管理员"><i class="fas fa-shield-alt" /></span>
+              <span v-else-if="userStore.isPlatformOps" class="tag-badge tag-ops" title="平台运维"><i class="fas fa-tools" /></span>
+            </div>
+            <div class="header-email" v-if="userStore.user?.email || userStore.user?.userName" :title="userStore.user?.email || userStore.user?.userName">
+              {{ userStore.user?.email || userStore.user?.userName }}
+            </div>
+            <div class="tenant-row">
+              <span class="header-tenant" v-if="userStore.activeTenant?.name" :title="userStore.activeTenant?.name">
+                <i class="fas fa-building" /> {{ userStore.activeTenant?.name }}
+              </span>
+              <span class="header-role">
+                <i class="fas fa-id-badge" /> {{ userStore.memberProfile?.memberName || '成员' }}
+              </span>
+            </div>
+          </div>
         </div>
         <div class="dd-divider" />
         <div class="dd-item" @click="openProfile">
@@ -167,18 +188,117 @@ onUnmounted(() => {
 }
 
 .menu-header {
-  padding: 10px;
+  padding: 12px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
 
-  h4 {
-    margin: 0;
-    font-size: 14px;
-  }
+.header-avatar {
+  width: 40px;
+  height: 40px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+  flex-shrink: 0;
+}
 
-  p {
-    margin: 3px 0 0 0;
-    font-size: 12px;
-    color: var(--text-sub);
-  }
+.header-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.tag-badge {
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tag-admin {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.tag-ops {
+  background: #fdf4ff;
+  color: #c026d3;
+}
+
+.header-email {
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.tenant-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.header-tenant,
+.header-role {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-tenant {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.header-role {
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
 .dd-item {

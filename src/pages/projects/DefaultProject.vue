@@ -3,7 +3,7 @@ import type { DeviceModelStatistics } from "@/common/apis/statistics/projects/ty
 import { getDeviceModelStatisticsApi } from "@/common/apis/statistics/projects"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
-import ProjectHeroCard from "./components/ProjectHeroCard.vue"
+import ProjectCard from "./components/ProjectCard.vue"
 import ModelEntry from "./models/ModelEntry.vue"
 
 const tenantContextStore = useTenantContextStore()
@@ -25,7 +25,7 @@ watch(() => tenantContextStore.currentProject, async (project) => {
   <div class="project-dashboard">
     <div class="project-container">
       <TenantBreadcrumb />
-      <ProjectHeroCard />
+      <ProjectCard />
 
       <div v-loading="loading">
         <template v-if="modelStats.length !== 0">
@@ -51,7 +51,7 @@ watch(() => tenantContextStore.currentProject, async (project) => {
   width: 100%;
 }
 
-.project-hero-card {
+.project-card {
   margin-bottom: 20px;
 }
 
@@ -77,7 +77,7 @@ watch(() => tenantContextStore.currentProject, async (project) => {
   .project-dashboard {
     padding: 10px;
   }
-  .project-hero-card {
+  .project-card {
     margin-bottom: 10px;
   }
 }

@@ -3,7 +3,6 @@ import type { Device } from "@/common/apis/devices/type"
 import type { Project } from "@/common/apis/projects/type"
 import { defineStore } from "pinia"
 import { useTenantRoute } from "@/common/hooks/useTenantRoute"
-import { getTenantMenu } from "@/pages/tenants/menu-registry"
 import { useUserStore } from "./user"
 
 export const useTenantContextStore = defineStore("tenantContext", () => {
@@ -21,13 +20,13 @@ export const useTenantContextStore = defineStore("tenantContext", () => {
     customNavLinks.value = links
   }
 
-  watch(currentTenant, (tenant) => {
-    if (tenant) {
-      setNavLinks(getTenantMenu(tenant))
-    } else {
-      setNavLinks([])
-    }
-  }, { immediate: true })
+  // watch(currentTenant, (tenant) => {
+  //   if (tenant) {
+  //     setNavLinks(getTenantMenu(tenant))
+  //   } else {
+  //     setNavLinks([])
+  //   }
+  // }, { immediate: true })
 
   const currentTenantKey = computed(() => route.params.tenantKey as string)
   const currentProjectKey = computed(() => route.params.projectKey as string)

@@ -2,6 +2,7 @@ import type { RouteRecordRaw } from "vue-router"
 import { createRouter } from "vue-router"
 import { routerConfig } from "@/router/config"
 import { registerNavigationGuard } from "@/router/guard"
+import { dataCenterRoutes } from "./data-center-route"
 import { deviceCenterRoutes } from "./device-center-route"
 import { flatMultiLevelRoutes } from "./helper"
 
@@ -112,6 +113,8 @@ export const constantRoutes: RouteRecordRaw[] = [
  * @description 必须带有唯一的 Name 属性
  */
 export const dynamicRoutes: RouteRecordRaw[] = [
+
+  ...dataCenterRoutes,
   {
     path: "/admin",
     name: "admin",

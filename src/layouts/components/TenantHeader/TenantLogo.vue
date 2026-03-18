@@ -1,16 +1,27 @@
 <script setup lang="ts">
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
+
 defineProps<{
   alwaysShowBrand?: boolean
 }>()
+const tenantContext = useTenantContextStore()
+
+const title = computed(() => {
+  if (tenantContext.currentTenant?.type === 99) {
+    return "平台运维概览"
+  } else {
+    return tenantContext.currentTenant?.name
+  }
+})
 </script>
 
 <template>
   <div class="tenant-logo" :class="{ 'always-show-brand': alwaysShowBrand }">
-    <div class="logo-box">
-      <i class="fas fa-layer-group" />
+    <div>
+      <img class="logo-box" src="@/common/assets/images/logo.jpg">
     </div>
     <div class="brand">
-      数据中心
+      {{ title }}
     </div>
   </div>
 </template>
@@ -23,9 +34,9 @@ defineProps<{
 }
 
 .logo-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
   color: var(--primary);
   display: flex;
   align-items: center;

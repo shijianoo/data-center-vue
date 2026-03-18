@@ -28,6 +28,9 @@ const props = defineProps<{
     </div>
     <div class="card-body">
       <div class="monitor-grid">
+        <div v-if="props.items.length === 0" class="no-data">
+          无数据
+        </div>
         <div v-for="(item, index) in props.items" :key="index" class="monitor-item">
           <div class="monitor-label">
             {{ item.label }}
@@ -83,6 +86,12 @@ const props = defineProps<{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
+}
+
+.no-data {
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 13px;
 }
 
 .monitor-item {

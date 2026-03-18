@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { MonitorItem } from "../components/MonitorGrid.vue"
 import type { Device } from "@/common/apis/devices/type"
+import { Clock } from "@element-plus/icons-vue"
 import { getLatestTelemetryData } from "@/common/apis/telemetry"
 import { formatHybridAgo } from "@/common/utils/datetime"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
@@ -17,6 +18,7 @@ const router = useRouter()
 const displayTitle = computed(() => device.displayName || device.deviceName || device.serialNumber)
 
 const monitorItems = ref<MonitorItem[]>([])
+const latestDataTime = ref<string | undefined>(undefined)
 const lon = ref(0)
 const lat = ref(0)
 
@@ -30,18 +32,16 @@ async function fetchLatestData() {
     if (data.data) {
       monitorItems.value = [
         { label: "水温", value: data.data.temp_wat, unit: "℃" },
-        { label: "湿度", value: data.data.humid },
+        { label: "湿度", value: data.data.humid, unit: "g/m^3" },
         { label: "主板温度", value: data.data.temp_mb, unit: "℃" },
-        { label: "倾角", value: data.data.tilt_ang },
+        { label: "倾角", value: data.data.tilt_ang, unit: "度" },
         { label: "电池", value: data.data.ubatt, unit: "V" }
       ]
+      latestDataTime.value = data.data.time
       lon.value = data.data.lon
       lat.value = data.data.lat
       console.log("设备最新数据", data.data)
     } else {
-      monitorItems.value = [
-        { label: "无数据", value: "无数据" }
-      ]
       lon.value = 0
       lat.value = 0
       console.log("设备没有数据")
@@ -75,21 +75,21 @@ watch(() => device.deviceCode, () => {
           <template v-else>
             <span class="display-name">{{ device.serialNumber }}</span>
           </template>
-          <span class="model-info">{{ device.modelName }}</span>
+          <el-tag>{{ device.modelName }}</el-tag>
         </h1>
         <div class="dh-meta">
           <span v-if="displayTitle !== device.serialNumber" class="meta-item">SN: <strong>{{ device.serialNumber }}</strong></span>
           <span class="meta-item">ID: <strong>{{ device.deviceCode }}</strong></span>
-          <span class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
-          <span class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
-          <span class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} 分</strong></span>
-          <span class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
+          <span v-if="device.firmwareVersion" class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
+          <span v-if="device.hardwareVersion" class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
+          <span v-if="device.uploadInterval" class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} 分</strong></span>
+          <span v-if="device.lastUploadTime" class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
         </div>
       </div>
       <div class="dh-actions">
-        <button class="btn" @click="goToHistoryPage">
-          <i class="fas fa-history" /> 历史数据
-        </button>
+        <el-button :icon="Clock" @click="goToHistoryPage">
+          历史数据
+        </el-button>
       </div>
     </div>
 
@@ -99,8 +99,12 @@ watch(() => device.deviceCode, () => {
         <TelemetryChart
           bucket="sob10_v1_t1_data"
           :device="device"
+          :latest-time="latestDataTime"
           :fields="[
             { label: '水温', field: 'temp_wat', unit: 'm' },
+            { label: '湿度', field: 'humid', unit: '%' },
+            { label: '主板温度', field: 'temp_mb', unit: '℃' },
+            { label: '电池', field: 'ubatt', unit: 'V' },
           ]"
         />
         <DeviceLocation
@@ -177,71 +181,9 @@ watch(() => device.deviceCode, () => {
     gap: 12px;
     flex-wrap: wrap;
 
-    .tab-toggle {
-      display: flex;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 8px;
-      gap: 4px;
-
-      .tab-btn {
-        border: none;
-        background: transparent;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #64748b;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s;
-
-        &:hover {
-          color: var(--primary);
-        }
-
-        &.active {
-          background: white;
-          color: var(--primary);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-      }
-    }
-
-    .divider-v {
-      width: 1px;
-      height: 24px;
-      background: var(--border);
-      margin: 0 4px;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: white;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-      white-space: nowrap;
-      font-weight: 500;
-      &:hover {
-        border-color: var(--primary);
-        color: var(--primary);
-      }
-      &.btn-primary {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        &:hover {
-          opacity: 0.9;
-        }
-      }
+    .el-button {
+      flex: 1;
+      justify-content: center;
     }
   }
 }
@@ -281,10 +223,6 @@ watch(() => device.deviceCode, () => {
   }
   .dh-actions {
     width: 100%;
-    .btn {
-      flex: 1;
-      justify-content: center;
-    }
   }
 }
 </style>

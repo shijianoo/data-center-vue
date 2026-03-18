@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { MonitorItem } from "../components/MonitorGrid.vue"
 import type { Device } from "@/common/apis/devices/type"
+import { Clock } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
 import { getLatestTelemetryData } from "@/common/apis/telemetry"
 import { formatHybridAgo } from "@/common/utils/datetime"
@@ -21,6 +22,7 @@ const router = useRouter()
 const displayTitle = computed(() => device.displayName || device.deviceName || device.serialNumber)
 
 const monitorItems = ref<MonitorItem[]>([])
+const latestDataTime = ref<string | undefined>(undefined)
 const csq = ref(0)
 const lon = ref(0)
 const lat = ref(0)
@@ -38,14 +40,12 @@ async function fetchLatestData() {
         { label: "1/3波高", value: data.data.h13, unit: "m" },
         { label: "1/3波周期", value: data.data.t13, unit: "s" }
       ]
+      latestDataTime.value = data.data.time
       csq.value = data.data.csq
       lon.value = data.data.lon
       lat.value = data.data.lat
       console.log("设备最新数据", data.data)
     } else {
-      monitorItems.value = [
-        { label: "无数据", value: "无数据" }
-      ]
       lon.value = 0
       lat.value = 0
       console.log("设备没有数据")
@@ -79,22 +79,22 @@ watch(() => device.deviceCode, () => {
           <template v-else>
             <span class="display-name">{{ device.serialNumber }}</span>
           </template>
-          <span class="model-info">{{ device.modelName }}</span>
+          <el-tag>{{ device.modelName }}</el-tag>
         </h1>
         <div class="dh-meta">
           <span v-if="displayTitle !== device.serialNumber" class="meta-item">SN: <strong>{{ device.serialNumber }}</strong></span>
           <span class="meta-item">ID: <strong>{{ device.deviceCode }}</strong></span>
-          <span class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
-          <span class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
-          <span class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} </strong>分钟</span>
-          <span class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
-          <span class="meta-item"><i class="fas fa-signal" /> 信号: <strong>{{ csq }}</strong></span>
+          <span v-if="device.firmwareVersion" class="meta-item">FW: <strong>{{ device.firmwareVersion }}</strong></span>
+          <span v-if="device.hardwareVersion" class="meta-item">HW: <strong>{{ device.hardwareVersion }}</strong></span>
+          <span v-if="device.uploadInterval" class="meta-item">上报间隔: <strong>{{ device.uploadInterval }} </strong>分钟</span>
+          <span v-if="device.lastUploadTime" class="meta-item">上次上报: <strong>{{ formatHybridAgo(device.lastUploadTime) }}</strong></span>
+          <span v-if="csq" class="meta-item"><i class="fas fa-signal" /> 信号: <strong>{{ csq }}</strong></span>
         </div>
       </div>
       <div class="dh-actions">
-        <button class="btn" @click="goToHistoryPage">
-          <i class="fas fa-history" /> 历史数据
-        </button>
+        <el-button :icon="Clock" @click="goToHistoryPage">
+          历史数据
+        </el-button>
       </div>
     </div>
 
@@ -108,6 +108,7 @@ watch(() => device.deviceCode, () => {
         <div class="card-body">
           <div class="control-grid">
             <StaticCmdBtn
+              v-role-enable="['platform_admin', 'platform_ops']"
               :device="device"
               command="Reset"
               command-name="重启"
@@ -115,6 +116,7 @@ watch(() => device.deviceCode, () => {
               btn-color="var(--danger)"
             />
             <DynamicCmdBtn
+              v-role-enable="['platform_admin', 'platform_ops']"
               :device="device"
               command="SetReportInterval"
               command-name="设置上报间隔"
@@ -130,11 +132,22 @@ watch(() => device.deviceCode, () => {
       <TelemetryChart
         bucket="wave_buoy_data"
         :device="device"
+        :latest-time="latestDataTime"
         :fields="[
           { label: '平均波高', field: 'hm', unit: 'm' },
           { label: '平均波周期', field: 'tm', unit: 's' },
+          { label: '最大波高', field: 'hmax', unit: 'm' },
+          { label: '最大波周期', field: 'tmax', unit: 's' },
           { label: '1/3波高', field: 'h13', unit: 'm' },
           { label: '1/3波周期', field: 't13', unit: 's' },
+          { label: '1/10波高', field: 'h10', unit: 'm' },
+          { label: '1/10波周期', field: 't10', unit: 's' },
+          { label: '谱有效波高', field: 'spec_hm', unit: 'm' },
+          { label: '谱平均周期', field: 'spec_tm', unit: 's' },
+          { label: '气压', field: 'press', unit: 'dBar' },
+          { label: '温度', field: 'temp', unit: '℃' },
+          { label: '主板温度', field: 'temp_mb', unit: '℃' },
+          { label: '电池电压', field: 'ubatt', unit: 'V' },
         ]"
       />
 
@@ -210,72 +223,9 @@ watch(() => device.deviceCode, () => {
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
-
-    .tab-toggle {
-      display: flex;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 8px;
-      gap: 4px;
-
-      .tab-btn {
-        border: none;
-        background: transparent;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #64748b;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s;
-
-        &:hover {
-          color: var(--primary);
-        }
-
-        &.active {
-          background: white;
-          color: var(--primary);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-      }
-    }
-
-    .divider-v {
-      width: 1px;
-      height: 24px;
-      background: var(--border);
-      margin: 0 4px;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: white;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-      white-space: nowrap;
-      font-weight: 500;
-      &:hover {
-        border-color: var(--primary);
-        color: var(--primary);
-      }
-      &.btn-primary {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        &:hover {
-          opacity: 0.9;
-        }
-      }
+    .el-button {
+      flex: 1;
+      justify-content: center;
     }
   }
 }

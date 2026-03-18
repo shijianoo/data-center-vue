@@ -68,7 +68,7 @@ const { device } = defineProps<{
 
 <style lang="scss" scoped>
 .device-not-found-page {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--header-h));
   background: var(--bg-body);
 }
 

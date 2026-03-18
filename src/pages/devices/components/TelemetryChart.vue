@@ -15,9 +15,10 @@ import { CanvasRenderer } from "echarts/renderers"
 import VChart from "vue-echarts"
 import { queryDeviceFieldData } from "@/common/apis/data-query"
 
-const { device, bucket, fields } = defineProps<{
+const { device, bucket, latestTime, fields } = defineProps<{
   device: Device
   bucket?: string
+  latestTime?: string
   fields: Array<{ label: string, field: string, unit?: string }>
 }>()
 
@@ -32,18 +33,33 @@ echarts.use([
   LineChart
 ])
 
+const lastUploadTime = computed(() => {
+  const t1 = device.lastUploadTime
+  const t2 = latestTime
+
+  console.log("最后上传时间", t1)
+  console.log("最新数据时间", t2)
+
+  if (!t1 && !t2) return null
+  if (!t1) return t2
+  if (!t2) return t1
+
+  // 都有值，取最新
+  return new Date(t1) > new Date(t2) ? t1 : t2
+})
+
 const start = ref<string | null>(null)
 const end = ref<string | null>(null)
 const selectedField = ref<string | null>(fields[0]?.field || null)
 const selectedHours = ref(24)
 const queryMode = ref<"hours" | "range">("hours")
 const timeRange = ref<[string, string]>([
-  dayjs(device.lastUploadTime).format("YYYY-MM-DD"),
-  dayjs(device.lastUploadTime).format("YYYY-MM-DD")
+  dayjs(lastUploadTime.value).format("YYYY-MM-DD"),
+  dayjs(lastUploadTime.value).format("YYYY-MM-DD")
 ])
 
 // 当设备最后上报时间变化时，更新默认时间区间
-watch(() => device.lastUploadTime, (newVal) => {
+watch(() => lastUploadTime.value, (newVal) => {
   if (newVal) {
     timeRange.value = [
       dayjs(newVal).format("YYYY-MM-DD"),
@@ -67,6 +83,12 @@ async function fetchHistory() {
     || !device.serialNumber) {
     return
   }
+
+  // ──────────────── 时间调整 ────────────────
+  // InfluxDB 的 range(start:, stop:) 是左闭右开区间 [start, stop)
+  // 所以 stop 时间点本身的数据不会包含在查询结果中
+  // 这里给 end 时间加 1 秒，保证查询结果能包含原本等于 end 的数据点
+  const adjustedEnd = dayjs(end.value).add(1, "second").toISOString()
 
   // 根据时间范围动态设置 window 和 agg，防止数据量过大导致卡顿
   const diffDays = dayjs(end.value).diff(dayjs(start.value), "day")
@@ -97,7 +119,7 @@ async function fetchHistory() {
       serialNumber: device.serialNumber!,
       field: selectedField.value,
       start: start.value,
-      end: end.value,
+      end: adjustedEnd, // 调整后的 end 时间
       window: windowParam,
       agg: aggParam
     })
@@ -111,14 +133,15 @@ async function fetchHistory() {
 
 watch([
   () => device.deviceCode,
+  () => lastUploadTime.value,
   () => selectedField.value,
   () => selectedHours.value,
   () => queryMode.value,
   () => timeRange.value
 ], () => {
   if (queryMode.value === "hours") {
-    if (device.lastUploadTime) {
-      end.value = dayjs(device.lastUploadTime).utc().toISOString()
+    if (lastUploadTime.value) {
+      end.value = dayjs(lastUploadTime.value).utc().toISOString()
       start.value = dayjs(end.value).add(-selectedHours.value, "hour").utc().toISOString()
     }
   } else {

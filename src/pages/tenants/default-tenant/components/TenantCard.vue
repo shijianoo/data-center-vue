@@ -11,50 +11,36 @@ const tenantName = computed(() => {
 })
 
 const desc = computed(() => {
-  return tenant?.description || "-"
+  return tenant?.description
 })
 
 const contact = computed(() => {
-  return tenant?.contactName || "-"
+  return tenant?.contactName
 })
 const expireTime = computed(() => {
-  return tenant?.expireTime || "-"
+  return tenant?.expireTime
 })
 </script>
 
 <template>
   <div class="tenant-card">
-    <div class="tc-left">
-      <div class="tc-header">
-        <div class="tc-title-row">
-          <div class="tc-name">
-            {{ tenantName }}
-          </div>
-        </div>
-        <div class="tc-desc">
-          {{ desc }}
-        </div>
-
-        <div class="tc-info-grid">
-          <div class="info-block">
-            <label>联系人</label>
-            <div><i class="far fa-user" /> {{ contact }}</div>
-          </div>
-          <div class="info-block">
-            <label>服务有效期</label>
-            <div><i class="far fa-calendar-alt" /> {{ formatDateTime(expireTime, "YYYY-MM-DD") }}</div>
-          </div>
-        </div>
+    <div class="tenant-title">
+      <div class="tenant-name">
+        {{ tenantName }}
       </div>
     </div>
 
-    <div class="tc-right" v-if="false">
-      <div class="btn btn-primary">
-        编辑
-      </div>
-      <div class="btn btn-primary">
-        编辑
-      </div>
+    <div class="tenant-description" v-if="desc">
+      {{ desc }}
+    </div>
+
+    <div class="tenant-meta">
+      <span class="meta-item" v-if="contact">
+        <i class="far fa-user" /> 联系人: <strong>{{ contact }}</strong>
+      </span>
+      <span class="meta-item" v-if="expireTime">
+        <i class="far fa-calendar-alt" /> 服务有效期: <strong>{{ formatDateTime(expireTime, "YYYY-MM-DD") }}</strong>
+      </span>
     </div>
   </div>
 </template>
@@ -62,112 +48,61 @@ const expireTime = computed(() => {
 <style lang="scss" scoped>
 .tenant-card {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   background: white;
+  gap: 10px;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 30px;
 
-  .tc-left {
-    flex: 1;
+  .tenant-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 
-    .tc-title-row {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 10px;
-      .tc-name {
-        font-size: 24px;
-        font-weight: 800;
-      }
-    }
-    .tc-desc {
-      color: var(--text-sub);
-      font-size: 14px;
-      max-width: 600px;
-      line-height: 1.5;
-    }
-
-    .tc-info-grid {
-      display: flex;
-      gap: 40px;
-      margin-top: 20px;
-      border-top: 1px solid var(--border);
-      padding-top: 20px;
-      .info-block {
-        label {
-          display: block;
-          font-size: 12px;
-          color: var(--text-sub);
-          margin-bottom: 10px;
-          text-transform: uppercase;
-        }
-        div {
-          font-size: 14px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          i {
-            color: var(--text-sub);
-          }
-        }
-      }
+    .tenant-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
     }
   }
 
-  .tc-right {
+  .tenant-description {
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.5;
+  }
+
+  .tenant-meta {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-    .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: white;
+    flex-wrap: wrap;
+    column-gap: 24px;
+    row-gap: 10px;
+    font-size: 13px;
+    color: var(--text-sub);
+
+    .meta-item {
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
-      &:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      &.btn-primary {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        &:hover {
-          background: #1e293b;
-          color: white;
-        }
+      i {
+        color: #94a3b8;
       }
     }
   }
 }
 
-// Mobile
 @media (max-width: 900px) {
   .tenant-card {
     flex-direction: column;
     align-items: flex-start;
-    gap: 20px;
-    .tc-info-grid {
+    gap: 10px;
+
+    .tenant-meta {
       flex-direction: column;
-      gap: 15px;
-      width: 100%;
-    }
-    .tc-right {
-      width: 100%;
-      flex-direction: row;
-      .btn {
-        flex: 1;
-        justify-content: center;
-      }
+      gap: 10px;
     }
   }
 }
