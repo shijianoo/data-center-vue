@@ -28,21 +28,22 @@ watch(
         latestData.value.set(device.serialNumber, res.data)
       }
     }
-    console.log(latestData.value)
     for (const device of newDevices) {
       const data = latestData.value.get(device.serialNumber)
-      locationInfos.value.push({
-        id: device.serialNumber,
-        desc: device.description,
-        lon: data.lon,
-        lat: data.lat,
-        data: new Map([
-          ["平均波高", `${data.hm} m`],
-          ["平均周期", `${data.tm} s`],
-          ["三分之一波高", `${data.h13} m`],
-          ["三分之一周期", `${data.t13} s`]
-        ])
-      })
+      if (data) {
+        locationInfos.value.push({
+          id: device.serialNumber,
+          desc: device.description,
+          lon: data.lon,
+          lat: data.lat,
+          data: new Map([
+            ["平均波高", `${data.hm} m`],
+            ["平均周期", `${data.tm} s`],
+            ["三分之一波高", `${data.h13} m`],
+            ["三分之一周期", `${data.t13} s`]
+          ])
+        })
+      }
     }
   }
 )

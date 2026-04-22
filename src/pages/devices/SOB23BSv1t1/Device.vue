@@ -130,7 +130,7 @@ watch(() => device.deviceCode, () => {
       </div>
 
       <TelemetryChart
-        bucket="wave_buoy_data"
+        bucket="sob23bs_v1_t1_data"
         :device="device"
         :latest-time="latestDataTime"
         :fields="[
