@@ -3,7 +3,7 @@ import type { Device } from "@/common/apis/devices/type"
 import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useHistoryDataQuery } from "@/common/hooks/useHistoryDataQuery"
-import { formatNumber, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
+import { formatNumber, parseLeakStatus, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
@@ -108,11 +108,11 @@ async function handleDownload() {
                 </div>
                 <div class="data-row">
                   <span class="label">经度</span>
-                  <span class="value">{{ formatNumber(row.lon, 4) }}° {{ parseLonHem(row.lon_hem) }}</span>
+                  <span class="value">{{ row.lon }}</span>
                 </div>
                 <div class="data-row">
                   <span class="label">纬度</span>
-                  <span class="value">{{ formatNumber(row.lat, 4) }}° {{ parseLonHem(row.lat_hem) }}</span>
+                  <span class="value">{{ row.lat }}</span>
                 </div>
               </td>
               <td>
@@ -126,7 +126,7 @@ async function handleDownload() {
                 </div>
                 <div class="data-row">
                   <span class="label">电池电压</span>
-                  <span class="value">{{ parseUbatt(row.ubatt) }} V</span>
+                  <span class="value">{{ row.ubatt }} V</span>
                 </div>
                 <div class="data-row">
                   <span class="label">主板温度</span>

@@ -101,10 +101,10 @@ watch(() => device.deviceCode, () => {
           :device="device"
           :latest-time="latestDataTime"
           :fields="[
-            { label: '水温', field: 'temp_wat', unit: 'm' },
-            { label: '湿度', field: 'humid', unit: '%' },
-            { label: '主板温度', field: 'temp_mb', unit: '℃' },
-            { label: '电池', field: 'ubatt', unit: 'V' },
+            { label: '水温', field: 'water_temp', unit: 'm' },
+            { label: '湿度', field: 'hum', unit: '%' },
+            { label: '主板温度', field: 'board_temp', unit: '℃' },
+            { label: '电池', field: 'vbat', unit: 'V' },
           ]"
         />
         <DeviceLocation

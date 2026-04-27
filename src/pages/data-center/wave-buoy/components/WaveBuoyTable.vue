@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { InfoFilled } from "@element-plus/icons-vue"
-import { formatNumber, parseLatHem, parseLeakStatus, parseLonHem, parseUbatt, parseUploadChannel } from "@/common/utils/data-parse"
+import { formatNumber, parseLeakStatus, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 
 interface Props {
@@ -37,10 +37,10 @@ function getChargingPanels(status: number) {
           上传通道：{{ parseUploadChannel(scope.row.upld_ch) }}
         </div>
         <div class="data-item">
-          经度：{{ formatNumber(scope.row.lon, 4) }} ° {{ parseLonHem(scope.row.lon_hem) }}
+          经度：{{ scope.row.lon }}
         </div>
         <div class="data-item">
-          纬度：{{ formatNumber(scope.row.lat, 4) }} ° {{ parseLatHem(scope.row.lat_hem) }}
+          纬度：{{ scope.row.lat }}
         </div>
       </template>
     </el-table-column>
@@ -53,7 +53,7 @@ function getChargingPanels(status: number) {
           信号强度：{{ scope.row.csq }}
         </div>
         <div class="data-item">
-          电池电压：{{ parseUbatt(scope.row.ubatt) }} V
+          电池电压：{{ scope.row.ubatt }} V
         </div>
         <div class="data-item">
           主板温度：{{ scope.row.temp_mb }} ℃

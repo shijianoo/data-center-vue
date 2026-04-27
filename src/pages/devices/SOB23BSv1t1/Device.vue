@@ -144,10 +144,10 @@ watch(() => device.deviceCode, () => {
           { label: '1/10波周期', field: 't10', unit: 's' },
           { label: '谱有效波高', field: 'spec_hm', unit: 'm' },
           { label: '谱平均周期', field: 'spec_tm', unit: 's' },
-          { label: '气压', field: 'press', unit: 'dBar' },
-          { label: '温度', field: 'temp', unit: '℃' },
-          { label: '主板温度', field: 'temp_mb', unit: '℃' },
-          { label: '电池电压', field: 'ubatt', unit: 'V' },
+          { label: '气压', field: 'air_press', unit: 'dBar' },
+          { label: '温度', field: 'water_temp', unit: '℃' },
+          { label: '主板温度', field: 'board_temp', unit: '℃' },
+          { label: '电池电压', field: 'vbat', unit: 'V' },
         ]"
       />
 

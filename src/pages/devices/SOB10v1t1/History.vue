@@ -3,7 +3,7 @@ import type { Device } from "@/common/apis/devices/type"
 import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useHistoryDataQuery } from "@/common/hooks/useHistoryDataQuery"
-import { parseLatHem, parseLeakStatus, parseLonHem } from "@/common/utils/data-parse"
+import { parseLeakStatus } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
@@ -80,9 +80,7 @@ async function handleDownload() {
               <th>采样时间</th>
               <th>接收时间</th>
               <th>经度(°)</th>
-              <th>经度半球</th>
               <th>纬度(°)</th>
-              <th>纬度半球</th>
               <th>水温(°C)</th>
               <th>湿度(g/m^3)</th>
               <th>电池电压(V)</th>
@@ -108,17 +106,7 @@ async function handleDownload() {
               </td>
               <td>
                 <span class="value">
-                  {{ parseLonHem(row.lon_hem) }}
-                </span>
-              </td>
-              <td>
-                <span class="value">
                   {{ row.lat }}
-                </span>
-              </td>
-              <td>
-                <span class="value">
-                  {{ parseLatHem(row.lat_hem) }}
                 </span>
               </td>
               <td>
