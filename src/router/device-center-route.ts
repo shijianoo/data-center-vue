@@ -33,7 +33,7 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         name: "DeviceControl",
         meta: {
           title: "设备控制",
-          roles: ["platform_admin", "device-mgr:devices"]
+          roles: ["platform_admin"]
         }
       },
       {

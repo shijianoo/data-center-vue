@@ -9,7 +9,11 @@ defineOptions({
 
 const deviceModelId = "019b4a4f-303a-773d-b9d4-008ce510f3b1"
 const { devicesLoading, selectedDeviceId, selectedDevice, serialNumberOptions } = useSerialNumberSelection(deviceModelId)
-const { dataList, loading, pageIndex, isLastPage, goNextPage, resetToFirstPage } = useDeviceStatusQuery(selectedDevice)
+const { dataList, loading, pageIndex, isLastPage, goNextPage, resetToFirstPage } = useDeviceStatusQuery("sob23bs_v1_t1", "status", selectedDevice)
+
+watch(dataList, () => {
+  console.log(dataList)
+})
 
 // 波浪状态
 function getWaveStat(code: number) {
@@ -182,42 +186,42 @@ function getGpsSatNum(code: number) {
               上传通道：{{ scope.row.upld_ch }}
             </div>
             <div class="data-item">
-              上传周期：{{ scope.row.upld_intv }}
+              上传周期：{{ scope.row.upld_intvl }}
             </div>
           </template>
         </el-table-column>
         <el-table-column label="模块状态" min-width="200px">
           <template #default="scope">
             <div class="data-item">
-              波浪模块：{{ getWaveStat(scope.row.wave_stat) }}
+              波浪模块：{{ getWaveStat(scope.row.wave_status) }}
             </div>
             <div class="data-item">
-              海温模块：{{ getTempStat(scope.row.temp_stat) }}
+              海温模块：{{ getTempStat(scope.row.temp_status) }}
             </div>
             <div class="data-item">
-              气压模块：{{ getPresStat(scope.row.pres_stat) }}
+              气压模块：{{ getPresStat(scope.row.press_status) }}
             </div>
             <div class="data-item">
-              姿态模块：{{ getAttiStat(scope.row.atti_stat) }}
+              姿态模块：{{ getAttiStat(scope.row.att_status) }}
             </div>
             <div class="data-item">
-              湿度模块：{{ getHumiStat(scope.row.humi_stat) }}
+              湿度模块：{{ getHumiStat(scope.row.hum_status) }}
             </div>
           </template>
         </el-table-column>
         <el-table-column label="模块状态" min-width="200px">
           <template #default="scope">
             <div class="data-item">
-              北斗模块：{{ getBdStat(scope.row.bd_stat) }}
+              北斗模块：{{ getBdStat(scope.row.bd_status) }}
             </div>
             <div class="data-item">
-              4G模块：{{ getG4Stat(scope.row["4g_stat"]) }}
+              4G模块：{{ getG4Stat(scope.row.lte_status) }}
             </div>
             <div class="data-item">
-              SD卡模块：{{ getSdStat(scope.row.sd_stat) }}
+              SD卡模块：{{ getSdStat(scope.row.sd_status) }}
             </div>
             <div class="data-item">
-              复位状态：{{ getResetStat(scope.row.reset_stat) }}
+              复位状态：{{ getResetStat(scope.row.rst_status) }}
             </div>
           </template>
         </el-table-column>
@@ -230,7 +234,7 @@ function getGpsSatNum(code: number) {
               时间信息：{{ getGpsTime(scope.row.gps_time) }}
             </div>
             <div class="data-item">
-              卫星数量：{{ getGpsSatNum(scope.row.gps_sat_num) }}
+              卫星数量：{{ getGpsSatNum(scope.row.gps_sat) }}
             </div>
           </template>
         </el-table-column>

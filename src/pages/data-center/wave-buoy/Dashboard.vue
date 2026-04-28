@@ -2,7 +2,7 @@
 import type { LocationInfo } from "../components/DeviceLocation.vue"
 import type { FieldInfo } from "../components/FieldDataChart.vue"
 import type { Device } from "@/common/apis/devices/type"
-import { queryDeviceLatestData } from "@/common/apis/data-query"
+import { influxLatestDataQueryApi } from "@/common/apis/data-query"
 import { useSerialNumberSelection } from "@/common/hooks/useSerialNumberSelection"
 import { formatHybridAgo } from "@/common/utils/datetime"
 import DeviceCommand from "../components/DeviceCommand.vue"
@@ -24,7 +24,11 @@ watch(
     for (const device of newDevices) {
       // 没缓存过才去请求
       if (!latestData.value.has(device.serialNumber)) {
-        const res = await queryDeviceLatestData(device.modelNumber!, device.serialNumber)
+        const res = await influxLatestDataQueryApi({
+          bucket: "sob23bs_v1_t1",
+          measurement: "data",
+          serialNumber: device.serialNumber
+        })
         latestData.value.set(device.serialNumber, res.data)
       }
     }
@@ -69,7 +73,7 @@ const selectedDevice = ref<Device | null>(null)
       <div class="bg-white min-h-90 px-3 pt-1 pb-2">
         <el-tabs class="h-full" v-loading="devicesLoading">
           <el-tab-pane :lazy="true" class="h-full" :label="device.serialNumber" v-for="device in devices" :key="device.id">
-            <FieldDataChart :default-days="7" :windows="['1m', '1h']" default-window="1m" :device="device" :fields="fields" />
+            <FieldDataChart bucket="sob23bs_v1_t1" measurement="data" :default-days="7" :windows="['1m', '1h']" default-window="1m" :device="device" :fields="fields" />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -114,7 +118,7 @@ const selectedDevice = ref<Device | null>(null)
           </el-table-column>
           <el-table-column label="电池电量(V)" min-width="100">
             <template #default="scope">
-              {{ getLatestData(scope.row.serialNumber).ubatt / 1000 }}
+              {{ getLatestData(scope.row.serialNumber).bat_volt }}
             </template>
           </el-table-column>
 
