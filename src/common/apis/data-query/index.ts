@@ -1,5 +1,5 @@
 import type { QueryResult } from "../type"
-import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
+import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, InfluxAnchorQueryParams, InfluxFieldQueryParams, InfluxLatestQueryParams, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 查询设备数据 */
@@ -72,6 +72,30 @@ export function queryDeviceLatestData(modelNumber: string, serialNumber: string)
 export function pagedDataQuery(params: PagedQueryRequest) {
   return dataCenterRequest<ApiResponseData<PagedQueryResult>>({
     url: "query/device/page",
+    method: "get",
+    params
+  })
+}
+
+export function influxAnchorDataQueryApi(params: InfluxAnchorQueryParams) {
+  return dataCenterRequest<ApiResponseData<any>>({
+    url: "query/influx-anchor-data",
+    method: "get",
+    params
+  })
+}
+
+export function influxFieldDataQueryApi(params: InfluxFieldQueryParams) {
+  return dataCenterRequest<ApiResponseData<HistoryField[]>>({
+    url: "query/influx-field-data",
+    method: "get",
+    params
+  })
+}
+
+export function influxLatestDataQueryApi(params: InfluxLatestQueryParams) {
+  return dataCenterRequest<ApiResponseData<any>>({
+    url: "query/influx-latest-data",
     method: "get",
     params
   })

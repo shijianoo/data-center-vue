@@ -13,7 +13,7 @@ import {
 import * as echarts from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import VChart from "vue-echarts"
-import { queryDeviceFieldData } from "@/common/apis/data-query"
+import { influxFieldDataQueryApi } from "@/common/apis/data-query"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { formatTimeLabel, saveAsImage } from "@/common/utils/echart-utils"
 
@@ -22,6 +22,8 @@ export interface FieldInfo {
   label: string
 }
 interface Props {
+  bucket: string
+  measurement: string
   device: Device
   fields: FieldInfo[]
   defaultDays?: number
@@ -29,6 +31,8 @@ interface Props {
   defaultWindow: string
 }
 const {
+  bucket,
+  measurement,
   device,
   fields,
   defaultDays = 7,
@@ -185,20 +189,19 @@ watch([selectedField, window], ([newField, newWindow], [oldField, oldWindow]) =>
 
 // 更新图表数据
 async function updateChart() {
-  const params = {
-    modelNumber: device.modelNumber,
-    serialNumber: device.serialNumber,
-    field: selectedField.value!.name,
-    start: start.value,
-    end: end.value,
-    window: window.value,
-    agg: "mean"
-  }
-
   loading.value = true
   hideMessage()
   try {
-    const { data } = await queryDeviceFieldData(params)
+    const { data } = await influxFieldDataQueryApi({
+      bucket,
+      measurement,
+      serialNumber: device.serialNumber,
+      field: selectedField.value!.name,
+      start: start.value,
+      end: end.value,
+      window: window.value,
+      agg: "mean"
+    })
 
     // 检查是否有数据
     if (!data || data.length === 0) {

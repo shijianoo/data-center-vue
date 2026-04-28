@@ -94,6 +94,32 @@ export interface PagedQueryResult {
   totalCount: number
 }
 
+export interface InfluxAnchorQueryParams {
+  bucket: string
+  measurement: string
+  serialNumber: string
+  anchorTime?: string
+  uploadChannel?: string
+  limit?: number
+}
+
+export interface InfluxFieldQueryParams {
+  bucket: string
+  measurement: string
+  serialNumber: string
+  field: string
+  start: string
+  end: string
+  window?: string
+  agg?: string
+}
+
+export interface InfluxLatestQueryParams {
+  bucket: string
+  measurement: string
+  serialNumber: string
+}
+
 export type BeidouDataListResponse = ApiResponseData<BeidouData[]>
 
 export type IridiumDataListResponse = ApiResponseData<IridiumData[]>

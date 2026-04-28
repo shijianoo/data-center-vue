@@ -1,8 +1,8 @@
-import type { DeviceStatusQueryParams } from "@/common/apis/data-query/type"
+import type { InfluxAnchorQueryParams } from "@/common/apis/data-query/type"
 import type { Device } from "@/common/apis/devices/type"
-import { querDeviceStatus } from "../apis/data-query"
+import { influxAnchorDataQueryApi } from "../apis/data-query"
 
-export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
+export function useDeviceStatusQuery(bucket: string, measurement: string, device: Ref<Device | undefined>) {
   const dataList = ref<any[]>([])
   const anchorTime = ref<string | undefined>(undefined)
   const limit = ref(50)
@@ -20,15 +20,16 @@ export function useDeviceStatusQuery(device: Ref<Device | undefined>) {
     console.log("开始查询设备数据，设备编号:", device.value.serialNumber, "锚点时间:", anchorTime.value, "限制:", limit.value)
 
     try {
-      const params: DeviceStatusQueryParams = {
-        anchorTime: anchorTime.value || new Date().toISOString(),
-        modelNumber: device.value.modelNumber,
+      const params: InfluxAnchorQueryParams = {
+        bucket,
+        measurement,
         serialNumber: device.value.serialNumber,
+        anchorTime: anchorTime.value || new Date().toISOString(),
         limit: limit.value
       }
-      const res = await querDeviceStatus(params)
-      console.log("查询设备数据结果:", res)
-      dataList.value = res.data.items ?? []
+      const { data } = await influxAnchorDataQueryApi(params)
+      console.log("查询设备数据结果:", data)
+      dataList.value = data ?? []
       ElMessage.success(`查询完成`)
     } catch {
       ElMessage.error(`查询失败`)

@@ -16,8 +16,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/data-center/weather-buoy/index.vue"),
         name: "WeatherBuoy",
         meta: {
-          title: "气象浮标",
-          roles: ["data-center:weather-buoy"]
+          title: "气象浮标"
         }
       },
       {
@@ -25,8 +24,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
         component: () => import("@/pages/data-center/sob10v1t1/index.vue"),
         name: "DriftBuoyV1T1",
         meta: {
-          title: "小型漂流浮标",
-          roles: ["data-center:drift-buoy-v1-t1"]
+          title: "小型漂流浮标"
         }
       }
     ]
@@ -36,8 +34,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
     component: Layouts,
     meta: {
       title: "热带所",
-      svgIcon: "data-center",
-      roles: ["data-center:redaisuo"]
+      svgIcon: "data-center"
     },
     children: [
       {
@@ -63,8 +60,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
     component: Layouts,
     meta: {
       title: "波浪浮标",
-      svgIcon: "wave-buoy",
-      roles: ["data-center:wave-buoy"]
+      svgIcon: "wave-buoy"
     },
     children: [
       {
@@ -98,8 +94,7 @@ export const dataCenterRoutes: RouteRecordRaw[] = [
     component: Layouts,
     meta: {
       title: "原始数据",
-      svgIcon: "data-base",
-      roles: ["data-center:raw-data"]
+      svgIcon: "data-base"
     },
     children: [
       {
