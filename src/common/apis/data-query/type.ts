@@ -121,6 +121,11 @@ export interface InfluxLatestQueryParams {
   serialNumber: string
 }
 
+export interface InfluxBatchLatestQueryParams {
+  bucket: string
+  measurement: string
+}
+
 export type BeidouDataListResponse = ApiResponseData<BeidouData[]>
 
 export type IridiumDataListResponse = ApiResponseData<IridiumData[]>

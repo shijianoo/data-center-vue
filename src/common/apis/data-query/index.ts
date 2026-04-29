@@ -1,5 +1,5 @@
 import type { QueryResult } from "../type"
-import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, InfluxAnchorQueryParams, InfluxFieldQueryParams, InfluxLatestQueryParams, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
+import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, InfluxAnchorQueryParams, InfluxBatchLatestQueryParams, InfluxFieldQueryParams, InfluxLatestQueryParams, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 查询设备数据 */
@@ -98,5 +98,14 @@ export function influxLatestDataQueryApi(params: InfluxLatestQueryParams) {
     url: "query/influx-latest-data",
     method: "get",
     params
+  })
+}
+
+export function influxBatchLatestDataQueryApi(params: InfluxBatchLatestQueryParams, serialNumbers: string[]) {
+  return dataCenterRequest<ApiResponseData<any>>({
+    url: "query/influx-batch-latest-data",
+    method: "post",
+    params,
+    data: serialNumbers
   })
 }
