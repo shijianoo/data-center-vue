@@ -14,6 +14,7 @@ const Layouts = () => import("@/layouts/index.vue")
  */
 export const tenantRoutes: RouteRecordRaw = {
   path: "/console/:tenantKey",
+  name: "TenantRoot",
   component: () => import("@/layouts/TenantLayout.vue"),
   meta: {
     hidden: true
@@ -22,34 +23,22 @@ export const tenantRoutes: RouteRecordRaw = {
   [
     {
       path: "",
+      name: "TenantIndex",
       component: () => import("@/pages/tenants/TenantEntry.vue")
     },
     {
-      path: "platform/tenants",
-      component: () => import("@/pages/tenants/platform-tenant/Tenants.vue")
-    },
-    {
-      path: "platform/settings",
-      component: () => import("@/pages/tenants/platform-tenant/Settings.vue")
-    },
-    {
-      path: "devices",
-      component: () => import("@/pages/tenants/default-tenant/Devices.vue")
-    },
-    {
-      path: "devices/tracks",
-      component: () => import("@/pages/tracks/TracksEntry.vue")
-    },
-    {
       path: "projects/:projectKey",
+      name: "Project",
       component: () => import("@/pages/projects/ProjectEntry.vue")
     },
     {
       path: "projects/:projectKey/devices/:deviceCode",
+      name: "Device",
       component: () => import("@/pages/devices/DeviceEntry.vue")
     },
     {
       path: "projects/:projectKey/devices/:deviceCode/history",
+      name: "History",
       component: () => import("@/pages/devices/HistoryEntry.vue")
     }
   ]

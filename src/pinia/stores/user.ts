@@ -6,7 +6,7 @@ import { setRefreshToken as _setRefreshToken, setToken as _setToken, getRefreshT
 import { switchTenantApi } from "@/common/apis/auth"
 import { getCurrentMenusApi } from "@/common/apis/menus"
 import { getCurrentPermissionsApi } from "@/common/apis/permissions"
-import { getCurrentMemberProfileApi, getCurrentUserTenantsApi, getTenantApi } from "@/common/apis/tenant"
+import { getCurrentMemberProfileApi, getCurrentUserTenantsApi, getTenantApi, getTenantByKeyApi } from "@/common/apis/tenant"
 import { pinia } from "@/pinia"
 import { resetRouter } from "@/router"
 import { routerConfig } from "@/router/config"
@@ -100,6 +100,44 @@ export const useUserStore = defineStore("user", () => {
     localStorage.setItem("LAST_TENANT_ID", tenant.id)
   }
 
+  /**
+   * 根据租户的任意 key（id / tenantCode / slug / customDomain）查找并切换到目标租户。
+   * 若目标租户已是当前激活租户，则直接返回，不重复切换。
+   * 若用户无权访问该租户，则将 activeTenant 置为 null。
+   */
+  const switchTenantByKey = async (tenantKey: string) => {
+    const matchKey = (t: { id: string, tenantCode: string, slug?: string, customDomain?: string }) =>
+      t.id === tenantKey
+      || t.tenantCode === tenantKey
+      || t.slug === tenantKey
+      || t.customDomain === tenantKey
+
+    // 已是当前激活租户，无需切换
+    if (activeTenant.value && matchKey(activeTenant.value)) {
+      console.log(`当前租户未发生变化: ${tenantKey}`)
+      return
+    }
+
+    // 从已加入的租户列表中查找
+    const matched = tenants.value.find(matchKey)
+    if (matched) {
+      console.log(`切换到已加入的租户: ${matched.name}`)
+      await switchTenant(matched.id)
+      return
+    }
+
+    // 平台管理员可访问任意租户
+    if (roles.value.includes("platform_admin") || roles.value.includes("platform_ops")) {
+      const { data } = await getTenantByKeyApi(tenantKey)
+      console.log(`切换到未加入的租户（平台管理员）: ${tenantKey}`, data)
+      await switchTenant(data.id)
+      return
+    }
+
+    console.warn(`无权访问租户: ${tenantKey}`)
+    activeTenant.value = null
+  }
+
   const getDefaultTenant = () => {
     const tenantId = localStorage.getItem("LAST_TENANT_ID")
     const tenant = tenants.value.find(t => t.id === tenantId)
@@ -144,7 +182,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { isInit, token, tenants, activeTenant, memberProfile, roles, permissions, menus, user, isPlatformAdmin, isPlatformOps, isPlatformUser, getTenantInfo, switchTenant, getDefaultTenant, setToken, setRefreshToken, getInfo, changeRoles, logout }
+  return { isInit, token, tenants, activeTenant, memberProfile, roles, permissions, menus, user, isPlatformAdmin, isPlatformOps, isPlatformUser, getTenantInfo, switchTenant, switchTenantByKey, getDefaultTenant, setToken, setRefreshToken, getInfo, changeRoles, logout }
 })
 
 /**

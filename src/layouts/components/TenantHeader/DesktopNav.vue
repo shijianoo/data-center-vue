@@ -1,65 +1,63 @@
-<script setup lang="ts">
-import type { Links } from "./type"
+<script lang="ts" setup>
+import { storeToRefs } from "pinia"
+import { useRoute, useRouter } from "vue-router"
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
+import NavMenuItems from "./NavMenuItems.vue"
 
-defineProps<{
-  links?: Links[]
-}>()
+const tenantStore = useTenantContextStore()
+const { tenantRoutes, currentTenantKey } = storeToRefs(tenantStore)
+const route = useRoute()
+const router = useRouter()
+
+const base = computed(() => `/console/${currentTenantKey.value}`)
+
+const menuItems = computed(() => tenantRoutes.value.filter(r => !r.meta?.hidden))
+
+/**
+ * el-menu 的 default-active 需要精确匹配 index。
+ * 当处于某路由的子路由（如详情页）时，尝试向上找最近的匹配菜单 index。
+ */
+const activeIndex = computed(() => {
+  const matched = route.matched.map(m => m.path).reverse()
+  for (const p of matched) {
+    if (p !== "/console/:tenantKey") return p.replace(":tenantKey", currentTenantKey.value)
+  }
+  return route.path
+})
+
+function handleSelect(index: string) {
+  router.push(index)
+}
 </script>
 
 <template>
-  <div v-if="links && links.length > 0" class="nav-menu">
-    <router-link
-      v-for="link in links"
-      :key="link.path"
-      :to="link.path"
-      custom
-      v-slot="{ navigate, isActive, isExactActive }"
-    >
-      <a
-        @click="navigate"
-        class="nav-item"
-        :class="{ active: link.exact ? isExactActive : isActive }"
-      >
-        {{ link.name }}
-      </a>
-    </router-link>
-  </div>
+  <el-menu
+    text-color="rgba(255, 255, 255, 0.6)"
+    active-text-color="#fff"
+    background-color="#1e293b"
+    class="desktop-menu"
+    v-if="menuItems.length"
+    mode="horizontal"
+    :default-active="activeIndex"
+    :ellipsis="false"
+    @select="handleSelect"
+  >
+    <NavMenuItems :items="menuItems" :base-path="base" />
+  </el-menu>
 </template>
 
 <style scoped>
-.nav-menu {
-  display: flex;
-  gap: 10px;
+.desktop-menu {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-}
-
-.nav-item {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  padding: 21px 0;
-  text-align: center;
-  min-width: 80px;
-  border-bottom: 2px solid transparent;
-  text-decoration: none;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.nav-item:hover {
-  color: white;
-}
-
-.nav-item.active {
-  color: white;
-  font-weight: 600;
-  border-bottom-color: white;
+  height: var(--header-h);
+  border-bottom: none !important;
+  overflow: visible;
 }
 
 @media (max-width: 768px) {
-  .nav-menu {
+  .el-menu {
     display: none;
   }
 }

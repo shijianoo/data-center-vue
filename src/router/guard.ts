@@ -4,6 +4,7 @@ import { useTitle } from "@@/composables/useTitle"
 import { getRefreshToken } from "@@/utils/cache/cookies"
 import NProgress from "nprogress"
 import { usePermissionStore } from "@/pinia/stores/permission"
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import { useUserStore } from "@/pinia/stores/user"
 import { routerConfig } from "@/router/config"
 import { isWhiteList } from "@/router/whitelist"
@@ -13,6 +14,9 @@ NProgress.configure({ showSpinner: false })
 const { setTitle } = useTitle()
 
 const LOGIN_PATH = "/login"
+
+/** 匹配 /console/:tenantKey 及其子路径 */
+const TENANT_CONSOLE_RE = /^\/console\/([^/]+)/
 
 export function registerNavigationGuard(router: Router) {
   // 全局前置守卫
@@ -45,7 +49,18 @@ export function registerNavigationGuard(router: Router) {
         // 将 "有访问权限的动态路由" 添加到 Router 中
         permissionStore.addRoutes.forEach(route => router.addRoute(route))
         userStore.isInit = true
+
+        // 租户动态路由预注册,若目标路径在 /console/:tenantKey 下，在放行前先完成路由注册
+        const tenantMatch = to.path.match(TENANT_CONSOLE_RE)
+        if (tenantMatch) {
+          const tenantKey = tenantMatch[1]
+          const tenantContextStore = useTenantContextStore()
+          console.log("初始化租户自定义路由")
+          await tenantContextStore.ensureTenantRoutes(tenantKey)
+        }
+
         // 设置 replace: true, 因此导航将不会留下历史记录
+        console.log("重新Replace")
         return { ...to, replace: true }
       } catch (error) {
       // 过程中发生任何错误，都直接重置 Token，并重定向到登录页面

@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import { watch } from "vue"
 import { useRoute } from "vue-router"
-import { useTenantContext } from "@/common/hooks/useTenantContext"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import TenantHeader from "./components/TenantHeader/index.vue"
 
 const route = useRoute()
-const { fetchData } = useTenantContext()
 const tenantStore = useTenantContextStore()
 
 watch(
   () => route.fullPath,
   () => {
-    fetchData()
+    tenantStore.fetchData()
   },
   { immediate: true }
 )
 </script>
 
 <template>
-  <TenantHeader :links="tenantStore.customNavLinks" />
+  <TenantHeader />
   <div class="console-layout">
     <main class="container-main">
       <router-view v-slot="{ Component }">

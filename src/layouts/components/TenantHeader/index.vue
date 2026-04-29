@@ -1,26 +1,29 @@
 <script setup lang="ts">
-import type { Links } from "./type"
-import { ref } from "vue"
+import { storeToRefs } from "pinia"
+import { computed, ref } from "vue"
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import { useUserStore } from "@/pinia/stores/user"
 import DesktopNav from "./DesktopNav.vue"
 import MobileMenu from "./MobileMenu.vue"
 import TenantLogo from "./TenantLogo.vue"
 import UserMenu from "./UserMenu.vue"
 
-defineProps<{
-  links?: Links[]
-}>()
 const userStore = useUserStore()
+const tenantStore = useTenantContextStore()
+const { tenantRoutes } = storeToRefs(tenantStore)
 const showMobileMenu = ref(false)
 
+/** 是否有可见菜单项（决定是否显示汉堡按钮） */
+const hasMenu = computed(() => tenantRoutes.value.some(r => !r.meta?.hidden))
+
 const tenantCode = computed(() => {
-  const tenant = userStore.tenants.find(tenant => tenant.type === 99)
+  const tenant = userStore.tenants.find(t => t.type === 99)
   return tenant?.customDomain || tenant?.slug || tenant?.tenantCode
 })
 </script>
 
 <template>
-  <nav class="navbar" :class="{ 'has-links': links && links.length > 0 }">
+  <nav class="navbar" :class="{ 'has-nav': hasMenu }">
     <div class="nav-left">
       <router-link
         v-if="userStore.isPlatformUser"
@@ -29,27 +32,32 @@ const tenantCode = computed(() => {
         v-slot="{ isExactActive, navigate, href }"
       >
         <a
-          title="返回平台总览页面"
           v-if="!isExactActive"
           :href="href"
           @click="navigate"
           class="back-link"
+          title="返回平台总览页面"
         >
           <i class="fa-solid fa-arrow-left" />
           <span class="back-text">返回</span>
         </a>
       </router-link>
-      <!-- 移动端菜单按钮 -->
-      <div v-if="links && links.length > 0" class="mobile-menu-btn" @click="showMobileMenu = true">
+
+      <button
+        v-if="hasMenu"
+        class="mobile-menu-btn"
+        @click="showMobileMenu = true"
+        aria-label="打开菜单"
+      >
         <i class="fa-solid fa-bars" />
-      </div>
+      </button>
+
       <TenantLogo class="desktop-logo" />
     </div>
 
-    <!-- 移动端侧边菜单 -->
-    <MobileMenu v-model:visible="showMobileMenu" :links="links" />
-
-    <DesktopNav :links="links" />
+    <!-- 组件内部从 store 自取数据 -->
+    <MobileMenu v-model:visible="showMobileMenu" />
+    <DesktopNav />
 
     <div class="nav-right">
       <UserMenu />
@@ -81,40 +89,47 @@ const tenantCode = computed(() => {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .back-link {
-  font-size: 14px; /* 字体大小 */
-  color: #94a3b8; /* 文字颜色 */
-  display: flex; /* flex 布局 */
-  align-items: center; /* 垂直居中 */
-  gap: 8px; /* 间距 */
-  padding: 6px 10px; /* 内边距 */
-  border-radius: 4px; /* 圆角 */
-  transition: background 0.2s; /* 过渡 */
-  text-decoration: none; /* 无下划线 */
+  font-size: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+  text-decoration: none;
 }
 .back-link:hover {
-  background: rgba(255, 255, 255, 0.1); /* 背景 */
+  background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-/* ================= 3. 右侧用户区域 ================= */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.icon-btn {
-  font-size: 18px;
-  color: #cbd5e1;
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  line-height: 1;
 }
-.icon-btn:hover {
-  color: white;
+.mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 900px) {
@@ -123,26 +138,17 @@ const tenantCode = computed(() => {
   }
 }
 
-.mobile-menu-btn {
-  display: none;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 8px;
-}
-
 @media (max-width: 768px) {
-  .navbar.has-links {
-    .desktop-logo {
-      display: none;
-    }
+  .navbar.has-nav .desktop-logo {
+    display: none;
   }
 
   .mobile-menu-btn {
     display: flex;
     align-items: center;
   }
+
   .nav-right {
-    display: flex !important;
     flex-shrink: 0;
   }
 }
