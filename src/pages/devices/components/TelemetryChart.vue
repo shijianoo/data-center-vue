@@ -13,11 +13,12 @@ import {
 import * as echarts from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import VChart from "vue-echarts"
-import { queryDeviceFieldData } from "@/common/apis/data-query"
+import { influxFieldDataQueryApi } from "@/common/apis/data-query"
 
-const { device, bucket, latestTime, fields } = defineProps<{
+const { device, bucket, measurement, latestTime, fields } = defineProps<{
   device: Device
-  bucket?: string
+  bucket: string
+  measurement: string
   latestTime?: string
   fields: Array<{ label: string, field: string, unit?: string }>
 }>()
@@ -114,8 +115,9 @@ async function fetchHistory() {
 
   loading.value = true
   try {
-    const { data } = await queryDeviceFieldData({
+    const { data } = await influxFieldDataQueryApi({
       bucket,
+      measurement,
       serialNumber: device.serialNumber!,
       field: selectedField.value,
       start: start.value,

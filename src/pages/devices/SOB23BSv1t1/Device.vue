@@ -130,7 +130,8 @@ watch(() => device.deviceCode, () => {
       </div>
 
       <TelemetryChart
-        bucket="sob23bs_v1_t1_data"
+        bucket="sob23bs_v1_t1"
+        measurement="data"
         :device="device"
         :latest-time="latestDataTime"
         :fields="[
@@ -147,7 +148,7 @@ watch(() => device.deviceCode, () => {
           { label: '气压', field: 'air_press', unit: 'dBar' },
           { label: '温度', field: 'water_temp', unit: '℃' },
           { label: '主板温度', field: 'board_temp', unit: '℃' },
-          { label: '电池电压', field: 'vbat', unit: 'V' },
+          { label: '电池电压', field: 'bat_volt', unit: 'V' },
         ]"
       />
 

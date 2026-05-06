@@ -97,14 +97,15 @@ watch(() => device.deviceCode, () => {
       <MonitorGrid :device="device" :items="monitorItems" />
       <div class="layout-grid-data">
         <TelemetryChart
-          bucket="sob10_v1_t1_data"
+          bucket="sob10_v1_t1"
+          measurement="data"
           :device="device"
           :latest-time="latestDataTime"
           :fields="[
             { label: '水温', field: 'water_temp', unit: 'm' },
             { label: '湿度', field: 'hum', unit: '%' },
             { label: '主板温度', field: 'board_temp', unit: '℃' },
-            { label: '电池', field: 'vbat', unit: 'V' },
+            { label: '电池', field: 'bat_volt', unit: 'V' },
           ]"
         />
         <DeviceLocation
