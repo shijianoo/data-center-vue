@@ -100,6 +100,13 @@ function handleSelect(index: string) {
   padding: 0 16px 0 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  gap: 8px;
+}
+
+/* Logo 可弹性收缩，长名称时自动截断而不撑破布局 */
+.panel-header :deep(.tenant-logo) {
+  flex: 1;
+  min-width: 0;
 }
 
 .close-btn {
@@ -114,6 +121,7 @@ function handleSelect(index: string) {
     color 0.2s,
     background 0.2s;
   line-height: 1;
+  flex-shrink: 0; /* 始终固定在右侧，不被 Logo 挤压 */
 }
 .close-btn:hover {
   color: white;

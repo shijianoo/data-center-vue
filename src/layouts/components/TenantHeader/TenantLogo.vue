@@ -43,6 +43,7 @@ const fullName = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .logo-box {
