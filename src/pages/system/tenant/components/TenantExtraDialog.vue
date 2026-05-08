@@ -92,9 +92,6 @@ function closed() {
             <el-form-item label="UI 配置">
               <el-input v-model="formData.uiProfile" placeholder="请输入 UI 配置" />
             </el-form-item>
-            <el-form-item label="简称">
-              <el-input v-model="formData.shortName" placeholder="请输入简称" />
-            </el-form-item>
             <el-form-item label="Logo URL">
               <el-input v-model="formData.logoURL" placeholder="请输入 Logo URL" />
             </el-form-item>

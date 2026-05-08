@@ -50,6 +50,8 @@ async function opened() {
         formData.value = {
           id: data.id,
           name: data.name,
+          shortName: data.shortName,
+          displayName: data.displayName,
           type: data.type,
           status: data.status,
           plan: data.plan,
@@ -120,6 +122,12 @@ async function handleCreateOrUpdate() {
             </el-form-item>
             <el-form-item prop="name" label="租户名称">
               <el-input v-model="formData.name" placeholder="请输入租户名称" />
+            </el-form-item>
+            <el-form-item prop="shortName" label="租户简称">
+              <el-input v-model="formData.shortName" placeholder="请输入租户简称" />
+            </el-form-item>
+            <el-form-item prop="displayName" label="显示名称">
+              <el-input v-model="formData.displayName" placeholder="请输入显示名称" />
             </el-form-item>
             <el-form-item prop="type" label="租户类型">
               <el-select v-model="formData.type" placeholder="请选择租户类型">

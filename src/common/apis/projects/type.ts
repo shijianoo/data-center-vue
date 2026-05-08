@@ -12,6 +12,8 @@ export interface Project {
   projectNo: string
   projectCode: string
   name: string
+  shortName?: string
+  displayName?: string
   address?: string
   type: number
   status: number
@@ -27,6 +29,8 @@ export interface ProjectForm {
   id?: string
   tenantId: string
   name: string
+  shortName?: string
+  displayName?: string
   projectCode: string
   address?: string
   type: number
@@ -42,6 +46,8 @@ export interface ProjectSummary {
   id: string
   projectNo: string
   name: string
+  shortName?: string
+  displayName?: string
   projectCode: string
 }
 

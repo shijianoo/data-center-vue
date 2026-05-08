@@ -170,6 +170,12 @@ watch(() => currentSelectedTenantId.value, () => {
                   <el-descriptions-item label="描述" :span="3">
                     {{ scope.row.description || '-' }}
                   </el-descriptions-item>
+                  <el-descriptions-item label="项目简称">
+                    {{ scope.row.shortName || '-' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="显示名称">
+                    {{ scope.row.displayName || '-' }}
+                  </el-descriptions-item>
                 </el-descriptions>
               </div>
             </template>

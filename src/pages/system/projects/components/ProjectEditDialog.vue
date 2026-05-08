@@ -58,6 +58,8 @@ async function opened() {
           id: data.id,
           tenantId: data.tenantId,
           name: data.name,
+          shortName: data.shortName,
+          displayName: data.displayName,
           projectCode: data.projectCode,
           address: data.address,
           type: data.type,
@@ -135,6 +137,12 @@ async function handleCreateOrUpdate() {
             </el-form-item>
             <el-form-item prop="name" label="项目名称">
               <el-input v-model="formData.name" placeholder="请输入项目名称" />
+            </el-form-item>
+            <el-form-item prop="shortName" label="项目简称">
+              <el-input v-model="formData.shortName" placeholder="请输入项目名称" />
+            </el-form-item>
+            <el-form-item prop="displayName" label="显示名称">
+              <el-input v-model="formData.displayName" placeholder="请输入显示名称" />
             </el-form-item>
             <el-form-item prop="projectCode" label="项目编号">
               <el-input v-model="formData.projectCode" placeholder="请输入项目编号" />

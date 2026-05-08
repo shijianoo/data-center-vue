@@ -97,8 +97,24 @@ watch(pageIndex, async () => {
                   <i class="fa fa-building" aria-hidden="true" />
                 </div>
                 <div class="p-info">
-                  <span class="p-name">{{ tenant.name }}</span>
-                  <span class="p-client">{{ tenant.description }}</span>
+                  <div class="p-name-row">
+                    <span class="p-name">
+                      {{ tenant.displayName || tenant.shortName || tenant.name }}
+                    </span>
+                    <span
+                      v-if="tenant.shortName && (tenant.displayName || (!tenant.displayName && tenant.shortName !== tenant.name))"
+                      class="p-short-tag"
+                    >
+                      {{ tenant.shortName }}
+                    </span>
+                  </div>
+                  <span
+                    v-if="tenant.displayName || tenant.shortName"
+                    class="p-fullname"
+                    :title="tenant.name"
+                  >
+                    {{ tenant.name }}
+                  </span>
                 </div>
               </div>
             </td>
@@ -254,12 +270,48 @@ watch(pageIndex, async () => {
 .p-info {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.p-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .p-name {
   font-weight: 600;
   color: var(--el-text-color-primary);
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-short-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+  border: 1px solid var(--el-color-primary-light-7);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.p-fullname {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
 }
 
 .p-client {

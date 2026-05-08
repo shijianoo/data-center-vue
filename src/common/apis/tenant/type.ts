@@ -2,7 +2,6 @@ export interface TenantExtra {
   uiProfile?: string
 
   // --- 品牌与展示 ---
-  shortName?: string
   logoURL?: string
   themeColor?: string
   richText?: string
@@ -25,6 +24,8 @@ export interface Tenant {
   id: string
   createdAt: string
   name: string
+  shortName?: string
+  displayName?: string
   tenantCode: string
   type: number
   status: number
@@ -48,6 +49,8 @@ export interface TenantForm {
   id?: string
   adminUsername?: string
   name?: string
+  shortName?: string
+  displayName?: string
   type: number
   status: number
   plan: number
@@ -65,6 +68,8 @@ export interface TenantForm {
 export interface TenantSummary {
   id: string
   name: string
+  shortName?: string
+  displayName?: string
   tenantCode: string
   type: number
   slug?: string
@@ -76,6 +81,8 @@ export interface TenantSummary {
 export interface UserTenantSelection {
   id: string
   name: string
+  shortName?: string
+  displayName?: string
   tenantCode: string
   type: number
   slug?: string

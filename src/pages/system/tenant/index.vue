@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { TenantStatistics } from "@/common/apis/statistics/tenants/type"
 import type { Tenant } from "@/common/apis/tenant/type"
-import { CirclePlus } from "@element-plus/icons-vue"
+import { CirclePlus, RefreshRight } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { onMounted, ref } from "vue"
 import { getTenantStatistics } from "@/common/apis/statistics/tenants"
@@ -126,6 +126,12 @@ function handleExtra(tenant: Tenant) {
             新增租户
           </el-button>
         </div>
+
+        <div>
+          <el-tooltip content="刷新当前页">
+            <el-button type="primary" :icon="RefreshRight" circle @click="getTableData" />
+          </el-tooltip>
+        </div>
       </div>
       <div class="table-wrapper">
         <el-table :data="tableData" v-loading="loading" row-key="id">
@@ -169,6 +175,12 @@ function handleExtra(tenant: Tenant) {
                   </el-descriptions-item>
                   <el-descriptions-item label="用户数量" :span="1">
                     {{ tenantUserCount.get(scope.row.id) || 0 }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="租户简称">
+                    {{ scope.row.shortName || '-' }}
+                  </el-descriptions-item>
+                  <el-descriptions-item label="显示名称">
+                    {{ scope.row.displayName || '-' }}
                   </el-descriptions-item>
                 </el-descriptions>
               </div>
