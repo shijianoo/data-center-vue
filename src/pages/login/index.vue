@@ -50,6 +50,8 @@ function handleLogin() {
         console.log("租户只有一个，自动切换租户:", userStore.tenants[0].name)
         router.push(`/console/${userStore.tenants[0]!.tenantCode}`)
       }
+    } else if (route.query.redirect) {
+      router.push(decodeURIComponent(route.query.redirect as string))
     } else {
       tenantSelectionVisible.value = true
     }
