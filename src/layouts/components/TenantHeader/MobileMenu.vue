@@ -6,7 +6,7 @@ import NavMenuItems from "./NavMenuItems.vue"
 import TenantLogo from "./TenantLogo.vue"
 
 const tenantStore = useTenantContextStore()
-const { tenantRoutes, currentTenantKey } = storeToRefs(tenantStore)
+const { activeNavRoutes, currentTenantKey } = storeToRefs(tenantStore)
 const route = useRoute()
 const router = useRouter()
 
@@ -14,7 +14,8 @@ const visible = defineModel<boolean>("visible")
 
 const base = computed(() => `/console/${currentTenantKey.value}`)
 
-const menuItems = computed(() => tenantRoutes.value.filter(r => !r.meta?.hidden))
+/** 使用语境感知路由 */
+const menuItems = computed(() => activeNavRoutes.value.filter(r => !r.meta?.hidden))
 
 /** 当前激活菜单 index，向上查找 matched 中最近的可用路径 */
 const activeIndex = computed(() => {

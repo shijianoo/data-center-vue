@@ -5,25 +5,23 @@ import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import NavMenuItems from "./NavMenuItems.vue"
 
 const tenantStore = useTenantContextStore()
-const { tenantRoutes, currentTenantKey } = storeToRefs(tenantStore)
+const { activeNavRoutes, currentTenantKey } = storeToRefs(tenantStore)
 const route = useRoute()
 const router = useRouter()
 
 const base = computed(() => `/console/${currentTenantKey.value}`)
 
-const menuItems = computed(() => tenantRoutes.value.filter(r => !r.meta?.hidden))
+/** 使用语境感知路由（activeNavRoutes 已按层级过滤并应用 navScope） */
+const menuItems = computed(() => activeNavRoutes.value.filter(r => !r.meta?.hidden))
 
 /**
- * el-menu 的 default-active 需要精确匹配 index。
- * 当处于某路由的子路由（如详情页）时，尝试向上找最近的匹配菜单 index。
+ * el-menu default-active 直接使用 route.path（当前实际路径）。
+ * NavMenuItems 生成的 index = basePath + route.path 段，与 route.path 完全一致。
+ *
+ * 若当前页面（如详情页）没有对应菜单项，el-menu 不高亮任何项，符合预期。
+ * 若需要高亮父菜单，可在对应路由 meta 中添加 activeMenu 字段（后续扩展）。
  */
-const activeIndex = computed(() => {
-  const matched = route.matched.map(m => m.path).reverse()
-  for (const p of matched) {
-    if (p !== "/console/:tenantKey") return p.replace(":tenantKey", currentTenantKey.value)
-  }
-  return route.path
-})
+const activeIndex = computed(() => route.path.replace(/\/+$/, "") || "/")
 
 function handleSelect(index: string) {
   router.push(index)

@@ -1,26 +1,41 @@
 <script setup lang="ts">
+import { useRoute } from "vue-router"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
 defineProps<{
   alwaysShowBrand?: boolean
 }>()
+
 const tenantContext = useTenantContextStore()
+const route = useRoute()
 
 const isPlatform = computed(() => tenantContext.currentTenant?.type === 99)
 
-/** 主显示名：口语名 > 简称 > 全称 */
+/**
+ * 从 route.meta 读取 logoTitle 覆盖。
+ * route.meta 在导航确认时立即响应式更新，早于组件 mount/unmount，
+ * 因此读取它不会产生任何"中间态"闪烁。
+ */
+const metaTitle = computed(
+  () => route.meta?.logoTitle as { primary?: string, sub?: string } | undefined
+)
+
+/** 主显示名：store 动态覆盖 > route.meta > 租户名 */
 const primaryName = computed(() => {
+  if (tenantContext.logoTitle?.primary != null) return tenantContext.logoTitle.primary
+  if (metaTitle.value?.primary != null) return metaTitle.value.primary
   if (isPlatform.value) return "平台运维概览"
   const t = tenantContext.currentTenant
   return t?.displayName || t?.shortName || t?.name || ""
 })
 
-/** 全称：仅当主名称不是全称时才显示 */
+/** 副标题：store 动态覆盖 > route.meta > 租户全称 */
 const fullName = computed(() => {
+  if (tenantContext.logoTitle?.sub != null) return tenantContext.logoTitle.sub
+  if (metaTitle.value?.sub != null) return metaTitle.value.sub
   if (isPlatform.value) return ""
   const t = tenantContext.currentTenant
   if (!t?.name) return ""
-  // 主名称已经是全称，无需再显示
   if (primaryName.value === t.name) return ""
   return t.name
 })
