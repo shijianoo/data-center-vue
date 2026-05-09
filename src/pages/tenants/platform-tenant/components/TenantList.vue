@@ -101,12 +101,6 @@ watch(pageIndex, async () => {
                     <span class="p-name">
                       {{ tenant.displayName || tenant.shortName || tenant.name }}
                     </span>
-                    <span
-                      v-if="tenant.shortName && (tenant.displayName || (!tenant.displayName && tenant.shortName !== tenant.name))"
-                      class="p-short-tag"
-                    >
-                      {{ tenant.shortName }}
-                    </span>
                   </div>
                   <span
                     v-if="tenant.displayName || tenant.shortName"
@@ -288,21 +282,6 @@ watch(pageIndex, async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.p-short-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
-  border: 1px solid var(--el-color-primary-light-7);
-  white-space: nowrap;
-  flex-shrink: 0;
-  line-height: 1.6;
 }
 
 .p-fullname {

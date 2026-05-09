@@ -53,5 +53,10 @@ declare module "vue-router" {
      * @description 默认为 false，为 true 时代表需要缓存，此时该路由和该页面都需要设置一致的 Name
      */
     keepAlive?: boolean
+
+    /**
+     * @description 定义当前页面在前台Logo处展示的名字
+     */
+    logoTitle: { primary?: string, sub?: string }
   }
 }

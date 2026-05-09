@@ -17,7 +17,7 @@ const isPlatform = computed(() => tenantContext.currentTenant?.type === 99)
  * 因此读取它不会产生任何"中间态"闪烁。
  */
 const metaTitle = computed(
-  () => route.meta?.logoTitle as { primary?: string, sub?: string } | undefined
+  () => route.meta?.logoTitle
 )
 
 /** 主显示名：store 动态覆盖 > route.meta > 租户名 */
