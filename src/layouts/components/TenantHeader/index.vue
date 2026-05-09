@@ -11,13 +11,16 @@ import UserMenu from "./UserMenu.vue"
 
 const userStore = useUserStore()
 const tenantStore = useTenantContextStore()
-const { tenantRoutes } = storeToRefs(tenantStore)
+const { activeNavRoutes } = storeToRefs(tenantStore)
 const route = useRoute()
 const router = useRouter()
 const showMobileMenu = ref(false)
 
-/** 是否有可见菜单项（决定是否显示汉堡按钮） */
-const hasMenu = computed(() => tenantRoutes.value.some(r => !r.meta?.hidden))
+/**
+ * 是否有可见菜单项（决定是否显示汉堡按钮）— 用 activeNavRoutes 而非 tenantRoutes，
+ *  这样项目/设备层有自定义菜单时也能正确显示，无菜单时正确隐藏
+ */
+const hasMenu = computed(() => activeNavRoutes.value.some(r => !r.meta?.hidden))
 
 /** 平台租户的 key（供平台用户最终返回使用） */
 const platformTenantCode = computed(() => {
