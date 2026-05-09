@@ -57,6 +57,6 @@ declare module "vue-router" {
     /**
      * @description 定义当前页面在前台Logo处展示的名字
      */
-    logoTitle: { primary?: string, sub?: string }
+    logoTitle?: { primary?: string, sub?: string }
   }
 }
