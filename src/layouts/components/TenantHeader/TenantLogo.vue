@@ -39,12 +39,29 @@ const fullName = computed(() => {
   if (primaryName.value === t.name) return ""
   return t.name
 })
+
+/** Logo 图片地址：租户自定义 logoURL 优先，否则用内置图片 */
+const logoSrc = computed(() => {
+  const url = tenantContext.currentTenant?.extra?.logoURL
+  return url || null
+})
 </script>
 
 <template>
   <div class="tenant-logo" :class="{ 'always-show-brand': alwaysShowBrand }">
     <div>
-      <img class="logo-box" src="@/common/assets/images/logo.jpg">
+      <img
+        v-if="logoSrc"
+        class="logo-box"
+        :src="logoSrc"
+        :alt="primaryName"
+      >
+      <img
+        v-else
+        class="logo-box"
+        src="@/common/assets/images/logo.jpg"
+        alt="logo"
+      >
     </div>
     <div class="brand">
       <span class="brand-primary">{{ primaryName }}</span>
