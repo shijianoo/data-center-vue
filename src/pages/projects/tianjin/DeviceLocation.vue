@@ -2,6 +2,7 @@
 import maplibregl from "maplibre-gl"
 import { onMounted, onUnmounted, ref, shallowRef } from "vue"
 import { influxBatchLatestDataQueryApi, influxLatestDataQueryApi } from "@/common/apis/data-query"
+import MapStyleSwitcher from "@/common/components/MapStyleSwitcher/index.vue"
 import { formatHybridAgo } from "@/common/utils/datetime"
 import { maplibreStyle } from "@/common/utils/tianditu-constants"
 import "maplibre-gl/dist/maplibre-gl.css"
@@ -324,6 +325,9 @@ onUnmounted(() => {
   <div class="app-container project-over" @click="closePopup">
     <!-- 地图 -->
     <div ref="mapContainer" class="map-container" />
+
+    <!-- 底图样式切换器（自带绝对定位，无需额外包装层） -->
+    <MapStyleSwitcher :map="map" default-style="image" />
 
     <Transition name="popup-fade">
       <div
