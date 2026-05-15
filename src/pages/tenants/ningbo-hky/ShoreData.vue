@@ -8,6 +8,13 @@ type ShoreKey = "NB09" | "NB10" | "NB11"
 type TabKey = "water" | "nutrient" | "current"
 type PageKey = `${ShoreKey}_${TabKey}`
 
+interface ColumnRule {
+  /** 白名单：只显示列表中的列（不配置则不限制） */
+  onlyShow?: string[]
+  /** 黑名单：强制隐藏列表中的列，优先级高于 onlyShow（不配置则不额外隐藏） */
+  hidden?: string[]
+}
+
 interface TableColumn {
   key: string
   label: string
@@ -37,11 +44,38 @@ const shoreOptions: { key: ShoreKey, label: string, code: string }[] = [
   { key: "NB11", label: "大嵩江入海口岸基站", code: "NB11" }
 ]
 
-const allTabOptions: { key: TabKey, label: string, onlyNB11?: boolean }[] = [
+const allTabOptions: { key: TabKey, label: string }[] = [
   { key: "water", label: "水质数据" },
   { key: "nutrient", label: "营养盐数据" },
-  { key: "current", label: "海流数据", onlyNB11: true }
+  { key: "current", label: "海流数据" }
 ]
+
+// ============================================================
+// 配置区：每个设备显示哪些参数类型（删掉不需要的 TabKey 即可）
+// ============================================================
+const shoreTabConfig: Record<ShoreKey, TabKey[]> = {
+  NB09: ["water", "nutrient"],
+  NB10: ["water", "nutrient"],
+  NB11: ["water", "nutrient", "current"]
+}
+
+// ============================================================
+// 配置区：每个设备每种参数类型下的列显示规则
+// onlyShow: 白名单，只显示指定的列（不配置 = 不限制）
+// hidden:   黑名单，强制隐藏指定的列，优先级高于 onlyShow（不配置 = 不额外隐藏）
+// 两者可同时使用，最终显示：(在 onlyShow 中 或 onlyShow 未设置) 且 (不在 hidden 中) 且 (有数据)
+// 列的 key 参见各 xxxColumns 数组定义
+// ============================================================
+const shoreColumnConfig: Partial<Record<ShoreKey, Partial<Record<TabKey, ColumnRule>>>> = {
+  // 示例：NB09 的水质数据隐藏叶竪素a列
+  // NB09: {
+  //   water: { hidden: ["chlorophyllA"] },
+  // },
+  // 示例：NB11 的海流数据只显示流速和水深
+  // NB11: {
+  //   current: { onlyShow: ["flowVelocity", "waterLevel"] },
+  // },
+}
 
 const waterColumns: TableColumn[] = [
   { key: "waterTemp", label: "水温(℃)", width: 110, align: "right", decimals: 2 },
@@ -62,12 +96,10 @@ const nutrientColumns: TableColumn[] = [
 ]
 
 const currentColumns: TableColumn[] = [
-  { key: "speed", label: "流速(m/s)", width: 110, align: "right", decimals: 3 },
-  { key: "direction", label: "流向(°)", width: 110, align: "right", decimals: 1 },
-  { key: "eastComponent", label: "断面流量", width: 120, align: "right", decimals: 3 },
-  { key: "northComponent", label: "断面面积", width: 120, align: "right", decimals: 3 },
-  { key: "depth", label: "深度", width: 100, align: "right", decimals: 2 },
-  { key: "temperature", label: "水温", width: 100, align: "right", decimals: 2 }
+  { key: "sectionFlow", label: "断面流量", width: 120, align: "right", decimals: 3 },
+  { key: "sectionArea", label: "断面面积", width: 120, align: "right", decimals: 3 },
+  { key: "flowVelocity", label: "流速(m/s)", width: 110, align: "right", decimals: 3 },
+  { key: "waterLevel", label: "水深(m)", width: 100, align: "right", decimals: 2 }
 ]
 
 const columnMap: Record<TabKey, TableColumn[]> = {
@@ -77,18 +109,16 @@ const columnMap: Record<TabKey, TableColumn[]> = {
 }
 
 const activeShore = ref<ShoreKey>("NB09")
-const activeTab = ref<TabKey>("water")
+const activeTab = ref<TabKey>(shoreTabConfig.NB09[0] ?? "water")
 const loading = ref(false)
 const pages = ref<Record<string, number>>({})
 const totals = ref<Record<string, number>>({})
 const tableCache = ref<Record<string, CommonRow[]>>({})
 
-// 当前可见的 Tab 选项（NB11 才显示海流）
+// 根据配置过滤当前设备可见的参数类型
 const tabOptions = computed(() => {
-  return allTabOptions.filter((tab) => {
-    if (tab.onlyNB11) return activeShore.value === "NB11"
-    return true
-  })
+  const allowed = shoreTabConfig[activeShore.value]
+  return allTabOptions.filter(tab => allowed.includes(tab.key))
 })
 
 function makePageKey(shore: ShoreKey, tab: TabKey): PageKey {
@@ -115,7 +145,13 @@ const currentRows = computed<CommonRow[]>(() => tableCache.value[getCurrentKey()
 
 const visibleColumns = computed(() => {
   const rows = currentRows.value
+  const rule = shoreColumnConfig[activeShore.value]?.[activeTab.value]
   return columnMap[activeTab.value].filter((column) => {
+    // 1. 白名单：若设置了 onlyShow，则必须在列表中
+    if (rule?.onlyShow && !rule.onlyShow.includes(column.key)) return false
+    // 2. 黑名单：在 hidden 中则强制隐藏（优先级高于 onlyShow）
+    if (rule?.hidden?.includes(column.key)) return false
+    // 3. 空列自动隐藏：该列所有行均无数据则不显示
     return rows.some(row => hasValue(row[column.key]))
   })
 })
@@ -163,10 +199,11 @@ function onPageChange(page: number) {
   loadCurrent()
 }
 
-// 切换站点时，若当前 tab 不适用则自动回退
+// 切换设备：若当前 Tab 不在新设备的可见列表中，自动回退到第一个可见 Tab
 watch(activeShore, (shore) => {
-  if (activeTab.value === "current" && shore !== "NB11") {
-    activeTab.value = "water"
+  const allowed = shoreTabConfig[shore]
+  if (!allowed.includes(activeTab.value)) {
+    activeTab.value = allowed[0] ?? "water"
   }
   const key = makePageKey(shore, activeTab.value)
   if (tableCache.value[key] === undefined) {

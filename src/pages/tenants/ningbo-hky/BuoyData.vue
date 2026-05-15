@@ -14,13 +14,27 @@ type BuoyKey = "NB00" | "NB01" | "NB02" | "NB03" | "NB04" | "NB05" | "NB06" | "N
 type TabKey = "minute" | "quarter" | "meteo" | "water" | "nutrient"
 type PageKey = `${BuoyKey}_${TabKey}`
 
+interface ColumnRule {
+  /** 白名单：只显示列表中的列（不配置则不限制） */
+  onlyShow?: string[]
+  /** 黑名单：强制隐藏列表中的列，优先级高于 onlyShow（不配置则不额外隐藏） */
+  hidden?: string[]
+}
+
+/**
+ * Tab 配置项：
+ * - 字符串形式（TabKey）：使用 allTabOptions 中对应的默认 label
+ * - 对象形式：自定义显示文字，不写则回退默认 label
+ */
+type TabEntry = TabKey | { key: TabKey, label: string }
+
 interface TableColumn {
   key: string
   label: string
   width?: number
   align?: "left" | "center" | "right"
   decimals?: number
-  formatter?: (value: unknown) => string
+  formatter?: (value: unknown | any) => string
 }
 
 interface CommonRow {
@@ -49,13 +63,76 @@ const buoyOptions: { key: BuoyKey, label: string, code: string }[] = [
   { key: "NB08", label: "杭州湾新区北污水排放口浮标", code: "NB08" }
 ]
 
-const tabOptions: { key: TabKey, label: string }[] = [
+const allTabOptions: { key: TabKey, label: string }[] = [
   { key: "meteo", label: "气象水文数据" },
   { key: "water", label: "水质数据" },
   { key: "nutrient", label: "营养盐数据" },
   { key: "minute", label: "气象数据" },
-  { key: "quarter", label: "周期数据" }
+  { key: "quarter", label: "位置状态数据" }
 ]
+
+// ============================================================
+// 配置区：每个设备显示哪些参数类型
+// - 直接写 TabKey 字符串 => 使用 allTabOptions 默认文字
+// - 写对象 { key, label } => 自定义显示文字（不写 label 则回退默认）
+// ============================================================
+const buoyTabConfig: Record<BuoyKey, TabEntry[]> = {
+  NB00: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB01: ["meteo", "water", "nutrient", "quarter"],
+  NB02: ["meteo", "water", "quarter"],
+  NB03: ["meteo", "water", "nutrient", "quarter"],
+  NB04: ["meteo", "water", "nutrient", "quarter"],
+  NB05: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB06: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB07: ["water", "nutrient", "quarter"],
+  NB08: ["meteo", "water", "nutrient", "minute", "quarter"]
+}
+
+/** 提取 TabEntry 数组中的纯 key 列表，用于判断 Tab 是否在可见列表中 */
+function getTabKeys(entries: TabEntry[]): TabKey[] {
+  return entries.map(e => typeof e === "string" ? e : e.key)
+}
+
+// ============================================================
+// 配置区：每个设备每种参数类型下的列显示规则
+// onlyShow: 白名单，只显示指定的列（不配置 = 不限制）
+// hidden:   黑名单，强制隐藏指定的列，优先级高于 onlyShow（不配置 = 不额外隐藏）
+// 两者可同时使用，最终显示：(在 onlyShow 中 或 onlyShow 未设置) 且 (不在 hidden 中) 且 (有数据)
+// 列的 key 参见各 xxxColumns 数组定义
+// ============================================================
+const buoyColumnConfig: Partial<Record<BuoyKey, Partial<Record<TabKey, ColumnRule>>>> = {
+  // 示例：NB00 的气象水文数据隐藏光照列
+  NB00: {
+    meteo: { onlyShow: ["par"] },
+    minute: { hidden: ["q09", "q10", "q11", "s03"] },
+    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  },
+  NB01: {
+    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  },
+  NB02: {
+    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  },
+  NB03: {
+    meteo: { hidden: ["par", "waterDepth"] },
+    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  },
+  NB04: {
+    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  },
+  NB05: {
+    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  },
+  NB06: {
+    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  },
+  NB07: {
+    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  },
+  NB08: {
+    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  }
+}
 
 const minuteColumns: TableColumn[] = [
   { key: "q01", label: "气温(℃)", width: 90, align: "right" },
@@ -76,7 +153,7 @@ const minuteColumns: TableColumn[] = [
 ]
 
 const quarterColumns: TableColumn[] = [
-  { key: "g01", label: "GPS时间", width: 130 },
+  { key: "receiveTime", label: "GPS时间", width: 130, formatter: formatDateTime },
   { key: "g02", label: "GPS东经(°)", width: 120, align: "right", formatter: formatCoordinate },
   { key: "g03", label: "GPS北纬(°)", width: 120, align: "right", formatter: formatCoordinate },
   { key: "g04", label: "漏水报警", width: 90, align: "right", decimals: 0 },
@@ -93,7 +170,7 @@ const quarterColumns: TableColumn[] = [
   { key: "w08", label: "溶解氧饱和度(％)", width: 120, align: "right" },
   { key: "w08O", label: "W08O", width: 90, align: "right" },
   { key: "w09", label: "pH", width: 90, align: "right" },
-  { key: "w09O", label: "W09O", width: 90, align: "right" },
+  { key: "w09O", label: "pH", width: 90, align: "right", formatter: value => (3.896 * value - 4.065).toFixed(3) },
   { key: "w10", label: "氨氮(mg/L)", width: 90, align: "right" },
   { key: "w11", label: "硝酸盐(mg/L)", width: 90, align: "right" },
   { key: "w12", label: "亚硝酸盐(mg/L)", width: 90, align: "right" },
@@ -154,7 +231,21 @@ const columnMap: Record<TabKey, TableColumn[]> = {
 }
 
 const activeBuoy = ref<BuoyKey>("NB00")
-const activeTab = ref<TabKey>("minute")
+const activeTab = ref<TabKey>(getTabKeys(buoyTabConfig.NB00)[0] ?? "minute")
+
+// 根据配置过滤当前设备可见的参数类型，支持自定义 label
+const tabOptions = computed(() => {
+  const entries = buoyTabConfig[activeBuoy.value]
+  return entries.map((entry) => {
+    if (typeof entry === "string") {
+      // 字符串：回退 allTabOptions 中的默认 label
+      return allTabOptions.find(t => t.key === entry) ?? { key: entry, label: entry }
+    }
+    // 对象：使用自定义 label，不写 label 则回退默认
+    const defaultLabel = allTabOptions.find(t => t.key === entry.key)?.label ?? entry.key
+    return { key: entry.key, label: entry.label ?? defaultLabel }
+  })
+})
 const loading = ref(false)
 const pages = ref<Record<string, number>>({})
 const totals = ref<Record<string, number>>({})
@@ -184,7 +275,13 @@ const currentRows = computed<CommonRow[]>(() => tableCache.value[getCurrentKey()
 
 const visibleColumns = computed(() => {
   const rows = currentRows.value
+  const rule = buoyColumnConfig[activeBuoy.value]?.[activeTab.value]
   return columnMap[activeTab.value].filter((column) => {
+    // 1. 白名单：若设置了 onlyShow，则必须在列表中
+    if (rule?.onlyShow && !rule.onlyShow.includes(column.key)) return false
+    // 2. 黑名单：在 hidden 中则强制隐藏（优先级高于 onlyShow）
+    if (rule?.hidden?.includes(column.key)) return false
+    // 3. 空列自动隐藏：该列所有行均无数据则不显示
     return rows.some(row => hasValue(row[column.key]))
   })
 })
@@ -244,10 +341,23 @@ function onPageChange(page: number) {
   loadCurrent()
 }
 
-watch([activeBuoy, activeTab], ([buoy, tab]) => {
-  const key = makePageKey(buoy, tab)
+// 切换设备：若当前 Tab 不在新设备的可见列表中，自动回退到第一个可见 Tab
+watch(activeBuoy, (buoy) => {
+  const allowedKeys = getTabKeys(buoyTabConfig[buoy])
+  if (!allowedKeys.includes(activeTab.value)) {
+    activeTab.value = allowedKeys[0] ?? "meteo"
+  }
+  const key = makePageKey(buoy, activeTab.value)
   if (tableCache.value[key] === undefined) {
-    fetchPageData(buoy, tab, pages.value[key] ?? 1)
+    fetchPageData(buoy, activeTab.value, pages.value[key] ?? 1)
+  }
+})
+
+// 切换参数类型：懒加载数据
+watch(activeTab, (tab) => {
+  const key = makePageKey(activeBuoy.value, tab)
+  if (tableCache.value[key] === undefined) {
+    fetchPageData(activeBuoy.value, tab, pages.value[key] ?? 1)
   }
 })
 
@@ -277,7 +387,7 @@ onMounted(() => {
           </button>
         </div>
 
-        <div class="selector-wrap">
+        <div class="selector-wrap" v-if="tabOptions.length > 0">
           <button
             v-for="tab in tabOptions"
             :key="tab.key"
