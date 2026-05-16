@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { RouteRecordRaw } from "vue-router"
 import { storeToRefs } from "pinia"
 import { useRoute, useRouter } from "vue-router"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
@@ -15,16 +16,46 @@ const base = computed(() => `/console/${currentTenantKey.value}`)
 const menuItems = computed(() => activeNavRoutes.value.filter(r => !r.meta?.hidden))
 
 /**
- * el-menu default-active 直接使用 route.path（当前实际路径）。
- * NavMenuItems 生成的 index = basePath + route.path 段，与 route.path 完全一致。
- *
- * 若当前页面（如详情页）没有对应菜单项，el-menu 不高亮任何项，符合预期。
- * 若需要高亮父菜单，可在对应路由 meta 中添加 activeMenu 字段（后续扩展）。
+ * 默认精确匹配菜单路径；路由配置 meta.activeMatch = "prefix" 时，
+ * 当前路径落在该菜单路径下也会高亮，适合“历史数据”这类父级入口。
  */
-const activeIndex = computed(() => route.path.replace(/\/+$/, "") || "/")
+const activeIndex = computed(() => {
+  const currentPath = normalizePath(route.path)
+  return findActiveIndex(menuItems.value, base.value, currentPath) ?? currentPath
+})
 
 function handleSelect(index: string) {
   router.push(index)
+}
+
+function findActiveIndex(items: RouteRecordRaw[], basePath: string, currentPath: string): string | null {
+  let prefixMatched: string | null = null
+
+  for (const item of items.filter(r => !r.meta?.hidden)) {
+    const itemPath = resolvePath(item.path, basePath)
+    if (currentPath === itemPath) return itemPath
+
+    if (item.meta?.activeMatch === "prefix" && isPrefixPath(currentPath, itemPath)) {
+      prefixMatched = itemPath
+    }
+
+    const childMatched = findActiveIndex(item.children ?? [], itemPath, currentPath)
+    if (childMatched) return childMatched
+  }
+
+  return prefixMatched
+}
+
+function resolvePath(routePath: string, basePath: string) {
+  return normalizePath(routePath ? `${basePath}/${routePath}` : basePath)
+}
+
+function normalizePath(path: string) {
+  return path.replace(/\/+/g, "/").replace(/\/+$/, "") || "/"
+}
+
+function isPrefixPath(currentPath: string, menuPath: string) {
+  return currentPath === menuPath || currentPath.startsWith(`${menuPath}/`)
 }
 </script>
 

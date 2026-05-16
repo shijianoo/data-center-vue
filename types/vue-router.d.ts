@@ -53,7 +53,10 @@ declare module "vue-router" {
      * @description 默认为 false，为 true 时代表需要缓存，此时该路由和该页面都需要设置一致的 Name
      */
     keepAlive?: boolean
-
+    /**
+     * @description 顶部租户菜单的激活匹配方式。默认精确匹配；prefix 表示当前路径以该菜单路径为前缀时也高亮。
+     */
+    activeMatch?: "exact" | "prefix"
     /**
      * @description 定义当前页面在前台Logo处展示的名字
      */
