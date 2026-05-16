@@ -153,7 +153,8 @@ async function handleCreateOrUpdate() {
               <el-tree-select
                 v-model="formData.parentId"
                 :data="props.menuTreeOptions"
-                :props="{ value: 'id', label: 'title', children: 'children' }"
+                :props="{ label: 'title', children: 'children' }"
+                node-key="id"
                 placeholder="请选择父级菜单（可为空）"
                 clearable
                 check-strictly
@@ -221,7 +222,8 @@ async function handleCreateOrUpdate() {
               <el-tree-select
                 v-model="formData.permissionId"
                 :data="props.permissionTreeOptions"
-                :props="{ value: 'id', label: 'name', children: 'children' }"
+                :props="{ label: 'name', children: 'children' }"
+                node-key="id"
                 placeholder="请选择关联权限（可为空）"
                 clearable
                 check-strictly
