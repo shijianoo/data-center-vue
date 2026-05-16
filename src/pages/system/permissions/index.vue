@@ -272,7 +272,8 @@ onMounted(() => {
           <el-tree-select
             v-model="formData.parentId"
             :data="permissionTreeOptions"
-            :props="{ value: 'id', label: 'name', children: 'children' }"
+            :props="{ label: 'name', children: 'children' }"
+            node-key="id"
             placeholder="请选择上级权限（可为空）"
             clearable
             check-strictly
