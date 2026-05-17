@@ -55,12 +55,13 @@ export function registerNavigationGuard(router: Router) {
           await preRegisterContextRoutes(to.path, router)
         }
 
-        // path: to.fullPath 强制 Vue Router 按路径重新解析，
+        // path: to.path 强制 Vue Router 按路径重新解析，
         // 使预注册的静态自定义路由（如 projects/tianjin）能优先于动态路由（projects/:projectKey）匹配。
         // 不能用 { ...to, replace: true }，spread 会带入 to.name，
         // Vue Router 会按 name 导航，绕过路径解析，自定义路由永远不生效。
+        // query/hash 必须显式带上；刷新分享链接时如果丢掉 query，页面会回退到默认 group。
         console.log("[Guard] 重新 Replace")
-        return { path: to.fullPath, replace: true }
+        return { path: to.path, query: to.query, hash: to.hash, replace: true }
       } catch (error) {
         // 过程中发生任何错误，都直接重置 Token，并重定向到登录页面
         userStore.logout()
@@ -108,7 +109,7 @@ export function registerNavigationGuard(router: Router) {
         const changed = await preRegisterContextRoutes(to.path, router)
         if (changed) {
           console.log("[Guard] 自定义路由已注册，重新 Replace")
-          return { path: to.fullPath, replace: true }
+          return { path: to.path, query: to.query, hash: to.hash, replace: true }
         } else {
           console.log("[Guard] 路由未发生变化，直接通过")
         }
