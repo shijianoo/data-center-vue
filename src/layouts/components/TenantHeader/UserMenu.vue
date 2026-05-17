@@ -124,12 +124,12 @@ onUnmounted(() => {
 
   i {
     font-size: 12px;
-    color: var(--text-sub);
+    color: var(--tenant-header-text-muted, var(--text-sub));
   }
 }
 .user-trigger:hover,
 .user-trigger.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--tenant-header-hover-bg, rgba(255, 255, 255, 0.1));
 }
 
 .user-info {
@@ -148,7 +148,7 @@ onUnmounted(() => {
   .user-sub-info {
     display: block;
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--tenant-header-text-muted, #94a3b8);
     padding: 0 2px;
     border-radius: 4px;
     width: fit-content;
@@ -167,6 +167,7 @@ onUnmounted(() => {
   font-weight: 600;
   font-size: 14px;
   border: 2px solid #1e293b;
+  border-color: var(--tenant-header-bg, #1e293b);
   flex-shrink: 0;
 }
 

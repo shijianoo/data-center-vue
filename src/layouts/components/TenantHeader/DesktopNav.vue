@@ -61,9 +61,6 @@ function isPrefixPath(currentPath: string, menuPath: string) {
 
 <template>
   <el-menu
-    text-color="rgba(255, 255, 255, 0.6)"
-    active-text-color="#fff"
-    background-color="#1e293b"
     class="desktop-menu"
     v-if="menuItems.length"
     mode="horizontal"
@@ -83,6 +80,30 @@ function isPrefixPath(currentPath: string, menuPath: string) {
   height: var(--header-h);
   border-bottom: none !important;
   overflow: visible;
+
+  --el-menu-bg-color: var(--tenant-header-bg);
+  --el-menu-text-color: var(--tenant-header-text-muted);
+  --el-menu-active-color: var(--tenant-header-text);
+  --el-menu-hover-bg-color: var(--tenant-header-hover-bg);
+  --el-menu-border-color: transparent;
+  background-color: var(--tenant-header-bg);
+}
+
+:deep(.el-menu-item),
+:deep(.el-sub-menu__title) {
+  color: var(--tenant-header-text-muted) !important;
+}
+
+:deep(.el-menu-item:hover),
+:deep(.el-sub-menu__title:hover) {
+  color: var(--tenant-header-text) !important;
+  background-color: var(--tenant-header-hover-bg) !important;
+}
+
+:deep(.el-menu-item.is-active),
+:deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: var(--tenant-header-text) !important;
+  background-color: var(--tenant-header-active-bg) !important;
 }
 
 @media (max-width: 768px) {

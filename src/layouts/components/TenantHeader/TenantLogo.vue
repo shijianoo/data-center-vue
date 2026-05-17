@@ -96,7 +96,7 @@ const logoSrc = computed(() => {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.3px;
-  color: white;
+  color: var(--tenant-header-text, white);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -105,7 +105,7 @@ const logoSrc = computed(() => {
 
 .brand-full {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--tenant-header-text-muted, rgba(255, 255, 255, 0.45));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

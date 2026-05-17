@@ -1,109 +1,55 @@
 import type { Router } from "vue-router"
 import { setRouteChange } from "@@/composables/useRouteListener"
-import { useTitle } from "@@/composables/useTitle"
 import { getRefreshToken } from "@@/utils/cache/cookies"
 import NProgress from "nprogress"
 import { usePermissionStore } from "@/pinia/stores/permission"
-import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import { useUserStore } from "@/pinia/stores/user"
+import { ensureTenantHeadWatcher, updateBrowserTab } from "@/router/browser-tab"
 import { routerConfig } from "@/router/config"
+import { isTenantFallbackRoute, preRegisterContextRoutes } from "@/router/tenant-context-routes"
 import { isWhiteList } from "@/router/whitelist"
 
 NProgress.configure({ showSpinner: false })
 
-const { setTitle } = useTitle()
-
 const LOGIN_PATH = "/login"
 
-/** 匹配 /console/:tenantKey 及其子路径 */
-const TENANT_RE = /^\/console\/([^/]+)/
-/** 匹配 /console/:tenantKey/projects/:projectKey */
-const PROJECT_RE = /^\/console\/[^/]+\/projects\/([^/]+)/
-/** 匹配 /console/:tenantKey/projects/:projectKey/devices/:deviceCode */
-const DEVICE_RE = /^\/console\/[^/]+\/projects\/[^/]+\/devices\/([^/]+)/
-/** 匹配 history 路径（/history 结尾 或 /history/ 后还有子路径） */
-const HISTORY_RE = /\/history(\/|$)/
-
-/**
- * 按路径层级预注册自定义路由。
- * 各 ensure* 函数已幂等（已注册立即返回），可对每次导航调用。
- *
- * @returns 是否新增了路由（需要重新解析时为 true）
- */
-async function preRegisterContextRoutes(path: string, router: Router): Promise<boolean> {
-  const tenantContextStore = useTenantContextStore()
-  const beforeCount = router.getRoutes().length
-
-  // 层级1：租户路由
-  const tenantMatch = path.match(TENANT_RE)
-  if (tenantMatch) {
-    await tenantContextStore.ensureTenantRoutes(tenantMatch[1])
-  }
-
-  // 层级2：项目路由（需要先加载项目数据）
-  const projectMatch = path.match(PROJECT_RE)
-  if (projectMatch) {
-    const projectKey = projectMatch[1]
-    await tenantContextStore.fetchProject(projectKey)
-    await tenantContextStore.ensureProjectRoutes(projectKey)
-  }
-
-  // 层级3：设备路由（需要先加载设备数据）
-  const deviceMatch = path.match(DEVICE_RE)
-  if (deviceMatch) {
-    const deviceCode = deviceMatch[1]
-    const pKey = projectMatch?.[1] ?? ""
-    await tenantContextStore.fetchDevice(deviceCode)
-    await tenantContextStore.ensureDeviceRoutes(deviceCode, pKey)
-  }
-
-  // 层级4：历史路由
-  if (deviceMatch && HISTORY_RE.test(path)) {
-    const deviceCode = deviceMatch[1]
-    const pKey = projectMatch?.[1] ?? ""
-    await tenantContextStore.ensureHistoryRoutes(deviceCode, pKey)
-  }
-
-  // 路由数量变化 → 有新路由注册
-  return router.getRoutes().length > beforeCount
-}
-
-/** 静态兜底路由名称集合（有自定义路由时应被覆盖，不应加载） */
-const FALLBACK_ROUTE_NAMES = new Set(["TenantIndex", "Project", "Device", "History"])
-
 export function registerNavigationGuard(router: Router) {
-  // 全局前置守卫
+  /**
+   * 全局前置守卫。
+   * 负责登录校验、用户初始化、动态路由注入、租户上下文路由预注册、
+   * 后台权限拦截，以及根路径跳转。
+   */
   router.beforeEach(async (to, _from) => {
     NProgress.start()
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
 
     console.log("进入路由守卫", to.path)
-    // 如果没有登录
+
+    // 未登录用户只能访问白名单页面，其余页面带 redirect 回到登录页
     if (!getRefreshToken()) {
       console.log("没有登录")
-      // 如果在免登录的白名单中，则直接进入
       if (isWhiteList(to)) return true
-      // 其他没有访问权限的页面将被重定向到登录页面
       return `${LOGIN_PATH}?redirect=${encodeURIComponent(to.fullPath)}`
     }
 
-    // 如果没有初始化
+    // 登录后第一次导航需要初始化用户、租户、角色，并注入动态路由
     if (!userStore.isInit) {
       console.log("没有初始化")
-      // 要重新获取租户、用户、权限角色、菜单
       try {
+        // 先获取租户信息，再获取用户信息，后续权限和默认租户都依赖这些数据
         await userStore.getTenantInfo()
         await userStore.getInfo()
+
         // 注意：角色必须是一个数组！ 例如: ["admin"] 或 ["developer", "editor"]
         const roles = userStore.roles!
-        // 生成可访问的 Routes
+
+        // 生成可访问的 Routes，并添加到 Router 中
         routerConfig.dynamic ? permissionStore.setRoutes(roles) : permissionStore.setAllRoutes()
-        // 将 "有访问权限的动态路由" 添加到 Router 中
         permissionStore.addRoutes.forEach(route => router.addRoute(route))
         userStore.isInit = true
 
-        // 预注册自定义路由（刷新场景：确保路由在 Vue Router 解析前存在）
+        // 刷新进入前台深层地址时，要先把租户/项目/设备自定义路由注册好
         if (to.path.startsWith("/console/")) {
           console.log("[Guard] 刷新预注册路由")
           await preRegisterContextRoutes(to.path, router)
@@ -124,10 +70,10 @@ export function registerNavigationGuard(router: Router) {
       }
     }
 
-    // 如果已经登录，并准备进入 Login 页面，则重定向到主页
+    // 已登录用户访问登录页时回到主页，由主页逻辑再落到默认租户
     if (to.path === LOGIN_PATH) return "/"
 
-    // /admin 仅管理员用户可进
+    // 后台管理区只允许平台管理员或平台运维进入
     if (to.path.startsWith("/admin")) {
       console.log("进入/admin")
       if (userStore.isPlatformAdmin || userStore.isPlatformOps) {
@@ -139,7 +85,7 @@ export function registerNavigationGuard(router: Router) {
       }
     }
 
-    // 根路径跳转
+    // 根路径不是具体页面：按当前用户默认租户进入前台租户首页
     if (to.path === "/") {
       const tenant = userStore.getDefaultTenant()
       if (!tenant) {
@@ -152,15 +98,12 @@ export function registerNavigationGuard(router: Router) {
       return toPath
     }
 
-    // ── 已初始化用户导航到 /console/ 路径时，同样预注册自定义路由 ──────
-    // 这样自定义静态路由（projects/tianjin）能在解析前注册，优先于动态参数路由
-    // （projects/:projectKey），Entry 组件不会被误加载。
+    // 已初始化用户导航到 /console/ 路径时，同样预注册自定义路由。
+    // 这样自定义静态路由能在解析前注册，优先于动态参数路由。
     if (to.path.startsWith("/console/")) {
-      // 当前 matched 是否命中了静态兜底路由（说明自定义路由尚未注册）
       const matchedName = to.matched.at(-1)?.name
-      const isStaticFallback = FALLBACK_ROUTE_NAMES.has(matchedName as string)
 
-      if (isStaticFallback) {
+      if (isTenantFallbackRoute(matchedName)) {
         console.log("[Guard] 命中兜底路由，尝试预注册自定义路由:", matchedName)
         const changed = await preRegisterContextRoutes(to.path, router)
         if (changed) {
@@ -175,10 +118,15 @@ export function registerNavigationGuard(router: Router) {
     return true
   })
 
-  // 全局后置钩子
+  /**
+   * 全局后置钩子。
+   * 负责通知路由变化、更新浏览器标题/图标，并结束页面进度条。
+   */
   router.afterEach((to) => {
     setRouteChange(to)
-    setTitle(to.meta.title)
+    // 首次导航完成后再创建页签监听，避免 Pinia 尚未安装时使用 store
+    ensureTenantHeadWatcher(router)
+    updateBrowserTab(to)
     NProgress.done()
   })
 }
