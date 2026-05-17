@@ -1,3 +1,4 @@
+import type { HistoryLocationQuery, HistoryQuery } from "./type"
 import axios from "axios"
 
 // 根据运行环境选择 baseURL`
@@ -50,4 +51,19 @@ export function getShoreCurrentPageData(sn: string, page: number, pageSize: numb
 // 获取所有设备最新位置数据
 export function getLatestDeviceLocations() {
   return client.get("location/latest")
+}
+
+// 获取历史位置数据
+export function getHistoricalLocations(query: HistoryLocationQuery) {
+  return client.post("location/historical", query)
+}
+
+// 查询历史数据
+export function getHistoricalData(query: HistoryQuery) {
+  return client.post("data/search", query)
+}
+
+// 查询最新数据
+export function getLatestData(tableName: string, serialNumber: string, selectColumns: string[]) {
+  return client.post("data/latest", { tableName, serialNumber, selectColumns })
 }

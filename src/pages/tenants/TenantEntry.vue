@@ -16,7 +16,7 @@ const pageMap: Record<string, any> = {
     loadingComponent: AsyncLoading
   }),
   nbhky: defineAsyncComponent({
-    loader: () => import("./ningbo-hky/DeviceLocation.vue"),
+    loader: () => import("./ningbo-hky/location-enhanced/EnhancedDeviceLocation.vue"),
     loadingComponent: AsyncLoading
   })
 }

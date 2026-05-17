@@ -64,11 +64,11 @@ const buoyOptions: { key: BuoyKey, label: string, code: string }[] = [
 ]
 
 const allTabOptions: { key: TabKey, label: string }[] = [
-  { key: "meteo", label: "气象水文数据" },
-  { key: "water", label: "水质数据" },
-  { key: "nutrient", label: "营养盐数据" },
-  { key: "minute", label: "气象数据" },
-  { key: "quarter", label: "位置状态数据" }
+  { key: "meteo", label: "气象表" },
+  { key: "water", label: "水质表" },
+  { key: "nutrient", label: "营养盐表" },
+  { key: "minute", label: "1分钟数据表" },
+  { key: "quarter", label: "15分钟数据表" }
 ]
 
 // ============================================================
@@ -78,13 +78,13 @@ const allTabOptions: { key: TabKey, label: string }[] = [
 // ============================================================
 const buoyTabConfig: Record<BuoyKey, TabEntry[]> = {
   NB00: ["meteo", "water", "nutrient", "minute", "quarter"],
-  NB01: ["meteo", "water", "nutrient", "quarter"],
-  NB02: ["meteo", "water", "quarter"],
-  NB03: ["meteo", "water", "nutrient", "quarter"],
-  NB04: ["meteo", "water", "nutrient", "quarter"],
+  NB01: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB02: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB03: ["meteo", "water", "nutrient", "minute", "quarter"],
+  NB04: ["meteo", "water", "nutrient", "minute", "quarter"],
   NB05: ["meteo", "water", "nutrient", "minute", "quarter"],
   NB06: ["meteo", "water", "nutrient", "minute", "quarter"],
-  NB07: ["water", "nutrient", "quarter"],
+  NB07: ["meteo", "water", "nutrient", "minute", "quarter"],
   NB08: ["meteo", "water", "nutrient", "minute", "quarter"]
 }
 
@@ -102,36 +102,36 @@ function getTabKeys(entries: TabEntry[]): TabKey[] {
 // ============================================================
 const buoyColumnConfig: Partial<Record<BuoyKey, Partial<Record<TabKey, ColumnRule>>>> = {
   // 示例：NB00 的气象水文数据隐藏光照列
-  NB00: {
-    meteo: { onlyShow: ["par"] },
-    minute: { hidden: ["q09", "q10", "q11", "s03"] },
-    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
-  },
-  NB01: {
-    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
-  },
-  NB02: {
-    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
-  },
-  NB03: {
-    meteo: { hidden: ["par", "waterDepth"] },
-    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
-  },
-  NB04: {
-    quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
-  },
-  NB05: {
-    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
-  },
-  NB06: {
-    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
-  },
-  NB07: {
-    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
-  },
-  NB08: {
-    quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
-  }
+  // NB00: {
+  //   meteo: { onlyShow: ["par"] },
+  //   minute: { hidden: ["q09", "q10", "q11", "s03"] },
+  //   quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  // },
+  // NB01: {
+  //   quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  // },
+  // NB02: {
+  //   quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  // },
+  // NB03: {
+  //   meteo: { hidden: ["par", "waterDepth"] },
+  //   quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  // },
+  // NB04: {
+  //   quarter: { onlyShow: ["receiveTime", "g02", "g03", "v02"] }
+  // },
+  // NB05: {
+  //   quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  // },
+  // NB06: {
+  //   quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  // },
+  // NB07: {
+  //   quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  // },
+  // NB08: {
+  //   quarter: { hidden: ["s00", "s01", "s02", "s03", "s04", "s05", "s07", "s08", "s09", "s18"] }
+  // }
 }
 
 const minuteColumns: TableColumn[] = [
