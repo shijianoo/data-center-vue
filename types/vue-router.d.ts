@@ -1,10 +1,19 @@
 import type * as ElementPlusIconsVue from "@element-plus/icons-vue"
+import type { RouteLocationNormalizedLoaded } from "vue-router"
 import type { SvgName } from "~virtual/svg-component"
 import "vue-router"
 
 export {}
 
 type ElementPlusIconsName = keyof typeof ElementPlusIconsVue
+interface LogoTitle { primary?: string, sub?: string }
+interface BrowserTitleContext {
+  route: RouteLocationNormalizedLoaded
+  tenant?: unknown
+  project?: unknown
+  device?: unknown
+  logoTitle?: LogoTitle
+}
 
 declare module "vue-router" {
   interface RouteMeta {
@@ -60,6 +69,13 @@ declare module "vue-router" {
     /**
      * @description 定义当前页面在前台Logo处展示的名字
      */
-    logoTitle?: { primary?: string, sub?: string }
+    logoTitle?: LogoTitle
+    /**
+     * @description 自定义浏览器标签页标题。前台路由默认使用 logoTitle.primary/租户名，后台路由默认使用“应用名 | 平台管理 | 页面名”。
+     * @example browserTitle: "天津项目 - 岸基站历史数据"
+     * @example browserTitle: ({ tenant }) => tenant?.name
+     * @example browserTitle: false // 前台仅使用租户名
+     */
+    browserTitle?: string | false | ((context: BrowserTitleContext) => string | undefined)
   }
 }

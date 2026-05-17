@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { CSSProperties } from "vue"
 import { storeToRefs } from "pinia"
 import { computed, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -15,6 +16,62 @@ const { activeNavRoutes } = storeToRefs(tenantStore)
 const route = useRoute()
 const router = useRouter()
 const showMobileMenu = ref(false)
+
+const DEFAULT_HEADER_BG = "#1e293b"
+
+function parseColor(color?: string) {
+  const value = color?.trim()
+  if (!value) return null
+
+  const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i)?.[1]
+  if (hex) {
+    const normalized = hex.length === 3
+      ? hex.split("").map(char => char + char).join("")
+      : hex.slice(0, 6)
+    return {
+      r: Number.parseInt(normalized.slice(0, 2), 16),
+      g: Number.parseInt(normalized.slice(2, 4), 16),
+      b: Number.parseInt(normalized.slice(4, 6), 16)
+    }
+  }
+
+  const rgb = value.match(/^rgba?\((\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i)
+  if (rgb) {
+    return {
+      r: Math.min(Number(rgb[1]), 255),
+      g: Math.min(Number(rgb[2]), 255),
+      b: Math.min(Number(rgb[3]), 255)
+    }
+  }
+
+  return null
+}
+
+function getLuminance({ r, g, b }: { r: number, g: number, b: number }) {
+  const channels = [r, g, b].map((value) => {
+    const channel = value / 255
+    return channel <= 0.03928
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+}
+
+/** 根据租户主题色生成 Header 颜色变量，并按背景明暗选择文字色 */
+const headerThemeStyle = computed<CSSProperties>(() => {
+  const background = tenantStore.currentTenant?.extra?.themeColor || DEFAULT_HEADER_BG
+  const color = parseColor(background) ?? parseColor(DEFAULT_HEADER_BG)!
+  const isLight = getLuminance(color) > 0.5
+
+  return {
+    "--tenant-header-bg": background,
+    "--tenant-header-text": isLight ? "#111827" : "#ffffff",
+    "--tenant-header-text-muted": isLight ? "rgba(17, 24, 39, 0.64)" : "rgba(255, 255, 255, 0.68)",
+    "--tenant-header-hover-bg": isLight ? "rgba(17, 24, 39, 0.08)" : "rgba(255, 255, 255, 0.1)",
+    "--tenant-header-active-bg": isLight ? "rgba(17, 24, 39, 0.12)" : "rgba(255, 255, 255, 0.14)",
+    "--tenant-header-border": isLight ? "rgba(17, 24, 39, 0.14)" : "rgba(255, 255, 255, 0.12)"
+  } as CSSProperties
+})
 
 /**
  * 是否有可见菜单项（决定是否显示汉堡按钮）— 用 activeNavRoutes 而非 tenantRoutes，
@@ -98,7 +155,7 @@ function handleBack() {
 </script>
 
 <template>
-  <nav class="navbar" :class="{ 'has-nav': hasMenu }">
+  <nav class="navbar" :class="{ 'has-nav': hasMenu }" :style="headerThemeStyle">
     <div class="nav-left">
       <!-- 返回按钮：多层级兜底，到顶隐藏 -->
       <button
@@ -142,8 +199,8 @@ function handleBack() {
   left: 0;
   right: 0;
   height: var(--header-h);
-  background: #1e293b;
-  color: white;
+  background: var(--tenant-header-bg);
+  color: var(--tenant-header-text);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,7 +225,7 @@ function handleBack() {
 .back-link {
   flex-shrink: 0;
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--tenant-header-text-muted);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -184,8 +241,8 @@ function handleBack() {
   white-space: nowrap;
 }
 .back-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--tenant-header-hover-bg);
+  color: var(--tenant-header-text);
 }
 
 /* 面包屑嵌入 header 时的样式调整 */
@@ -211,7 +268,7 @@ function handleBack() {
   display: none;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--tenant-header-text-muted);
   font-size: 20px;
   cursor: pointer;
   padding: 6px 8px;
@@ -220,7 +277,8 @@ function handleBack() {
   line-height: 1;
 }
 .mobile-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--tenant-header-hover-bg);
+  color: var(--tenant-header-text);
 }
 
 @media (max-width: 900px) {
