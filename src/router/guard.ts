@@ -24,7 +24,7 @@ export function registerNavigationGuard(router: Router) {
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
 
-    console.log("进入路由守卫", to.path)
+    console.log("进入路由守卫", to.fullPath)
 
     // 未登录用户只能访问白名单页面，其余页面带 redirect 回到登录页
     if (!getRefreshToken()) {
@@ -55,11 +55,10 @@ export function registerNavigationGuard(router: Router) {
           await preRegisterContextRoutes(to.path, router)
         }
 
-        // path: to.path 强制 Vue Router 按路径重新解析，
-        // 使预注册的静态自定义路由（如 projects/tianjin）能优先于动态路由（projects/:projectKey）匹配。
-        // 不能用 { ...to, replace: true }，spread 会带入 to.name，
-        // Vue Router 会按 name 导航，绕过路径解析，自定义路由永远不生效。
-        // query/hash 必须显式带上；刷新分享链接时如果丢掉 query，页面会回退到默认 group。
+        // 强制执行基于 Path 的重定向解析：
+        // 1. 显式 path：确保静态路由优先级高于动态路由匹配。
+        // 2. 禁用 {...to}：防止混入 to.name 触发 name 导航，导致绕过路径解析。
+        // 3. 显式透传：对象模式下必须手动继承 query/hash，避免参数丢失。
         console.log("[Guard] 重新 Replace")
         return { path: to.path, query: to.query, hash: to.hash, replace: true }
       } catch (error) {
