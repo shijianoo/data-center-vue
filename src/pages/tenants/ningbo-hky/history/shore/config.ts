@@ -37,9 +37,9 @@ const nutrientFields: HistoryField[] = [
 
 // 海流数据目前只有 NB11 配置，字段较少所以固定宽度展示，避免表格在宽屏上显得过空。
 const currentFields: HistoryField[] = [
-  { key: "sec_flow", label: "断面流量", column: "sec_flow", width: 120, decimals: 3 },
+  { key: "sec_flow", label: "断面流量", column: "sec_flow", width: 120, decimals: 3, formatter: (value: HistoryRow) => Math.abs(value.sec_flow as number).toFixed(3) },
   { key: "sec_area", label: "断面面积", column: "sec_area", width: 120, decimals: 3 },
-  { key: "flow_vel", label: "流速(m/s)", column: "flow_vel", width: 120, decimals: 3 },
+  { key: "flow_vel", label: "流速(m/s)", column: "flow_vel", width: 120, decimals: 3, formatter: (value: HistoryRow) => Math.abs(value.flow_vel as number).toFixed(3) },
   { key: "water_level", label: "水深(m)", column: "water_level", width: 120, decimals: 2 }
 ]
 

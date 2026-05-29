@@ -50,6 +50,7 @@ const playback = createPlaybackController({
   getVisibleTrackPoints
 })
 
+// 获取所有设备最新位置数据，创建 Marker，并绑定交互事件。
 async function loadMarkers() {
   if (!map.value) return
   loading.value = true
@@ -111,6 +112,7 @@ function normalizeLatestLocations(rows: Record<string, unknown>[]): DevicePoint[
     .filter((item): item is DevicePoint => Boolean(item?.serialNumber))
 }
 
+// 点击 Marker 或抽屉里设备名称都会触发 selectDevice，展示该设备的最新数据抽屉和（如果是浮标）轨迹查询面板。
 function selectDevice(serialNumber: string) {
   const meta = getMeta(serialNumber)
   selectedCode.value = serialNumber
@@ -129,6 +131,8 @@ function selectDevice(serialNumber: string) {
   }
 }
 
+// 获取浮标的轨迹状态，包含查询日期、过滤参数、已加载轨迹和回放进度等信息。
+// 首次打开某台浮标时创建默认状态，后续直接获取缓存的状态。
 function getTrackState(serialNumber: string): TrackQueryState {
   if (!trackStateMap.value[serialNumber]) {
     const location = latestLocations.value.find(item => item.serialNumber === serialNumber)
@@ -249,9 +253,8 @@ function resetMarkerPosition(serialNumber: string) {
   const lngLat = getDeviceLngLat(serialNumber)
   if (marker && lngLat) marker.setLngLat(lngLat)
 }
-
+// 围栏模块需要地图实例、最新位置和轨迹状态。
 function getFenceContext() {
-  // 围栏模块需要地图实例、最新位置和轨迹状态；集中组装可以让 fence-layer 保持纯工具函数形态。
   return {
     map: map.value,
     latestLocations: latestLocations.value,

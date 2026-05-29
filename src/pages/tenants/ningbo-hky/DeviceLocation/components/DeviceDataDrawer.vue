@@ -64,7 +64,7 @@ async function loadLatestData() {
   if (!device) return
 
   latestGroups.value = device.groups
-    .filter(group => !group.placeholder && group.tableName)
+    .filter(group => group.tableName)
     // 先把骨架状态放进数组，UI 可以立即显示每个分组的“加载中”。
     .map(group => ({ group, row: null, loading: true }))
 

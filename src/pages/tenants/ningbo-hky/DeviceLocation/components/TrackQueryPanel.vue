@@ -51,20 +51,20 @@ const fenceRadius = computed({
   set: value => emit("updateState", { fenceRadius: value })
 })
 
-const playbackSpeed = computed({
-  get: () => props.state?.playbackSpeed ?? 1,
-  set: value => emit("updateState", { playbackSpeed: value })
-})
+// const playbackSpeed = computed({
+//   get: () => props.state?.playbackSpeed ?? 1,
+//   set: value => emit("updateState", { playbackSpeed: value })
+// })
 
-const canPlayback = computed(() => Boolean(props.state?.loaded && props.state.points.length > 1))
-const playbackButtonText = computed(() => {
-  // 按钮文案跟随回放状态变化，用户不用理解内部状态机也能知道下一步动作。
-  const status = props.state?.playbackStatus ?? "idle"
-  if (status === "playing") return "暂停"
-  if (status === "paused") return "继续"
-  if (status === "finished") return "重新播放"
-  return "轨迹回放"
-})
+// const canPlayback = computed(() => Boolean(props.state?.loaded && props.state.points.length > 1))
+// const playbackButtonText = computed(() => {
+//   // 按钮文案跟随回放状态变化，用户不用理解内部状态机也能知道下一步动作。
+//   const status = props.state?.playbackStatus ?? "idle"
+//   if (status === "playing") return "暂停"
+//   if (status === "paused") return "继续"
+//   if (status === "finished") return "重新播放"
+//   return "轨迹回放"
+// })
 
 watch(
   () => props.device?.code,
@@ -137,11 +137,11 @@ function clearTrack() {
   emit("clear", device.code)
 }
 
-function togglePlayback() {
-  const device = props.device
-  if (!device || !canPlayback.value) return
-  emit("togglePlayback", device.code)
-}
+// function togglePlayback() {
+//   const device = props.device
+//   if (!device || !canPlayback.value) return
+//   emit("togglePlayback", device.code)
+// }
 
 function getDefaultTrackRange(time?: string | null): [string, string] {
   // 默认以最新定位日期为结束日期，向前取 7 天，便于第一次打开就能看到近期轨迹。
@@ -218,15 +218,15 @@ function normalizeTrackPoint(row: Record<string, unknown>): TrackPoint | null {
         <el-switch v-model="filterStable" active-text="过滤抖动" />
       </div>
 
-      <div class="number-row">
+      <!-- <div class="number-row">
         <span>过滤距离(m)</span>
         <el-input-number v-model="minDistance" :min="0" :step="5" size="small" />
       </div>
       <div class="number-row">
         <span>围栏半径(m)</span>
         <el-input-number v-model="fenceRadius" :min="10" :step="50" size="small" />
-      </div>
-      <div class="number-row">
+      </div> -->
+      <!-- <div class="number-row">
         <span>回放速度</span>
         <el-segmented
           v-model="playbackSpeed"
@@ -238,7 +238,7 @@ function normalizeTrackPoint(row: Record<string, unknown>): TrackPoint | null {
             {{ item }}x
           </template>
         </el-segmented>
-      </div>
+      </div> -->
 
       <div class="track-actions">
         <el-button type="primary" :loading="loading" @click="loadTrack">
@@ -247,9 +247,9 @@ function normalizeTrackPoint(row: Record<string, unknown>): TrackPoint | null {
         <el-button @click="clearTrack">
           清除
         </el-button>
-        <el-button v-if="canPlayback" class="playback-button" @click="togglePlayback">
+        <!-- <el-button v-if="canPlayback" class="playback-button" @click="togglePlayback">
           {{ playbackButtonText }}
-        </el-button>
+        </el-button> -->
       </div>
     </section>
   </Transition>

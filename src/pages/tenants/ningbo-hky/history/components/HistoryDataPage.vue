@@ -1,9 +1,13 @@
 <script lang="ts" setup>
+import type { HistoryQuery } from "../../apis/type"
 import type { HistoryField, HistoryGroup, HistoryRow } from "../buoy/config"
+import { Download } from "@element-plus/icons-vue"
 import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { useDateRangeSelector } from "@/common/composables/useDateRangeSelector"
 import { formatDateTime } from "@/common/utils/datetime"
-import { getHistoricalData, getLatestData } from "../../apis"
+import { downloadFile } from "@/common/utils/download"
+import { exportFile, getHistoricalData, getLatestData } from "../../apis"
 
 const props = defineProps<{
   serialNumber: string
@@ -17,17 +21,29 @@ const route = useRoute()
 const router = useRouter()
 
 const loading = ref(false)
+const downloading = ref(false)
 const rows = ref<HistoryRow[]>([])
 const pickingStartDate = ref<Date | null>(null)
 const requestSeq = ref(0)
 const groupDateCache = ref<Record<string, [string, string]>>({})
 const MAX_RANGE_DAYS = 30
 const DAY_MS = 24 * 60 * 60 * 1000
+const { selectRange, isSelecting } = useDateRangeSelector({ maxDays: MAX_RANGE_DAYS, useUtc: true })
+
+type AggregateMode = "Raw" | "Hourly" | "Daily"
+const aggregateMode = ref<AggregateMode>("Raw")
+
+const aggregateOptions: Array<{ label: string, value: AggregateMode }> = [
+  { label: "原始", value: "Raw" },
+  { label: "时", value: "Hourly" },
+  { label: "天", value: "Daily" }
+]
 
 const routeGroup = computed(() => getValidGroupKey(getSingleQuery(route.query.group)))
 const routeDateRange = computed(() => getValidDateRange(getSingleQuery(route.query.start), getSingleQuery(route.query.end)))
 const activeGroup = computed(() => props.groups.find(group => group.key === routeGroup.value))
 const routeQueryState = computed(() => `${routeGroup.value}|${routeDateRange.value?.[0] ?? ""}|${routeDateRange.value?.[1] ?? ""}|${props.serialNumber}`)
+const aggregateQueryState = computed(() => `${aggregateMode.value}|${routeQueryState.value}`)
 const groupModel = computed({
   get: () => routeGroup.value,
   set: (groupKey: string) => {
@@ -115,6 +131,22 @@ function getSelectColumns(group: HistoryGroup) {
   return [...columns]
 }
 
+function getAggregateQuery() {
+  return aggregateMode.value === "Raw" ? undefined : aggregateMode.value
+}
+
+function buildHistoryQuery(group: HistoryGroup, startTime: string, endTime: string): HistoryQuery {
+  return {
+    tableName: group.tableName!,
+    serialNumber: props.serialNumber,
+    selectColumns: getSelectColumns(group),
+    startTime,
+    endTime,
+    sortDirection: "asc",
+    Aggregate: getAggregateQuery()
+  }
+}
+
 async function replaceQuery(next: Record<string, string | null | undefined>) {
   const query = { ...route.query }
   Object.entries(next).forEach(([key, value]) => {
@@ -154,7 +186,7 @@ async function ensureDateRange(group: HistoryGroup): Promise<[string, string] | 
 
 async function loadActiveGroup() {
   const group = activeGroup.value
-  if (!group || group.placeholder || !group.tableName) {
+  if (!group || !group.tableName) {
     rows.value = []
     return
   }
@@ -166,14 +198,7 @@ async function loadActiveGroup() {
     const range = await ensureDateRange(group)
     if (!range) return
     const { startTime, endTime } = getQueryRange(range)
-    const { data } = await getHistoricalData({
-      tableName: group.tableName,
-      serialNumber: props.serialNumber,
-      selectColumns: getSelectColumns(group),
-      startTime,
-      endTime,
-      sortDirection: "desc"
-    })
+    const { data } = await getHistoricalData(buildHistoryQuery(group, startTime, endTime))
     if (seq !== requestSeq.value) return
     rows.value = Array.isArray(data) ? data : (data?.items ?? data?.records ?? [])
   } catch (error) {
@@ -246,6 +271,46 @@ function getFieldValue(row: HistoryRow, field: HistoryField) {
   return field.formatter ? field.formatter(row) : fmt(row[field.column], field.decimals)
 }
 
+function getDownloadUrl(data: unknown): string | null {
+  if (typeof data === "string") return data
+  if (!data || typeof data !== "object") return null
+
+  const result = data as Record<string, unknown>
+  const keys = ["url", "downloadUrl", "fileUrl", "link", "href"]
+  for (const key of keys) {
+    if (typeof result[key] === "string") return result[key]
+  }
+  if (result.data) return getDownloadUrl(result.data)
+  return null
+}
+
+async function handleDownload() {
+  const group = activeGroup.value
+  if (!group || !group.tableName) return
+
+  const range = await selectRange()
+  if (!range) return
+
+  downloading.value = true
+  try {
+    const { data } = await exportFile({
+      ...buildHistoryQuery(group, range.startDate, range.endDate),
+      downloadFileName: `${props.serialNumber}_${group.label}`
+    })
+    const url = getDownloadUrl(data)
+    if (!url) {
+      ElMessage.error("下载链接为空")
+      return
+    }
+    downloadFile(url)
+  } catch (error) {
+    console.error(`导出 ${props.serialNumber} ${group.label} 历史数据失败`, error)
+    ElMessage.error("下载失败")
+  } finally {
+    downloading.value = false
+  }
+}
+
 function getThresholdValue(row: HistoryRow, field: HistoryField) {
   return field.thresholdValue ? field.thresholdValue(row) : row[field.column]
 }
@@ -259,7 +324,7 @@ function isThresholdExceeded(row: HistoryRow, field: HistoryField) {
 }
 
 watch(
-  routeQueryState,
+  aggregateQueryState,
   () => {
     cacheRouteDateRange()
     loadActiveGroup()
@@ -281,6 +346,15 @@ watch(
       </div>
 
       <div class="query-tools">
+        <el-radio-group v-model="aggregateMode" class="aggregate-mode">
+          <el-radio-button
+            v-for="option in aggregateOptions"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </el-radio-button>
+        </el-radio-group>
         <el-date-picker
           v-model="dateRangeModel"
           type="daterange"
@@ -296,6 +370,9 @@ watch(
         <el-button type="primary" :loading="loading" @click="loadActiveGroup">
           查询
         </el-button>
+        <el-button :icon="Download" :loading="downloading || isSelecting" @click="handleDownload">
+          下载
+        </el-button>
       </div>
     </div>
 
@@ -308,23 +385,15 @@ watch(
       />
     </el-tabs>
 
-    <el-alert
-      v-if="activeGroup?.placeholder"
-      title="该参数暂未确认查询方式，已预留代码位置。"
-      type="info"
-      :closable="false"
-      show-icon
-    />
-
-    <div v-else class="table-wrapper" v-loading="loading">
+    <div class="table-wrapper" v-loading="loading">
       <el-table :data="rows" stripe size="small" height="100%" empty-text="暂无数据">
-        <el-table-column prop="samp_time" label="采样时间" width="180" fixed>
+        <el-table-column :label="aggregateMode === 'Raw' ? '采样时间' : '时间分组'" width="180" fixed>
           <template #default="{ row }">
             {{ formatDateTime(row.samp_time) }}
           </template>
         </el-table-column>
 
-        <el-table-column prop="recv_time" label="接收时间" width="180">
+        <el-table-column v-if="aggregateMode === 'Raw'" prop="recv_time" label="接收时间" width="180">
           <template #default="{ row }">
             {{ formatDateTime(row.recv_time) }}
           </template>
@@ -401,6 +470,10 @@ watch(
   flex-shrink: 0;
 }
 
+.aggregate-mode {
+  flex-shrink: 0;
+}
+
 .type-tabs {
   flex-shrink: 0;
 }
@@ -428,6 +501,10 @@ watch(
   .query-tools {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .aggregate-mode {
+    width: 100%;
   }
 }
 </style>

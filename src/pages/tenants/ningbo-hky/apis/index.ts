@@ -67,3 +67,8 @@ export function getHistoricalData(query: HistoryQuery) {
 export function getLatestData(tableName: string, serialNumber: string, selectColumns: string[]) {
   return client.post("data/latest", { tableName, serialNumber, selectColumns })
 }
+
+// 导出数据,返回一个文件下载链接，可以使用这个链接来下载文件
+export function exportFile(query: HistoryQuery) {
+  return client.post("data/export", query)
+}

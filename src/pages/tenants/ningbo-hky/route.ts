@@ -7,14 +7,8 @@ export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
     {
       path: "",
       name: "NingboHKYGpsData",
-      component: () => import("@/pages/tenants/ningbo-hky/location-enhanced/EnhancedDeviceLocation.vue"),
+      component: () => import("@/pages/tenants/ningbo-hky/DeviceLocation/DeviceLocation.vue"),
       meta: { title: "GPS数据" }
-    },
-    {
-      path: "buoy-data",
-      name: "NingboHKYBuoyData",
-      component: () => import("@/pages/tenants/ningbo-hky/BuoyData.vue"),
-      meta: { title: "浮标数据" }
     },
     {
       path: "history-data",
@@ -26,7 +20,6 @@ export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
         {
           path: "buoy",
           name: "NingboHKYHistoryBuoy",
-          component: () => import("@/pages/tenants/ningbo-hky/history/buoy/BuoyHistoryLayout.vue"),
           redirect: { name: "NingboHKYHistoryBuoyNB00" },
           meta: { title: "浮标数据", hidden: true },
           children: [
@@ -89,7 +82,6 @@ export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
         {
           path: "shore",
           name: "NingboHKYHistoryShore",
-          component: () => import("@/pages/tenants/ningbo-hky/history/shore/ShoreHistoryLayout.vue"),
           redirect: { name: "NingboHKYHistoryShoreNB09" },
           meta: { title: "岸基站数据", hidden: true },
           children: [

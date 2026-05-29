@@ -5,6 +5,8 @@ export interface HistoryQuery {
   startTime: string
   endTime: string
   sortDirection?: string
+  Aggregate?: "Hourly" | "Daily" | "Weekly" | "Monthly"
+  downloadFileName?: string
 }
 
 export interface HistoryLocationQuery {

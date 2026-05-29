@@ -128,19 +128,6 @@ function getShorePath(key: string) {
   overflow-y: auto;
   overflow-x: hidden;
   border-right: none;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 999px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
 }
 
 .mobile-history-switch {

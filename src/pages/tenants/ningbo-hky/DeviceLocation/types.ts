@@ -59,7 +59,9 @@ export interface TrackQueryState {
   loaded: boolean
   // 回放状态和进度存进同一份 state，切换浮标后也能继续展示按钮状态。
   playbackStatus: PlaybackStatus
+  // 播放速度，单位为倍速，默认值为 1
   playbackSpeed: number
+  // playbackIndex 和 playbackProgress 共同记录回放进度，前者是当前播放到的轨迹段 index，后者是当前段内的进度（0-1）。
   playbackIndex: number
   playbackProgress: number
 }

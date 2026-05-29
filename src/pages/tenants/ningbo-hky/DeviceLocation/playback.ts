@@ -86,6 +86,7 @@ export function createPlaybackController(options: PlaybackOptions) {
     return deviceCode === serialNumber && options.getTrackState(serialNumber).playbackStatus === "playing"
   }
 
+  // 根据当前段的起止点和 progress 计算 Marker 的实时位置，并更新 Marker。
   function playSegment(serialNumber: string, segmentIndex: number, initialProgress = 0) {
     cancelFrame()
     const state = options.getTrackState(serialNumber)
@@ -106,6 +107,7 @@ export function createPlaybackController(options: PlaybackOptions) {
     frameId = requestAnimationFrame(step)
   }
 
+  // 每一帧都根据当前时间计算 progress，更新 Marker 位置，并在段尾自动切换到下一段。
   function step(now: number) {
     if (!deviceCode) return
 
@@ -121,16 +123,20 @@ export function createPlaybackController(options: PlaybackOptions) {
     // 每一帧按线性插值移动现有 Marker，既能保持原 Marker 样式，也能继续响应点击/hover。
     moveMarkerOnSegment(marker, startPoint, endPoint, progress)
 
+    // 进度未满时继续请求下一帧，直到到达段尾自动切换到下一段。
     if (progress < 1) {
       frameId = requestAnimationFrame(step)
       return
     }
 
+    // 下一段的开始时间从当前时间算起，避免因为前面某段动画卡顿导致整体回放时间过长。
     state.playbackIndex = segmentFrom + 1
     state.playbackProgress = 0
+    // segmentFrom 在 step 里是当前段的起点，下一段的起点就是当前段的终点，所以是 segmentFrom + 1。
     playSegment(deviceCode, segmentFrom + 1)
   }
 
+  /** 取消当前的动画帧请求，停止 Marker 移动，避免多个动画帧同时运行导致状态混乱。 */
   function cancelFrame() {
     if (frameId === null) return
     cancelAnimationFrame(frameId)
@@ -145,6 +151,7 @@ export function createPlaybackController(options: PlaybackOptions) {
   }
 }
 
+// 根据当前段的起止点和 progress 计算 Marker 的实时位置，并更新 Marker。
 function moveMarkerOnSegment(marker: maplibregl.Marker, start: TrackPoint, end: TrackPoint, progress: number) {
   const longitude = start.longitude + (end.longitude - start.longitude) * progress
   const latitude = start.latitude + (end.latitude - start.latitude) * progress

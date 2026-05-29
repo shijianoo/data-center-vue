@@ -45,8 +45,6 @@ export interface HistoryGroup {
   // 同一个设备的不同参数可能来自不同历史表，所以按分组分别配置表名和字段。
   tableName?: string
   fields: HistoryField[]
-  // 查询方式还没确定的参数可以先占位，页面会展示提示而不会发请求。
-  placeholder?: boolean
   // GPS 分组才需要围栏状态列，避免把业务状态逻辑混进所有表格。
   locationStatus?: boolean
 }
@@ -136,11 +134,11 @@ export const buoyOptions: BuoyOption[] = [
   { key: "NB01", name: "南韭山生态浮标", longitude: 122.183392, latitude: 29.456208, radius: 50 },
   { key: "NB02", name: "松兰山海滨浮标", longitude: 121.997222, latitude: 29.409542, radius: 50 },
   { key: "NB03", name: "渔山生态浮标", longitude: 122.248864, latitude: 28.886947, radius: 50 },
-  { key: "NB04", name: "三门生态浮标", longitude: 121.776147, latitude: 29.112797, radius: 50 },
-  { key: "NB05", name: "杭州湾生态浮标", longitude: 121.603422, latitude: 30.154139, radius: 50 },
+  { key: "NB04", name: "三门生态浮标", longitude: 121.776067, latitude: 29.112817, radius: 50 },
+  { key: "NB05", name: "杭州湾生态浮标", longitude: 121.603425, latitude: 30.152307, radius: 50 },
   { key: "NB06", name: "镇海重点化工区排污口浮标", longitude: 121.677867, latitude: 30.036408, radius: 50 },
   { key: "NB07", name: "松兰山生态浮标", longitude: 121.998558, latitude: 29.497536, radius: 50 },
-  { key: "NB08", name: "杭州湾新区北污水排放口浮标", longitude: 121.623417, latitude: 30.135525, radius: 50 }
+  { key: "NB08", name: "杭州湾新区北污水排放口浮标", longitude: 121.623179, latitude: 30.135525, radius: 50 }
 ]
 
 export const buoyHistoryConfig: Record<BuoyKey, HistoryGroup[]> = {
@@ -148,7 +146,7 @@ export const buoyHistoryConfig: Record<BuoyKey, HistoryGroup[]> = {
   // 页面层只理解 HistoryGroup，不关心具体设备差异，从而避免为每台设备写一套查询逻辑。
   NB00: [
     group("water", "水质数据", "buoy_water_data", waterFields),
-    group("meteo", "气象数据", "wide_buoy_meteo_data", wideMeteoFields),
+    group("meteo", "气象数据", "buoy_met_hydro_data", meteoFields),
     group("nutrient", "营养盐", "buoy_nutri_data", nutrientFields),
     group("altimeter", "高度计", "wide_buoy_data", [compactField({ key: "w14", label: "高度计(m)", column: "w14", decimals: 2 })]),
     group("light", "光照数据", "buoy_met_hydro_data", [compactField({ key: "par", label: "光照(lux)", column: "par", decimals: 0 })]),
