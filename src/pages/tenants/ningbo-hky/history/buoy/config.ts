@@ -275,6 +275,7 @@ function formatTotal(row: HistoryRow, columns: string[], decimals: number) {
 }
 
 function formatPhByVoltage(value: unknown) {
+  if (value === null) return "--"
   // 现场给出的换算公式：pH = 3.896 * V - 4.065，V 为 w09o 的原始电压值。
   const voltage = Number(value)
   if (!Number.isFinite(voltage)) return "--"
