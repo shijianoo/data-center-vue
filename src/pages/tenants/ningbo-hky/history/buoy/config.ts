@@ -202,9 +202,9 @@ export const buoyHistoryConfig: Record<BuoyKey, HistoryGroup[]> = {
       { key: "w04", label: "电导率(mS/cm)", column: "w04", decimals: 3 }
     ]),
     group("altimeter", "高度计", "wide_buoy_data", [compactField({ key: "w14", label: "高度计(m)", column: "w14", decimals: 2 })]),
-    group("oil", "油类监测数据", "wide_buoy_data", [compactField({ key: "w15", label: "化合物(ppm)", column: "w15", decimals: 3 })]),
+    group("oil", "油类监测数据", "buoy_ext_data", [compactField({ key: "value2", label: "化合物(ppm)", column: "value2", decimals: 3 })]),
     group("battery", "电池电压", "wide_buoy_data", [compactField({ key: "v02", label: "电池电压(V)", column: "v02", decimals: 2 })]),
-    group("cod", "COD", "wide_buoy_data", [compactField({ key: "w17", label: "COD(mg/L)", column: "w17", decimals: 2 })]),
+    group("cod", "COD", "buoy_ext_data", [compactField({ key: "value1", label: "COD(mg/L)", column: "value1", decimals: 2 })]),
     group("gps", "GPS信息", "wide_buoy_data", gpsFields())
   ],
   NB07: [
