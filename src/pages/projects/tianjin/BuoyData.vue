@@ -4,12 +4,12 @@ import { formatDateTime } from "@/common/utils/datetime"
 import { getBuoyMeteoPageData, getBuoyNutrientPageData, getBuoyWaterPageData } from "./apis"
 
 // ── 浮标选择 ──
-type BuoyKey = "001" | "002"
-const activeBuoy = ref<BuoyKey>("001")
+type BuoyKey = "002" | "003"
+const activeBuoy = ref<BuoyKey>("002")
 
 const buoys: { key: BuoyKey, label: string }[] = [
-  { key: "001", label: "1号浮标" },
-  { key: "002", label: "2号浮标" }
+  { key: "002", label: "1号浮标" },
+  { key: "003", label: "2号浮标" }
 ]
 
 // ── Tab 切换 ──
@@ -61,12 +61,6 @@ const currentWater = computed<[]>(() =>
 const currentNutrient = computed<[]>(() =>
   nutrientCache.value[makePageKey(activeBuoy.value, "nutrient")] ?? []
 )
-
-// ── 格式化 ──
-function fmt(val: number | null | undefined, decimals = 1): string {
-  if (val === null || val === undefined) return "—"
-  return val.toFixed(decimals)
-}
 
 // 数据请求, 水文与气象
 async function fetchMeteo(sn: BuoyKey, page: number) {
@@ -133,7 +127,7 @@ watch([activeBuoy, activeTab], ([buoy, tab]) => {
   if (!alreadyLoaded) loadCurrent()
 })
 
-onMounted(() => fetchMeteo("001", 1))
+onMounted(() => fetchMeteo("002", 1))
 </script>
 
 <template>
@@ -174,6 +168,9 @@ onMounted(() => fetchMeteo("001", 1))
             {{ tab.label }}
           </button>
         </div>
+        <el-button type="primary" @click="loadCurrent">
+          刷新
+        </el-button>
       </div>
     </div>
 
@@ -188,77 +185,32 @@ onMounted(() => fetchMeteo("001", 1))
           height="100%"
           empty-text="暂无数据"
         >
-          <el-table-column prop="sampleTime" label="采样时间" width="165" fixed>
+          <el-table-column prop="sampleTime" label="采样时间" width="130" fixed>
             <template #default="{ row }">
               {{ formatDateTime(row.sampleTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="receiveTime" label="接收时间" width="165">
+          <el-table-column prop="receiveTime" label="接收时间" width="130">
             <template #default="{ row }">
               {{ formatDateTime(row.receiveTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="风速 (m/s)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.windSpd) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="风向 (°)" width="90" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.windDir, 0) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="气温 (°C)" width="95" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.airTemp) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="湿度 (%RH)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.rh, 0) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="气压 (hPa)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.pressure) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="降雨 (mm)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.rain) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="潮位 (m)" width="90" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.tideLevel) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="水温 (°C)" width="90" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.waterTemp) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="盐度 (psu)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.salinity) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="波向 (°)" width="90" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.waveDir, 0) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="波高 (m)" width="90" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.waveHeight) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="波周期 (s)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.wavePeriod) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="uploadChannel" label="上传通道" width="90" align="center" />
+          <el-table-column prop="longitude" label="经度" width="100" align="right" />
+          <el-table-column prop="latitude" label="纬度" width="100" align="right" />
+          <el-table-column prop="batteryVoltage" label="电池电压" width="100" align="right" />
+          <el-table-column prop="windSpd" label="风速 (m/s)" width="100" align="right" />
+          <el-table-column prop="windDir" label="风向 (°)" width="90" align="right" />
+          <el-table-column prop="airTemp" label="气温 (°C)" width="95" align="right" />
+          <el-table-column prop="rh" label="湿度 (%RH)" width="100" align="right" />
+          <el-table-column prop="pressure" label="气压 (hPa)" width="100" align="right" />
+          <el-table-column prop="rain" label="降雨 (mm)" width="100" align="right" />
+          <el-table-column prop="visibility" label="能见度" width="90" align="right" />
+          <el-table-column prop="azimuth" label="方位" width="90" align="right" />
+          <el-table-column prop="waveDir" label="波向 (°)" width="90" align="right" />
+          <el-table-column prop="waveHeight" label="波高 (m)" width="90" align="right" />
+          <el-table-column prop="wavePeriod" label="波周期 (s)" width="100" align="right" />
+          <el-table-column prop="flowSped" label="流速" width="100" align="right" />
+          <el-table-column prop="flowDir" label="流向" width="100" align="right" />
         </el-table>
       </template>
 
@@ -281,47 +233,15 @@ onMounted(() => fetchMeteo("001", 1))
               {{ formatDateTime(row.receiveTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="COD (mg/L)" width="110" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.cod) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="TOC (mg/L)" width="110" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.toc) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="油含量 (mg/L)" width="120" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.oil) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="水温 (°C)" width="95" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.waterTemp) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="盐度 (psu)" width="100" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.salinity) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="pH" width="80" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.ph, 2) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="溶解氧 (mg/L)" width="125" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.do) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="浊度 (NTU)" width="110" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.turb) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="uploadChannel" label="上传通道" width="90" align="center" />
+          <el-table-column prop="cod" label="COD (mg/L)" width="110" align="right" />
+          <el-table-column prop="oil" label="水中油" width="110" align="right" />
+          <el-table-column prop="cO2" label="二氧化碳" width="110" align="right" />
+          <el-table-column prop="waterTemp" label="水温 (°C)" width="95" align="right" />
+          <el-table-column prop="salinity" label="盐度 (psu)" width="100" align="right" />
+          <el-table-column prop="ph" label="pH" width="80" align="right" />
+          <el-table-column prop="do" label="溶解氧 (mg/L)" width="125" align="right" />
+          <el-table-column prop="turb" label="浊度 (NTU)" width="110" align="right" />
+          <el-table-column prop="chlorophyllA" label="叶绿素a" width="90" align="center" />
         </el-table>
       </template>
 
@@ -344,32 +264,13 @@ onMounted(() => fetchMeteo("001", 1))
               {{ formatDateTime(row.receiveTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="亚硝酸盐 (μmol/L)" width="160" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.nitrite) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="硝酸盐 (μmol/L)" width="150" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.nitrate) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="磷酸盐 (μmol/L)" width="150" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.phosphate) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="硅酸盐 (μmol/L)" width="150" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.silicate) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="氨氮 (μmol/L)" width="140" align="right">
-            <template #default="{ row }">
-              {{ fmt(row.ammoniaNitrogen) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="uploadChannel" label="上传通道" width="90" align="center" />
+          <el-table-column prop="nitrite" label="亚硝酸盐" width="160" align="right" />
+          <el-table-column prop="nitrate" label="硝酸盐" width="160" align="right" />
+          <el-table-column prop="phosphate" label="磷酸盐" width="160" align="right" />
+          <el-table-column prop="silicate" label="硅酸盐" width="160" align="right" />
+          <el-table-column prop="ammoniaNitrogen" label="氨氮" width="160" align="right" />
+          <el-table-column prop="totalNitrogen" label="总氮" width="160" align="right" />
+          <el-table-column prop="totalPhosphorus" label="总磷" width="160" align="right" />
         </el-table>
       </template>
     </div>

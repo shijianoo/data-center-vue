@@ -61,9 +61,9 @@ async function fetchDeviceLocations(): Promise<DeviceLocation[]> {
   const { data: buoyData } = await influxBatchLatestDataQueryApi({ bucket: "tianjin_data_store", measurement: "buoy_met_hydro_data" }, ["001", "002"])
   console.log("天津浮标数据", buoyData)
   return [
-    { id: "001", name: "1号浮标", log: 117.778, lat: 38.9000, color: "#3b82f6" },
-    { id: "002", name: "2号浮标", log: 117.728, lat: 38.829, color: "#f59e0b" },
-    { id: "003", name: "岸基站", log: 117.717056, lat: 38.958458, color: "#10b981" }
+    { id: "002", name: "1号浮标", log: 117.778, lat: 38.9000, color: "#3b82f6" },
+    { id: "003", name: "2号浮标", log: 117.728, lat: 38.829, color: "#3b82f6" },
+    { id: "001", name: "岸基站", log: 117.717056, lat: 38.958458, color: "#10b981" }
   ]
 }
 
@@ -73,7 +73,7 @@ async function fetchDeviceData(sn: string) {
   let water = null
   let nutri = null
 
-  if (sn === "001" || sn === "002") {
+  if (sn === "002" || sn === "003") {
     const met_hydroRes = await influxLatestDataQueryApi({
       bucket: "tianjin_data_store",
       measurement: "buoy_met_hydro_data",
@@ -97,11 +97,11 @@ async function fetchDeviceData(sn: string) {
     })
     console.log(`${sn}号浮标最新营养盐数据`, nutriRes.data)
     nutri = nutriRes.data
-  } else if (sn === "003") {
+  } else if (sn === "001") {
     const met_hydroRes = await influxLatestDataQueryApi({
       bucket: "tianjin_data_store",
       measurement: "shore_met_hydro_data",
-      serialNumber: "001"
+      serialNumber: sn
     })
     met_hydro = met_hydroRes.data
     console.log("岸基站最新水文与气象数据", met_hydro)
@@ -109,7 +109,7 @@ async function fetchDeviceData(sn: string) {
     const waterRes = await influxLatestDataQueryApi({
       bucket: "tianjin_data_store",
       measurement: "shore_water_data",
-      serialNumber: "001"
+      serialNumber: sn
     })
     water = waterRes.data
     console.log("岸基站最新水质数据", water)
@@ -117,7 +117,7 @@ async function fetchDeviceData(sn: string) {
     const nutriRes = await influxLatestDataQueryApi({
       bucket: "tianjin_data_store",
       measurement: "shore_nutri_data",
-      serialNumber: "001"
+      serialNumber: sn
     })
     nutri = nutriRes.data
     console.log("岸基站最新营养盐数据", nutri)

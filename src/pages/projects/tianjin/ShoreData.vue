@@ -315,7 +315,6 @@ onMounted(() => fetchMeteo(1))
               {{ fmt(row.ammoniaNitrogen) }}
             </template>
           </el-table-column>
-          <el-table-column prop="uploadChannel" label="上传通道" width="90" align="center" />
         </el-table>
       </template>
     </div>
