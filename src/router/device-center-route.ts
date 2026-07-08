@@ -2,14 +2,14 @@ import type { RouteRecordRaw } from "vue-router"
 
 const Layouts = () => import("@/layouts/index.vue")
 export const deviceCenterRoutes: RouteRecordRaw[] = [
-
   {
     path: "/device-center",
     component: Layouts,
     name: "DeviceCenter",
     meta: {
       title: "设备中⼼",
-      svgIcon: "device-center"
+      svgIcon: "device-center",
+      roles: ["platform_admin"]
     },
     children: [
       {
@@ -26,22 +26,6 @@ export const deviceCenterRoutes: RouteRecordRaw[] = [
         name: "Devices",
         meta: {
           title: "设备管理"
-        }
-      },
-      {
-        path: "device-control",
-        component: () => import("@/pages/device-center/device-control/index.vue"),
-        name: "DeviceControl",
-        meta: {
-          title: "设备控制"
-        }
-      },
-      {
-        path: "firmwares",
-        component: () => import("@/pages/device-center/firmwares/index.vue"),
-        name: "Firmwares",
-        meta: {
-          title: "固件管理"
         }
       }
     ]

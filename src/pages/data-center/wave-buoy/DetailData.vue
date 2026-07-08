@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import ChannelDropdown from "@@/components/ChannelDropdown/index.vue"
 import { buildExcelQuickExportUrl } from "@/common/apis/data-export"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useDeviceDataPagination } from "@/common/hooks/useDeviceDataPagination"
@@ -73,7 +72,6 @@ async function dataExport() {
           :value="option.id"
         />
       </el-select>
-      <ChannelDropdown @click="fetchFirstPageData" v-model="uploadChannel" />
       <el-button style="margin: 0;" @click="dataExport">
         下载
       </el-button>

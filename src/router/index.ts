@@ -90,65 +90,6 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           title: "角色管理",
           svgIcon: "roles-mgr"
         }
-      },
-      {
-        path: "menus",
-        component: () => import("@/pages/system/menus/index.vue"),
-        name: "Menus",
-        meta: {
-          title: "菜单管理",
-          svgIcon: "menus-mgr"
-        }
-      },
-      {
-        path: "permissions",
-        component: () => import("@/pages/system/permissions/index.vue"),
-        name: "Permissions",
-        meta: {
-          title: "权限管理",
-          svgIcon: "permissions-mgr"
-        }
-      },
-      {
-        path: "data-check",
-        name: "DataCheck",
-        meta: {
-          title: "数据检查"
-        },
-        children: [
-          {
-            path: "data-source",
-            name: "DataSource",
-            component: () => import("@/pages/system/data-check/data-source/index.vue"),
-            meta: {
-              title: "数据源"
-            }
-          },
-          {
-            path: "data-point",
-            name: "DataPoint",
-            component: () => import("@/pages/system/data-check/data-point/index.vue"),
-            meta: {
-              title: "数据点"
-            }
-          },
-          {
-            path: "rule-definition",
-            name: "RuleDefinition",
-            component: () => import("@/pages/system/data-check/rule-definition/index.vue"),
-            meta: {
-              title: "规则定义"
-            }
-          },
-          {
-            path: "rule-binding",
-            name: "RuleBinding",
-            component: () => import("@/pages/system/data-check/rule-binding/index.vue"),
-            meta: {
-              title: "规则绑定"
-            }
-          }
-        ]
       }
     ]
   }
