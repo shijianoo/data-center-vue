@@ -1,6 +1,7 @@
+import type { HistoryField, HistoryGroup, HistoryRow } from "../buoy/config"
 // 岸基站历史表格复用浮标历史页的字段定义，保证两类页面渲染逻辑一致。
 // 这样字段宽度、queryColumn、formatter 等能力只维护一套，后续新增参数也能直接复用。
-import type { HistoryField, HistoryGroup, HistoryRow } from "../buoy/config"
+import { compactField } from "../buoy/config"
 
 export type ShoreKey = "NB09" | "NB10" | "NB11"
 
@@ -47,7 +48,8 @@ export const shoreHistoryConfig: Record<ShoreKey, HistoryGroup[]> = {
   // 按岸基站编号声明可查询的参数类型；页面只读取这份配置，不写站点特例逻辑。
   NB09: [
     group("water", "水质数据", "buoy_water_data", waterFields),
-    group("nutrient", "污染物指标", "shore_nutri_data", nutrientFields)
+    group("nutrient", "污染物指标", "shore_nutri_data", nutrientFields),
+    group("nutrient-cod", "污染物指标-COD", "buoy_ext_data", [compactField({ key: "value1", label: "COD(mg/L)", column: "value1", decimals: 2 })])
   ],
   NB10: [
     group("water", "水质数据", "buoy_water_data", waterFields),

@@ -251,7 +251,7 @@ function gpsFields(): HistoryField[] {
   ]
 }
 
-function compactField(field: HistoryField, width: number | string = 120): HistoryField {
+export function compactField(field: HistoryField, width: number | string = 120): HistoryField {
   // 字段较少的分组使用固定宽度靠左显示，避免整张表被少数列撑满。
   // 例如光照、GPS、电池电压这类 1-2 列数据，看起来会更像“数据项”而不是空表。
   return { ...field, width, align: "left" }

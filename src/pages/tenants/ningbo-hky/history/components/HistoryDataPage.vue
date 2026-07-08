@@ -7,6 +7,7 @@ import { useRoute, useRouter } from "vue-router"
 import { useDateRangeSelector } from "@/common/composables/useDateRangeSelector"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
+import { useUserStore } from "@/pinia/stores/user"
 import { exportFile, getHistoricalData, getLatestData } from "../../apis"
 
 const props = defineProps<{
@@ -19,6 +20,7 @@ const props = defineProps<{
 
 const route = useRoute()
 const router = useRouter()
+const user = useUserStore()
 
 const loading = ref(false)
 const downloading = ref(false)
@@ -128,7 +130,7 @@ function getSelectColumns(group: HistoryGroup) {
   group.fields.forEach((field) => {
     columns.add(field.queryColumn ?? field.column)
   })
-  return [...columns]
+  return ["record_id", ...columns]
 }
 
 function getAggregateQuery() {
@@ -387,6 +389,7 @@ watch(
 
     <div class="table-wrapper" v-loading="loading">
       <el-table :data="rows" stripe size="small" height="100%" empty-text="暂无数据">
+        <el-table-column width="100" v-if="user.isPlatformUser" label="RecordId" prop="record_id" fixed />
         <el-table-column :label="aggregateMode === 'Raw' ? '采样时间' : '时间分组'" width="180" fixed>
           <template #default="{ row }">
             {{ formatDateTime(row.samp_time) }}
