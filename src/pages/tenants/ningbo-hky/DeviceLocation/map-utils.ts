@@ -1,6 +1,5 @@
 import type { TrackPoint } from "./types"
 import maplibregl from "maplibre-gl"
-import { wgs84togcj02 } from "@/common/utils/lnglat-convert"
 
 export const BUOY_COLOR = "#3b82f6"
 export const SHORE_COLOR = "#10b981"
@@ -9,8 +8,8 @@ export const UNKNOWN_COLOR = "#64748b"
 export function toMapLngLat(longitude: number, latitude: number): [number, number] {
   // 后端位置按 WGS84 存储，天地图底图展示前需要转成 GCJ02。
   // 地图相关模块统一调用这个函数，避免 Marker、轨迹线、围栏圆出现坐标系不一致。
-  const converted = wgs84togcj02(longitude, latitude)
-  return [converted[0], converted[1]]
+  // const converted = wgs84togcj02(longitude, )
+  return [longitude, latitude]
 }
 
 export function parseCoordinate(value: unknown) {

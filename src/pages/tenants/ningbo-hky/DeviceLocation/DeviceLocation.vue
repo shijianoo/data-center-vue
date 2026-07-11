@@ -65,7 +65,10 @@ async function loadMarkers() {
     const bounds: [number, number][] = []
     devices.forEach((device) => {
       const meta = getMeta(device.serialNumber)
-      const lngLat = toMapLngLat(device.longitude, device.latitude)
+      const lngLat: [
+        number,
+        number
+      ] = [device.longitude, device.latitude]
       const marker = new maplibregl.Marker({ element: createMarkerEl(meta.color), anchor: "bottom" })
         .setLngLat(lngLat)
         .addTo(map.value!)
