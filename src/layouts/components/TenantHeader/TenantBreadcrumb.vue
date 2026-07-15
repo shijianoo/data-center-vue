@@ -6,42 +6,24 @@ const tenantContextStore = useTenantContextStore()
 
 <template>
   <div class="smart-breadcrumb">
-    <!-- 首页 -->
     <router-link v-if="tenantContextStore.currentProjectKey" class="bc-item bc-link" :to="tenantContextStore.currentHomePath">
       首页
     </router-link>
 
-    <!-- 项目层级 -->
     <template v-if="tenantContextStore.currentProjectKey">
-      <i class="fas fa-chevron-right bc-sep" />
-      <router-link
-        v-if="tenantContextStore.currentModelKey || tenantContextStore.currentDeviceCode"
-        class="bc-item bc-link"
-        :to="tenantContextStore.currentProjectPath"
-      >
-        {{ tenantContextStore.currentProject?.name || '项目' }}
-      </router-link>
-      <span v-else class="bc-item bc-current">
-        {{ tenantContextStore.currentProject?.name || '项目' }}
-      </span>
-    </template>
-
-    <!-- 型号层级 -->
-    <template v-if="tenantContextStore.currentModelKey">
       <i class="fas fa-chevron-right bc-sep" />
       <router-link
         v-if="tenantContextStore.currentDeviceCode"
         class="bc-item bc-link"
-        :to="tenantContextStore.currentModelPath"
+        :to="tenantContextStore.currentProjectPath"
       >
-        {{ tenantContextStore.currentModel?.modelName || tenantContextStore.currentModelKey }}
+        {{ tenantContextStore.currentProject?.name || "项目" }}
       </router-link>
       <span v-else class="bc-item bc-current">
-        {{ tenantContextStore.currentModel?.modelName || tenantContextStore.currentModelKey }}
+        {{ tenantContextStore.currentProject?.name || "项目" }}
       </span>
     </template>
 
-    <!-- 设备层级 -->
     <template v-if="tenantContextStore.currentDeviceCode">
       <i class="fas fa-chevron-right bc-sep" />
       <router-link
@@ -56,7 +38,6 @@ const tenantContextStore = useTenantContextStore()
       </span>
     </template>
 
-    <!-- 历史记录 -->
     <template v-if="tenantContextStore.isHistory">
       <i class="fas fa-chevron-right bc-sep" />
       <span class="bc-current">历史记录</span>
@@ -69,10 +50,10 @@ const tenantContextStore = useTenantContextStore()
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: var(--text-sub);
   margin-bottom: 14px;
   margin-left: 1px;
+  color: var(--text-sub);
+  font-size: 13px;
 }
 
 .bc-item {
@@ -85,6 +66,7 @@ const tenantContextStore = useTenantContextStore()
 
   &.bc-link {
     cursor: pointer;
+
     &:hover {
       color: var(--primary);
     }

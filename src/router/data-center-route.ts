@@ -1,6 +1,13 @@
 import type { RouteRecordRaw } from "vue-router"
 
 const Layouts = () => import("@/layouts/index.vue")
+
+/**
+ * 平台数据展示区的预配置动态路由。
+ *
+ * 这里是普通后台路由定义，不应放入某个租户的专属页面；租户级定制统一进入
+ * 对应租户模块目录内的 `manifest.ts`，否则会绕过 Console 的上下文和卸载机制。
+ */
 export const dataCenterRoutes: RouteRecordRaw[] = [
   {
     path: "/data-center",

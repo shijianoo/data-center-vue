@@ -40,8 +40,7 @@ function handleLogin() {
   }
   loading.value = true
   loginApi(loginFormData).then(async ({ data }) => {
-    userStore.setToken(data.accessToken)
-    userStore.setRefreshToken(data.refreshToken)
+    userStore.setCredentials(data.accessToken, data.refreshToken)
     await userStore.getTenantInfo()
     if (userStore.tenants?.length === 1) {
       if (route.query.redirect) {

@@ -1,5 +1,11 @@
 import type { RouteRecordRaw } from "vue-router"
 
+/**
+ * 平台设备管理区的子路由。
+ *
+ * 本数组被展开到 `/admin` children 中，因此 path 必须保持相对语义；页面级权限继续写在
+ * meta.roles，由 Permission Store 与全局 Guard 共同处理。
+ */
 export const deviceCenterRoutes: RouteRecordRaw[] = [
   {
     path: "/device-center",

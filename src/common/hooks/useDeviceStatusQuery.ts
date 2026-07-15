@@ -9,58 +9,62 @@ export function useDeviceStatusQuery(bucket: string, measurement: string, device
   const loading = ref(false)
   const pageIndex = ref(1)
   const isLastPage = computed(() => dataList.value.length < limit.value)
+  let requestRevision = 0
 
   const fetchData = async () => {
-    if (!device.value) {
-      ElMessage.warning("选择需要查询的设备")
-      console.warn("未选择设备，无法查询数据")
-      return
+    const selected = device.value
+    const requestId = ++requestRevision
+    if (!selected) {
+      dataList.value = []
+      loading.value = false
+      return false
     }
     loading.value = true
-    console.log("开始查询设备数据，设备编号:", device.value.serialNumber, "锚点时间:", anchorTime.value, "限制:", limit.value)
 
     try {
       const params: InfluxAnchorQueryParams = {
         bucket,
         measurement,
-        serialNumber: device.value.serialNumber,
+        serialNumber: selected.serialNumber,
         anchorTime: anchorTime.value || new Date().toISOString(),
         limit: limit.value
       }
-      const { data } = await influxAnchorDataQueryApi(params)
-      console.log("查询设备数据结果:", data)
+      const { data } = await influxAnchorDataQueryApi(params, { silent: true })
+      if (requestId !== requestRevision) return false
       dataList.value = data ?? []
-      ElMessage.success(`查询完成`)
-    } catch {
-      ElMessage.error(`查询失败`)
-      dataList.value = []
+      return true
+    } catch (error) {
+      if (requestId !== requestRevision) return false
+      console.error("设备状态查询失败", error)
+      ElMessage.error("查询失败")
+      return false
     } finally {
-      loading.value = false
+      if (requestId === requestRevision) loading.value = false
     }
   }
 
   const goNextPage = async () => {
     if (dataList.value.length === 0) return
+    const previousAnchor = anchorTime.value
     anchorTime.value = dataList.value[dataList.value.length - 1].time
-    await fetchData()
-    pageIndex.value++
+    const succeeded = await fetchData()
+    if (succeeded) pageIndex.value++
+    else anchorTime.value = previousAnchor
   }
 
   const resetToFirstPage = async () => {
-    console.log("重置到第一页")
     pageIndex.value = 1
     anchorTime.value = undefined
     await fetchData()
   }
 
-  watch([device], ([sd]) => {
-    if (sd) resetToFirstPage()
-  }, { immediate: true })
+  watch([device, limit], () => void resetToFirstPage(), { immediate: true })
 
   return {
     dataList,
     loading,
     pageIndex,
+    limit,
     isLastPage,
     fetchData,
     goNextPage,

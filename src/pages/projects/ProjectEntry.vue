@@ -1,8 +1,10 @@
 <script lang="ts" setup>
+import type { Component } from "vue"
 import AsyncLoading from "@/common/components/AsyncLoading.vue"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
-const pageMap: Record<string, any> = {
+/** 项目定制页由 Manifest 处理；Entry 只需在通用页面和实体不存在页面之间切换。 */
+const pageMap: Record<"Default" | "NotFound", Component> = {
   Default: defineAsyncComponent({
     loader: () => import("./DefaultProject.vue"),
     loadingComponent: AsyncLoading
@@ -13,15 +15,12 @@ const pageMap: Record<string, any> = {
   })
 }
 
-function getProjectPage(key: string) {
-  return pageMap[key] ?? pageMap.Default
-}
-
 const tenantContextStore = useTenantContextStore()
-const projectComponent = shallowRef()
+const projectComponent = shallowRef<Component>()
 watch(() => tenantContextStore.currentProject, (project) => {
   if (project) {
-    projectComponent.value = getProjectPage(project.extra!.uiProfile!)
+    // 项目级定制由 Manifest 精确路由处理；这里仅渲染标准项目页。
+    projectComponent.value = pageMap.Default
   } else if (project === null) {
     projectComponent.value = pageMap.NotFound
   }

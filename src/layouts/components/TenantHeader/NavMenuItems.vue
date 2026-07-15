@@ -1,59 +1,40 @@
 <script lang="ts" setup>
-import type { RouteRecordRaw } from "vue-router"
+import type { NavigationItem } from "@/framework/tenant-console/types"
 
 defineOptions({ name: "NavMenuItems" })
 
 const props = defineProps<{
-  /** 当前层级的路由列表 */
-  items: RouteRecordRaw[]
-  /** 当前层级的绝对路径前缀，如 /console/abc 或 /console/abc/settings */
-  basePath: string
+  items: NavigationItem[]
 }>()
 
-/** 拼接绝对路径 */
-function resolvePath(routePath: string, base: string) {
-  if (!routePath) return base
-  return `${base}/${routePath}`.replace(/\/+/g, "/")
-}
+const visibleItems = computed(() => props.items.filter(item => !item.hidden))
 
-/** 过滤不可见子菜单 */
-function visibleChildren(item: RouteRecordRaw): RouteRecordRaw[] {
-  return item.children?.filter(c => !c.meta?.hidden) ?? []
+function visibleChildren(item: NavigationItem) {
+  return item.children?.filter(child => !child.hidden) ?? []
 }
-
-/** 过滤当前层级可见项 */
-const visibleItems = computed(() => props.items.filter(r => !r.meta?.hidden))
 </script>
 
 <template>
-  <template v-for="item in visibleItems" :key="item.path">
-    <!-- 有可见子菜单 → el-sub-menu -->
+  <template v-for="item in visibleItems" :key="item.id">
     <el-sub-menu
       v-if="visibleChildren(item).length"
-      :index="resolvePath(item.path, basePath)"
+      :index="item.href"
     >
       <template #title>
-        <SvgIcon v-if="item.meta?.svgIcon" :name="item.meta.svgIcon" class="menu-icon svg-icon" />
-        <component v-else-if="item.meta?.elIcon" :is="item.meta.elIcon" class="menu-icon" />
-        <span>{{ item.meta?.title }}</span>
+        <SvgIcon v-if="item.icon" :name="item.icon" class="menu-icon svg-icon" />
+        <span>{{ item.label }}</span>
       </template>
 
-      <!-- 递归渲染子项 -->
-      <NavMenuItems
-        :items="visibleChildren(item)"
-        :base-path="resolvePath(item.path, basePath)"
-      />
+      <NavMenuItems :items="visibleChildren(item)" />
     </el-sub-menu>
 
-    <!-- 叶子节点 → el-menu-item -->
     <el-menu-item
       v-else
-      :index="resolvePath(item.path, basePath)"
+      :index="item.href"
     >
-      <SvgIcon v-if="item.meta?.svgIcon" :name="item.meta.svgIcon" class="menu-icon svg-icon" />
-      <component v-else-if="item.meta?.elIcon" :is="item.meta.elIcon" class="menu-icon" />
+      <SvgIcon v-if="item.icon" :name="item.icon" class="menu-icon svg-icon" />
       <template #title>
-        {{ item.meta?.title }}
+        {{ item.label }}
       </template>
     </el-menu-item>
   </template>

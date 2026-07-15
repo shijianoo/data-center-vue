@@ -1,14 +1,18 @@
 import type { App, Component } from "vue"
-import ElementPlus from "element-plus"
 import { createApp } from "vue"
+
+interface DialogInstance {
+  app: App
+  container: HTMLDivElement
+}
 
 /**
  * 全局弹窗管理器
  * 用于动态创建和管理全局弹窗组件
  */
 export class GlobalDialogManager {
-  private app: App | null = null
-  private container: HTMLDivElement | null = null
+  private instances = new Map<symbol, DialogInstance>()
+  private nextId = 0
 
   /**
    * 创建全局弹窗
@@ -16,34 +20,29 @@ export class GlobalDialogManager {
    * @param props 组件属性
    * @returns Promise，在弹窗关闭时resolve
    */
-  create<T = any>(component: Component, props: Record<string, any> = {}): Promise<T> {
+  create<T = unknown>(component: Component, props: Record<string, unknown> = {}): Promise<T> {
     return new Promise((resolve, reject) => {
+      const instanceId = Symbol("global-dialog")
       try {
-        // 创建容器
-        this.container = document.createElement("div")
-        this.container.id = `global-dialog-${Date.now()}`
-        document.body.appendChild(this.container)
+        const container = document.createElement("div")
+        container.id = `global-dialog-${++this.nextId}`
+        document.body.appendChild(container)
 
-        // 创建Vue应用实例
-        this.app = createApp(component, {
+        const app = createApp(component, {
           ...props,
           onResolve: (result: T) => {
-            this.destroy()
+            this.destroy(instanceId)
             resolve(result)
           },
-          onReject: (error?: any) => {
-            this.destroy()
+          onReject: (error?: unknown) => {
+            this.destroy(instanceId)
             reject(error)
           }
         })
-
-        // 使用ElementPlus
-        this.app.use(ElementPlus)
-
-        // 挂载到容器
-        this.app.mount(this.container)
+        this.instances.set(instanceId, { app, container })
+        app.mount(container)
       } catch (error) {
-        this.destroy()
+        this.destroy(instanceId)
         reject(error)
       }
     })
@@ -52,15 +51,12 @@ export class GlobalDialogManager {
   /**
    * 销毁弹窗
    */
-  private destroy() {
-    if (this.app) {
-      this.app.unmount()
-      this.app = null
-    }
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container)
-      this.container = null
-    }
+  private destroy(instanceId: symbol) {
+    const instance = this.instances.get(instanceId)
+    if (!instance) return
+    instance.app.unmount()
+    instance.container.remove()
+    this.instances.delete(instanceId)
   }
 }
 

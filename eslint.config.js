@@ -15,7 +15,12 @@ export default antfu(
       semi: false
     },
     // 忽略文件
-    ignores: []
+    ignores: [
+      "docs/**",
+      "dist/**",
+      "coverage/**",
+      "types/auto/**"
+    ]
   },
   {
     // 对所有文件都生效的规则

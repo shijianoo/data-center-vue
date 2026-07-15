@@ -3,19 +3,21 @@ import type { MemberProfileDto, Tenant, TenantExtra, TenantForm, TenantListRespo
 import { authCenterRequest } from "@/http/axios"
 
 /** 获取租户列表 */
-export function getTenantListApi(params?: any) {
+export function getTenantListApi() {
   return authCenterRequest<TenantListResponseData>({
     url: "/tenants",
-    method: "get",
-    params
+    method: "get"
   })
 }
 
 /** 获取指定租户 */
-export function getTenantApi(id: string) {
+export function getTenantApi(id: string, accessToken?: string) {
   return authCenterRequest<ApiResponseData<Tenant>>({
     url: `/tenants/${id}`,
-    method: "get"
+    method: "get",
+    authToken: accessToken,
+    skipAuthRefresh: Boolean(accessToken),
+    silent: Boolean(accessToken)
   })
 }
 
@@ -37,10 +39,13 @@ export function getTenantByKeyApi(value: string) {
 }
 
 /** 获取当前用户所在租户的成员信息 */
-export function getCurrentMemberProfileApi() {
+export function getCurrentMemberProfileApi(accessToken?: string) {
   return authCenterRequest<ApiResponseData<MemberProfileDto>>({
     url: "/tenants/current-member",
-    method: "get"
+    method: "get",
+    authToken: accessToken,
+    skipAuthRefresh: Boolean(accessToken),
+    silent: Boolean(accessToken)
   })
 }
 

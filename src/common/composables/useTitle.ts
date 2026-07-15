@@ -1,4 +1,4 @@
-const VITE_APP_TITLE = import.meta.env.VITE_APP_TITLE ?? "V3 Admin Vite"
+const VITE_APP_TITLE = import.meta.env.VITE_APP_TITLE ?? "数据中心"
 
 const dynamicTitle = ref<string>("")
 

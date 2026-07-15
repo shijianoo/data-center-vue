@@ -44,12 +44,21 @@ function resolvePath(routePath: string) {
       return path.resolve(basePath, routePath)
   }
 }
+
+/** 外链菜单由 meta 保存真实 URL；普通菜单继续依据父级路径解析。 */
+function resolveMenuPath(route: RouteRecordRaw) {
+  return route.meta?.externalUrl || resolvePath(route.path)
+}
 </script>
 
 <template>
   <template v-if="!alwaysShowRootMenu && theOnlyOneChild && !theOnlyOneChild.children">
-    <Link v-if="theOnlyOneChild.meta" :to="resolvePath(theOnlyOneChild.path)">
-      <el-menu-item :index="resolvePath(theOnlyOneChild.path)">
+    <Link
+      v-if="theOnlyOneChild.meta"
+      :to="resolveMenuPath(theOnlyOneChild)"
+      :target="theOnlyOneChild.meta.externalTarget"
+    >
+      <el-menu-item :index="resolveMenuPath(theOnlyOneChild)">
         <SvgIcon v-if="theOnlyOneChild.meta.svgIcon" :name="theOnlyOneChild.meta.svgIcon" class="svg-icon" />
         <component v-else-if="theOnlyOneChild.meta.elIcon" :is="theOnlyOneChild.meta.elIcon" class="el-icon" />
         <template v-if="theOnlyOneChild.meta.title" #title>

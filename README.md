@@ -1,232 +1,42 @@
-<div align="center">
-  <img alt="logo" width="120" height="120" src="./src/common/assets/images/layouts/logo.png">
-  <h1>V3 Admin Vite</h1>
-</div>
+# 多租户数据管理平台前端
 
-[![github release](https://img.shields.io/github/v/release/un-pany/v3-admin-vite?style=flat)](https://github.com/un-pany/v3-admin-vite/releases)
-[![github stars](https://img.shields.io/github/stars/un-pany/v3-admin-vite?style=flat)](https://github.com/un-pany/v3-admin-vite/stargazers)
-[![gitee stars](https://gitee.com/un-pany/v3-admin-vite/badge/star.svg)](https://gitee.com/un-pany/v3-admin-vite/stargazers)
+基于 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Element Plus 的多租户数据管理平台。项目同时支持平台后台动态菜单，以及租户、项目、设备、历史四级 Console 定制路由。
 
-<b>English | <a href="./README.zh-CN.md">中文</a></b>
+## 开发
 
-## Introduction <a href="https://mp.weixin.qq.com/s/ccuzm4ZlHvN-1XBBN2lduQ"><img src="https://img.shields.io/badge/AI-VibeCoding-black"></a>
-
-V3 Admin Vite is a well-crafted backend management system template, built with popular technologies such as Vue3, Vite, TypeScript, and Element Plus, and offers a great AI Vibe Coding experience!
-
-## Notifications
-
-> [!IMPORTANT]
-> Welcome to experience the brand-new version 5.0, a masterpiece crafted with great care! If it helps you, feel free to give a Star to show your support.
-
-> [!WARNING]
-> Version 4.x will no longer be maintained unless there are critical bugs! [Click to switch to the 4.x branch](https://github.com/un-pany/v3-admin-vite/tree/4.x)
-
-> [!TIP]
-> Paid services are officially launched! If you don’t want to do it yourself but want to remove TS or other modules, try the lazy package! [Click to check it out](https://github.com/un-pany/v3-admin-vite/issues/225)
-
-> [!NOTE]
-> If you have mobile web app requirements, give the new open-source template [MobVue](https://github.com/un-pany/mobvue) a try.
-
-## Usage
-
-<details>
-<summary>Recommended Environment</summary>
-
-<br>
-
-- Latest version of `Visual Studio Code` or AI IDE `Cursor` and `Trae`
-- Install the recommended plugins in the `.vscode/extensions.json` file
-- `node` 20.19+ or 22.12+
-- `pnpm` 10+
-
-</details>
-
-<details>
-<summary>Local Development</summary>
-
-<br>
+要求 Node.js 22.16+、pnpm 10+。
 
 ```bash
-# Clone the project
-git clone https://github.com/un-pany/v3-admin-vite.git
-
-# Enter the project directory
-cd v3-admin-vite
-
-# Install dependencies
-pnpm i
-
-# Start the development server
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-</details>
-
-<details>
-<summary>Build</summary>
-
-<br>
+生产构建与本地预览：
 
 ```bash
-# Build for the staging environment
-pnpm build:staging
-
-# Build for the production environment
 pnpm build
-```
-
-</details>
-
-<details>
-<summary>Local Preview</summary>
-
-<br>
-
-```bash
-# Execute the build command first to generate the dist directory, then run the preview command
 pnpm preview
 ```
 
-</details>
-
-<details>
-<summary>Code Check</summary>
-
-<br>
+## 质量检查
 
 ```bash
-# Code linting and formatting
-pnpm lint
-
-# Unit tests
-pnpm test
+pnpm typecheck
+pnpm lint:check
+pnpm test --run
+pnpm verify:business-content
+pnpm build
+pnpm verify:generated-types
 ```
 
-</details>
+`types/auto/**` 和 `types/vue-router.d.ts` 是需要提交的确定性生成产物；修改组件、自动导入或路由后执行生产构建并提交生成差异。`.env*.local`、`.cursor/` 和日志属于本机配置，不应提交。
 
-<details>
-<summary>Commit Guidelines</summary>
+## 架构文档
 
-<br>
+- [Console V2 完整使用手册](docs/tenant-console-v2-usage-guide.md)：目录结构、执行流程、Header 菜单、四级定制页面、子路由和布局。
+- [公共框架维护说明](docs/framework-maintenance-guide.md)：会话、HTTP、动态菜单、主题、分页、质量门禁和生成文件约定。
+- [租户专属第三方 API 指南](docs/tenant-external-api-guide.md)：环境隔离、当前租户保护、类型封装和认证边界。
+- [架构升级与迁移记录](docs/architecture/tenant-routing-v2-refactor-plan.md)：设计决策、边界和迁移依据。
+- [再次审查与重构临界值](docs/architecture/refactor-review-thresholds.md)：哪些问题应重构、哪些应保持简单。
 
-`feat` New feature
-
-`fix` Bug fix
-
-`perf` Performance improvement
-
-`refactor` Code refactoring
-
-`docs` Documentation and comments
-
-`types` Type-related changes
-
-`test` Unit tests related
-
-`ci` Continuous integration, workflows
-
-`revert` Revert changes
-
-`chore` Chores (update dependencies, modify configurations, etc)
-
-</details>
-
-## Links
-
-**Online Preview**: [github-pages](https://un-pany.github.io/v3-admin-vite)
-
-**Chinese Documentation**: [link](https://juejin.cn/post/7089377403717287972)
-
-**Zero to Hero Tutorial**: [link](https://juejin.cn/column/7207659644487139387)
-
-**Mobile Web App**: [mobvue](https://github.com/un-pany/mobvue)
-
-**Electron Desktop Version**: [v3-electron-vite](https://github.com/un-pany/v3-electron-vite)
-
-**Chinese Repository**: [gitee](https://gitee.com/un-pany/v3-admin-vite)
-
-**Optional Group**: [check how to join](https://github.com/un-pany/v3-admin-vite/issues/191)
-
-**Donations**: [buy a coffee for the author](https://github.com/un-pany/v3-admin-vite/issues/69)
-
-**Releases & Changelog**: [releases](https://github.com/un-pany/v3-admin-vite/releases)
-
-## Features
-
-**Simplified structure**: No complex encapsulation, no complicated type gymnastics, just enough to meet the needs
-
-**Detailed comments**: Every configuration item comes with as detailed comments as possible
-
-**Latest dependencies**: Keeps all third-party dependencies up to date
-
-**Consistency**: Unified code style, naming conventions, and comment style
-
-## Built-in Features
-
-**User Management**: Login, logout demonstration
-
-**Permission Management**: Page-level permissions (dynamic routing), button-level permissions (permission directives, permission functions), route guards
-
-**Multiple Environments**: Development, staging, and production environments
-
-**Multiple Themes**: Normal, dark, and deep blue themes
-
-**Multiple Layouts**: Left-side, top, and hybrid layouts
-
-**Homepage**: Different dashboard pages for different users
-
-**Error Pages**: 403, 404
-
-**Mobile Compatibility**: Layouts compatible with mobile screen resolutions
-
-**Others**: SVG sprite sheet, dynamic sidebar, dynamic breadcrumbs, tab navigation, content zoom and fullscreen, composable functions
-
-## Tech Stack
-
-**Vue3**: Vue3 + script setup with the latest Vue3 Composition API
-
-**Element Plus**: The Vue3 version of Element UI
-
-**Pinia**: The legendary Vuex5
-
-**Vite**: Really fast
-
-**Vue Router**: The routing system
-
-**TypeScript**: A superset of JavaScript
-
-**pnpm**: A faster, disk-space-saving package manager
-
-**Scss**: Consistent with Element Plus
-
-**CSS Variables**: Primarily controls layout and color in the project
-
-**ESLint**: Code linting and formatting
-
-**Axios**: Sends network requests
-
-**UnoCSS**: A high-performance, flexible atomic CSS engine
-
-## Project Preview Image
-
-![preview](./src/common/assets/images/docs/preview.png)
-
-## Contributors
-
-A big thank you to all the contributors!
-
-<a href="https://github.com/un-pany/v3-admin-vite/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=un-pany/v3-admin-vite">
-</a>
-
-## ‌WeChat Official Account‌
-
-New attempts, welcome to follow
-
-<a href="https://mp.weixin.qq.com/s/artNHKubYNRBlsrxD7eXXA">
-  <img src="https://github.com/user-attachments/assets/529bac73-f9e3-4311-94d0-3db57216b771">
-</a>
-
-## License
-
-[MIT](./LICENSE) License © 2022-PRESENT [pany](https://github.com/pany-ang)
+租户业务实现集中在 `src/tenant-modules/**/implementation/`，路由接入集中在相邻的 `manifest.ts`。没有显式注册定制路由时，系统才进入对应的 `*Entry.vue` 通用兜底页。

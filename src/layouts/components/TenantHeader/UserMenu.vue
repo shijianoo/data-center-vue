@@ -38,7 +38,7 @@ function handleInternal() {
 }
 
 // 注册全局点击事件以关闭下拉菜单
-onMounted(async () => {
+onMounted(() => {
   document.addEventListener("click", closeMenu)
 })
 

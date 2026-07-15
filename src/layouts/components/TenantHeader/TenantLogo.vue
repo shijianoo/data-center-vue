@@ -20,20 +20,35 @@ const metaTitle = computed(
   () => route.meta?.logoTitle
 )
 
-/** 主显示名：store 动态覆盖 > route.meta > 租户名 */
+/** 主显示名：页面 lease > route meta > 当前设备/项目 > 租户。 */
 const primaryName = computed(() => {
   if (tenantContext.logoTitle?.primary != null) return tenantContext.logoTitle.primary
   if (metaTitle.value?.primary != null) return metaTitle.value.primary
   if (isPlatform.value) return "平台运维概览"
+  const device = tenantContext.currentDevice
+  if (device?.displayName || device?.deviceName || device?.modelName) {
+    return device.displayName || device.deviceName || device.modelName || ""
+  }
+  const project = tenantContext.currentProject
+  if (project?.displayName || project?.shortName || project?.name) {
+    return project.displayName || project.shortName || project.name
+  }
   const t = tenantContext.currentTenant
   return t?.displayName || t?.shortName || t?.name || ""
 })
 
-/** 副标题：store 动态覆盖 > route.meta > 租户全称 */
+/** 副标题独立继承，避免当前级没有全称时短暂显示空白。 */
 const fullName = computed(() => {
   if (tenantContext.logoTitle?.sub != null) return tenantContext.logoTitle.sub
   if (metaTitle.value?.sub != null) return metaTitle.value.sub
   if (isPlatform.value) return ""
+  const device = tenantContext.currentDevice
+  if (device?.deviceName || device?.modelName) {
+    const value = device.deviceName || device.modelName || ""
+    return value === primaryName.value ? "" : value
+  }
+  const project = tenantContext.currentProject
+  if (project?.name) return project.name === primaryName.value ? "" : project.name
   const t = tenantContext.currentTenant
   if (!t?.name) return ""
   if (primaryName.value === t.name) return ""

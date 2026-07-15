@@ -3,38 +3,16 @@ import { defineAsyncComponent } from "vue"
 import AsyncLoading from "@/common/components/AsyncLoading.vue"
 import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
-const pageMap: Record<string, any> = {
-  SOB23BS: defineAsyncComponent({
-    loader: () => import("./SOB23BSv1t1/Device.vue"),
-    loadingComponent: AsyncLoading
-  }),
-  SOB10: defineAsyncComponent({
-    loader: () => import("./SOB10v1t1/Device.vue"),
-    loadingComponent: AsyncLoading
-  }),
-  NotFound: defineAsyncComponent({
-    loader: () => import("./NotFound.vue"),
-    loadingComponent: AsyncLoading
-  })
-}
-
-function getDevicePage(modelCode: string) {
-  return pageMap[modelCode] ?? pageMap.NotFound
-}
-
 const tenantContextStore = useTenantContextStore()
-const deviceComponent = shallowRef()
-watch(() => tenantContextStore.currentDevice, (device) => {
-  if (device) {
-    deviceComponent.value = getDevicePage(device.modelNumber!)
-  } else if (device === null) {
-    deviceComponent.value = pageMap.NotFound
-  }
-}, { immediate: true })
+// 已有型号定制会被精确路由拦截；本 Entry 只承担未注册型号的说明页。
+const deviceComponent = defineAsyncComponent({
+  loader: () => import("./NotFound.vue"),
+  loadingComponent: AsyncLoading
+})
 </script>
 
 <template>
-  <component :is="deviceComponent" :device="tenantContextStore.currentDevice" />
+  <component :is="deviceComponent" :device="tenantContextStore.currentDevice ?? undefined" />
 </template>
 
 <style lang="scss" scoped></style>

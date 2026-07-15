@@ -1,9 +1,9 @@
 import type { RouteRecordRaw } from "vue-router"
 import { convertMenuToRoutes } from "@/common/utils/menu-builder"
 import { pinia } from "@/pinia"
-import { constantRoutes, dynamicRoutes } from "@/router"
 import { routerConfig } from "@/router/config"
 import { flatMultiLevelRoutes } from "@/router/helper"
+import { constantRoutes, dynamicRoutes } from "@/router/routes"
 import { useUserStore } from "./user"
 
 function hasPermission(roles: string[], route: RouteRecordRaw) {

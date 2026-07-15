@@ -127,8 +127,11 @@ function handleEnter() {
   const { length } = result.value
   if (length === 0) return
   const name = activeRouteName.value
-  const path = result.value.find(item => item.name === name)?.path
-  if (path && isExternal(path)) return window.open(path, "_blank", "noopener, noreferrer")
+  const selected = result.value.find(item => item.name === name)
+  const externalUrl = selected?.meta?.externalUrl
+  if (externalUrl && isExternal(externalUrl)) {
+    return window.open(externalUrl, selected.meta?.externalTarget || "_blank", "noopener,noreferrer")
+  }
   if (!name) return ElMessage.warning("无法通过搜索进入该菜单，请为对应的路由设置唯一的 Name")
   try {
     router.push({ name })

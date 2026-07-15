@@ -63,6 +63,12 @@ declare module "vue-router" {
      */
     keepAlive?: boolean
     /**
+     * 外链菜单的真实地址。路由 path 使用内部 synthetic path，避免外部 URL 被当作嵌套路由解析。
+     */
+    externalUrl?: string
+    /** 外链打开目标，默认由菜单组件以新窗口打开。 */
+    externalTarget?: string
+    /**
      * @description 顶部租户菜单的激活匹配方式。默认精确匹配；prefix 表示当前路径以该菜单路径为前缀时也高亮。
      */
     activeMatch?: "exact" | "prefix"

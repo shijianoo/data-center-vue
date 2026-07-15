@@ -4,7 +4,7 @@ import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 
 const { setDocumentTitle } = useTitle()
 
-const APP_TITLE = import.meta.env.VITE_APP_TITLE ?? "V3 Admin Vite"
+const APP_TITLE = import.meta.env.VITE_APP_TITLE ?? "数据中心"
 const ADMIN_TITLE_PREFIX = "平台管理"
 const DEFAULT_FAVICON = "/logo.jpg"
 

@@ -1,18 +1,21 @@
 {
-  "name": "v3-admin-vite",
+  "name": "multi-tenant-data-center-web",
   "type": "module",
-  "version": "5.0.2",
-  "description": "A crafted admin template, built with Vue3, Vite, TypeScript, Element Plus, and more",
-  "author": "pany <939630029@qq.com> (https://github.com/pany-ang)",
-  "repository": "https://github.com/un-pany/v3-admin-vite",
+  "version": "1.0.0",
+  "description": "多租户数据管理平台前端",
   "scripts": {
     "dev": "vite",
-    "build:staging": "vue-tsc && vite build --mode staging",
-    "build": "vue-tsc && vite build",
+    "build:staging": "vue-tsc && vite build --mode staging && node tools/check-bundle-budget.mjs",
+    "build": "vue-tsc && vite build && node tools/check-bundle-budget.mjs",
     "preview": "vite preview",
     "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "typecheck": "vue-tsc --noEmit",
     "prepare": "husky",
-    "test": "vitest"
+    "test": "vitest",
+    "test:router": "vitest --run tests/tenant-console",
+    "verify:business-content": "node tools/tenant-migration/verify-business-content-lock.mjs",
+    "verify:generated-types": "git diff --exit-code -- types/auto types/vue-router.d.ts"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "1.0.1",
@@ -34,9 +37,8 @@
     "screenfull": "6.0.2",
     "spark-md5": "3.0.2",
     "vue": "3.5.21",
-    "vue-echarts": "7.0.3",
-    "vue-router": "4.5.1",
-    "vxe-table": "4.6.25"
+    "vue-echarts": "8.0.1",
+    "vue-router": "4.5.1"
   },
   "devDependencies": {
     "@antfu/eslint-config": "5.3.0",
@@ -60,12 +62,11 @@
     "unplugin-svg-component": "0.12.4",
     "unplugin-vue-components": "29.0.0",
     "vite": "7.1.5",
-    "vite-plugin-vue-mcp": "0.3.2",
     "vite-svg-loader": "5.1.0",
     "vitest": "3.2.4",
     "vue-tsc": "3.0.7"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*.{js,mjs,cjs,ts,tsx,vue}": "eslint --fix"
   }
 }

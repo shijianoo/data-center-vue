@@ -1,13 +1,15 @@
 import type { QueryResult } from "../type"
 import type { BeidouData, BeidouRawQueryParams, DeviceDataQueryParams, DeviceFieldDataQueryParams, DeviceStatusQueryParams, HistoryField, InfluxAnchorQueryParams, InfluxBatchLatestQueryParams, InfluxFieldQueryParams, InfluxLatestQueryParams, IridiumData, IridiumRawQueryParams, PagedQueryRequest, PagedQueryResult, PagedResultResponse, PageListQueryParams } from "./type"
+import type { AppRequestConfig } from "@/http/axios"
 import { dataCenterRequest } from "@/http/axios"
 
 /** 查询设备数据 */
-export function querDeviceData<T>(params: DeviceDataQueryParams) {
+export function querDeviceData<T>(params: DeviceDataQueryParams, options: Pick<AppRequestConfig, "silent"> = {}) {
   return dataCenterRequest<ApiResponseData<QueryResult<T>>>({
     url: "query/device-data",
     method: "get",
-    params
+    params,
+    silent: options.silent
   })
 }
 
@@ -39,11 +41,12 @@ export function queryIridiumData(params: IridiumRawQueryParams) {
 }
 
 /** 查询设分页数据 */
-export function querDeviceDataPageList(params: PageListQueryParams) {
+export function querDeviceDataPageList(params: PageListQueryParams, options: Pick<AppRequestConfig, "silent"> = {}) {
   return dataCenterRequest<PagedResultResponse>({
     url: "query/device-page-data",
     method: "get",
-    params
+    params,
+    silent: options.silent
   })
 }
 
@@ -69,19 +72,21 @@ export function queryDeviceLatestData(modelNumber: string, serialNumber: string)
 }
 
 /** 分页数据查询 */
-export function pagedDataQuery(params: PagedQueryRequest) {
+export function pagedDataQuery(params: PagedQueryRequest, options: Pick<AppRequestConfig, "silent"> = {}) {
   return dataCenterRequest<ApiResponseData<PagedQueryResult>>({
     url: "query/device/page",
     method: "get",
-    params
+    params,
+    silent: options.silent
   })
 }
 
-export function influxAnchorDataQueryApi(params: InfluxAnchorQueryParams) {
+export function influxAnchorDataQueryApi(params: InfluxAnchorQueryParams, options: Pick<AppRequestConfig, "silent"> = {}) {
   return dataCenterRequest<ApiResponseData<any>>({
     url: "query/influx-anchor-data",
     method: "get",
-    params
+    params,
+    silent: options.silent
   })
 }
 
