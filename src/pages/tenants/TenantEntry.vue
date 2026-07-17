@@ -14,10 +14,6 @@ const pageMap: Record<string, any> = {
   NotFound: defineAsyncComponent({
     loader: () => import("./NotFound.vue"),
     loadingComponent: AsyncLoading
-  }),
-  nbhky: defineAsyncComponent({
-    loader: () => import("./ningbo-hky/DeviceLocation/DeviceLocation.vue"),
-    loadingComponent: AsyncLoading
   })
 }
 

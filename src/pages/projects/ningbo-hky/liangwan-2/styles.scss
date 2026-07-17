@@ -1,0 +1,71 @@
+/** 两湾二期业务内容采用扁平布局，不使用卡片、圆角或投影。 */
+.lw2-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/** 表格和标签页占用标题、筛选区以外的全部剩余高度。 */
+.lw2-content > :deep(.el-table) {
+  flex: 1;
+  min-height: 0;
+}
+
+/** 所有数据表仅保留行底部的水平分隔线，不绘制列之间的竖线。 */
+.lw2-content :deep(.el-table th.el-table__cell),
+.lw2-content :deep(.el-table td.el-table__cell) {
+  border-right: 0;
+}
+
+.lw2-content > :deep(.el-tabs) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lw2-content > :deep(.el-tabs .el-tabs__content),
+.lw2-content > :deep(.el-tabs .el-tab-pane) {
+  height: 100%;
+  min-height: 0;
+}
+
+/** 带筛选条件的右侧业务页填满 SideMenuLayout 提供的内容高度。 */
+.lw2-full-height {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.lw2-page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    color: var(--el-text-color-primary);
+    font-size: 18px;
+  }
+}
+
+/** 页面内弹窗同样保持直角；表单控件继续使用 Element Plus 默认交互样式。 */
+:global(.el-dialog),
+:global(.el-message-box) {
+  border-radius: 0;
+}
+
+.review-cell {
+  min-height: 44px;
+  padding: 5px 8px;
+  margin: -8px -12px;
+  cursor: default;
+  border-left: 3px solid transparent;
+}

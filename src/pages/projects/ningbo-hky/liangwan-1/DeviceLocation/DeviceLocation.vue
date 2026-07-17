@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import type { DevicePoint, TrackPayload, TrackQueryState } from "./types"
+import type { DevicePoint, TrackPayload, TrackQueryState } from "./types.ts"
 import maplibregl from "maplibre-gl"
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue"
 import MapStyleSwitcher from "@/common/components/MapStyleSwitcher/index.vue"
 import { maplibreStyle } from "@/common/utils/tianditu-constants"
-import { getLatestDeviceLocations } from "../apis"
+import { getLatestDeviceLocations } from "../apis/index.ts"
 import DeviceDataDrawer from "./components/DeviceDataDrawer.vue"
 import TrackQueryPanel from "./components/TrackQueryPanel.vue"
-import { getMeta } from "./device-meta"
+import { getMeta } from "./device-meta.ts"
 import {
   clearFenceLabel,
   drawFenceLabel,
@@ -15,12 +15,12 @@ import {
   getConfiguredFenceRadius,
   getFenceCoordinates,
   getFenceRadius
-} from "./fence-layer"
-import { fitBounds, parseCoordinate, toMapLngLat } from "./map-utils"
-import { createMarkerEl } from "./marker"
-import { createPlaybackController } from "./playback"
-import { hideMarkerTooltip, showMarkerTooltip } from "./tooltip"
-import { drawTracks, getVisibleTrackPoints } from "./track-layer"
+} from "./fence-layer.ts"
+import { fitBounds, parseCoordinate, toMapLngLat } from "./map-utils.ts"
+import { createMarkerEl } from "./marker.ts"
+import { createPlaybackController } from "./playback.ts"
+import { hideMarkerTooltip, showMarkerTooltip } from "./tooltip.ts"
+import { drawTracks, getVisibleTrackPoints } from "./track-layer.ts"
 import "maplibre-gl/dist/maplibre-gl.css"
 
 const mapContainer = ref<HTMLElement | null>(null)

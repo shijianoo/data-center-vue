@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { ShoreKey } from "./config"
+import type { ShoreKey } from "./config.ts"
 import { computed } from "vue"
 import HistoryDataPage from "../components/HistoryDataPage.vue"
-import { getShoreName, shoreHistoryConfig } from "./config"
+import { getShoreName, shoreHistoryConfig } from "./config.ts"
 
 const props = defineProps<{
   shore: ShoreKey

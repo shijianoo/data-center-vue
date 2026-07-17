@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import { useRoute, useRouter } from "vue-router"
+import { useTenantContextStore } from "@/pinia/stores/tenantContext"
 import { buoyOptions } from "./buoy/config"
 import { shoreOptions } from "./shore/config"
 
 const route = useRoute()
 const router = useRouter()
+const tenantContext = useTenantContextStore()
 
 // 菜单高亮使用完整 path，避免浮标/岸基站编号相同或嵌套路由时匹配不准。
 // 这里去掉尾部斜杠，是为了兼容浏览器刷新或路由跳转时可能出现的 /xxx/ 写法。
@@ -17,11 +19,11 @@ function go(path: string) {
 
 function getBuoyPath(key: string) {
   // 历史数据挂在租户路由下，tenantKey 不能写死，否则切换租户后菜单会跳回固定项目。
-  return `/console/${route.params.tenantKey}/history-data/buoy/${key}`
+  return `/console/${route.params.tenantKey}/projects/${tenantContext.currentProject?.projectCode}/history-data/buoy/${key}`
 }
 
 function getShorePath(key: string) {
-  return `/console/${route.params.tenantKey}/history-data/shore/${key}`
+  return `/console/${route.params.tenantKey}/projects/${tenantContext.currentProject?.projectCode}/history-data/shore/${key}`
 }
 </script>
 

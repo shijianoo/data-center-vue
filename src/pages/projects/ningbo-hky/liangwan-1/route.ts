@@ -1,19 +1,19 @@
 import type { RouteRecordRaw } from "vue-router"
-import type { Tenant } from "@/common/apis/tenant/type"
+import type { Project } from "@/common/apis/projects/type"
 
 // eslint-disable-next-line unused-imports/no-unused-vars
-export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
+export function getNingboHKYRoute(project: Project): RouteRecordRaw[] {
   return [
     {
       path: "",
       name: "NingboHKYGpsData",
-      component: () => import("@/pages/tenants/ningbo-hky/DeviceLocation/DeviceLocation.vue"),
+      component: () => import("./DeviceLocation/DeviceLocation.vue"),
       meta: { title: "GPS数据" }
     },
     {
       path: "history-data",
       name: "NingboHKYHistoryData",
-      component: () => import("@/pages/tenants/ningbo-hky/history/HistoryLayout.vue"),
+      component: () => import("./history/HistoryLayout.vue"),
       redirect: { name: "NingboHKYHistoryBuoyNB00" },
       meta: { title: "历史数据", activeMatch: "prefix" },
       children: [
@@ -26,55 +26,55 @@ export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
             {
               path: "NB00",
               name: "NingboHKYHistoryBuoyNB00",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB00.vue"),
+              component: () => import("./history/buoy/pages/NB00.vue"),
               meta: { title: "NB00", hidden: true }
             },
             {
               path: "NB01",
               name: "NingboHKYHistoryBuoyNB01",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB01.vue"),
+              component: () => import("./history/buoy/pages/NB01.vue"),
               meta: { title: "NB01", hidden: true }
             },
             {
               path: "NB02",
               name: "NingboHKYHistoryBuoyNB02",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB02.vue"),
+              component: () => import("./history/buoy/pages/NB02.vue"),
               meta: { title: "NB02", hidden: true }
             },
             {
               path: "NB03",
               name: "NingboHKYHistoryBuoyNB03",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB03.vue"),
+              component: () => import("./history/buoy/pages/NB03.vue"),
               meta: { title: "NB03", hidden: true }
             },
             {
               path: "NB04",
               name: "NingboHKYHistoryBuoyNB04",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB04.vue"),
+              component: () => import("./history/buoy/pages/NB04.vue"),
               meta: { title: "NB04", hidden: true }
             },
             {
               path: "NB05",
               name: "NingboHKYHistoryBuoyNB05",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB05.vue"),
+              component: () => import("./history/buoy/pages/NB05.vue"),
               meta: { title: "NB05", hidden: true }
             },
             {
               path: "NB06",
               name: "NingboHKYHistoryBuoyNB06",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB06.vue"),
+              component: () => import("./history/buoy/pages/NB06.vue"),
               meta: { title: "NB06", hidden: true }
             },
             {
               path: "NB07",
               name: "NingboHKYHistoryBuoyNB07",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB07.vue"),
+              component: () => import("./history/buoy/pages/NB07.vue"),
               meta: { title: "NB07", hidden: true }
             },
             {
               path: "NB08",
               name: "NingboHKYHistoryBuoyNB08",
-              component: () => import("@/pages/tenants/ningbo-hky/history/buoy/pages/NB08.vue"),
+              component: () => import("./history/buoy/pages/NB08.vue"),
               meta: { title: "NB08", hidden: true }
             }
           ]
@@ -88,19 +88,19 @@ export function getNingboHKYRoute(tenant: Tenant): RouteRecordRaw[] {
             {
               path: "NB09",
               name: "NingboHKYHistoryShoreNB09",
-              component: () => import("@/pages/tenants/ningbo-hky/history/shore/pages/NB09.vue"),
+              component: () => import("./history/shore/pages/NB09.vue"),
               meta: { title: "NB09", hidden: true }
             },
             {
               path: "NB10",
               name: "NingboHKYHistoryShoreNB10",
-              component: () => import("@/pages/tenants/ningbo-hky/history/shore/pages/NB10.vue"),
+              component: () => import("./history/shore/pages/NB10.vue"),
               meta: { title: "NB10", hidden: true }
             },
             {
               path: "NB11",
               name: "NingboHKYHistoryShoreNB11",
-              component: () => import("@/pages/tenants/ningbo-hky/history/shore/pages/NB11.vue"),
+              component: () => import("./history/shore/pages/NB11.vue"),
               meta: { title: "NB11", hidden: true }
             }
           ]

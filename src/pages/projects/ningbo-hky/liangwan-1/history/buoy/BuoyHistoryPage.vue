@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { BuoyKey, HistoryRow } from "./config"
+import type { BuoyKey, HistoryRow } from "./config.ts"
 import { computed } from "vue"
 import HistoryDataPage from "../components/HistoryDataPage.vue"
-import { buoyHistoryConfig, buoyOptions, getBuoyName } from "./config"
+import { buoyHistoryConfig, buoyOptions, getBuoyName } from "./config.ts"
 
 const props = defineProps<{
   buoy: BuoyKey
