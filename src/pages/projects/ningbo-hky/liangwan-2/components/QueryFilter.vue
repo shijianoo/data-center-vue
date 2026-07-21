@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Granularity, Station } from "../types"
 import { WarningFilled } from "@element-plus/icons-vue"
+import { nextTick } from "vue"
 
 withDefaults(defineProps<{
   /** 可选站点。 */
@@ -36,6 +37,14 @@ function handleStationChange(value: string) {
   emit("update:stationId", value)
   emit("update:groupId", "")
 }
+
+/** 切换参数组时，更新值并自动触发查询。 */
+function handleTabChange(value: string) {
+  emit("update:groupId", value)
+  nextTick(() => {
+    emit("search")
+  })
+}
 </script>
 
 <template>
@@ -48,7 +57,7 @@ function handleStationChange(value: string) {
         style="width: 190px"
         @update:model-value="handleStationChange"
       >
-        <el-option v-for="item in stations" :key="item.id" :label="`${item.name}（${item.mn}）`" :value="item.id" />
+        <el-option v-for="item in stations" :key="item.id" :label="item.name" :value="item.id" />
       </el-select>
     </el-form-item>
     <el-form-item label="时间范围">
@@ -63,7 +72,7 @@ function handleStationChange(value: string) {
         @update:model-value="emit('update:dateRange', $event)"
       />
     </el-form-item>
-    <el-form-item v-if="showGranularity" label="数据类型">
+    <el-form-item v-if="showGranularity">
       <el-select :model-value="granularity" style="width: 120px" @update:model-value="emit('update:granularity', $event)">
         <el-option label="原始数据" value="Raw" />
         <el-option label="时均值" value="Hour" />
@@ -93,12 +102,11 @@ function handleStationChange(value: string) {
     </el-form-item>
   </el-form>
   <div class="parameter-group-tabs">
-    <span class="parameter-group-tabs__label">参数组</span>
     <el-tabs
       v-if="groups.length"
       :model-value="groupId"
       class="parameter-group-tabs__content"
-      @tab-change="emit('update:groupId', String($event))"
+      @tab-change="handleTabChange(String($event))"
     >
       <el-tab-pane v-for="item in groups" :key="item.id" :label="item.name" :name="item.id" />
     </el-tabs>

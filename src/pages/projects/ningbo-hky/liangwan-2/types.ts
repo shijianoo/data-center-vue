@@ -62,8 +62,6 @@ export type SaveStation = Omit<Station, "id" | "lastSeenAt">
 export interface ParameterCatalogGroup {
   /** 分组主键。 */
   id: EntityId
-  /** 上级分组主键，顶级分组为空。 */
-  parentId?: EntityId | null
   /** 分组名称。 */
   name: string
   /** 分组参数类型。 */

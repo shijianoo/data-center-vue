@@ -53,10 +53,6 @@ onMounted(async () => {
 <template>
   <div class="statistics-page">
     <section class="statistics-filter">
-      <div class="lw2-page-title">
-        <h2>统计条件</h2>
-        <span>获取率 = 实收 / 应收；有效率 = 有效 / 应收</span>
-      </div>
       <el-form inline @submit.prevent="search">
         <el-form-item label="站点">
           <el-select v-model="stationId" filterable placeholder="请选择站点" style="width: 210px">

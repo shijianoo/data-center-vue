@@ -27,7 +27,7 @@ import axios from "axios"
 const BASE_URL = import.meta.env.VITE_LIANGWAN_2_API_BASE_URL
   || (import.meta.env.DEV ? "http://127.0.0.1:5114/api/v1" : "/api/v1")
 
-export const ecoClient = axios.create({ baseURL: BASE_URL, timeout: 30000 })
+export const ecoClient = axios.create({ baseURL: BASE_URL })
 
 /**
  * 根据 API baseURL 生成 TCP Gateway 调试页面地址。

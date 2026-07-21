@@ -72,7 +72,7 @@ async function loadData() {
 /** 打开新增或编辑目录对话框。 */
 function editGroup(row?: ParameterCatalogGroup) {
   editingGroupId.value = row?.id || ""
-  Object.assign(groupForm, row ? { parentId: row.parentId ?? null, name: row.name, parameterKind: row.parameterKind, sortOrder: row.sortOrder } : { parentId: null, name: "", parameterKind: "Monitoring", sortOrder: 0 })
+  Object.assign(groupForm, row ? { name: row.name, parameterKind: row.parameterKind, sortOrder: row.sortOrder } : { name: "", parameterKind: "Monitoring", sortOrder: 0 })
   groupDialog.value = true
 }
 
@@ -172,11 +172,6 @@ onMounted(loadData)
       <el-tab-pane label="参数组" name="groups">
         <el-table v-loading="loading" :data="groups" height="100%">
           <el-table-column prop="name" label="分组名称" min-width="180" />
-          <el-table-column label="上级分组" min-width="150">
-            <template #default="scope">
-              {{ scope.row.parentId ? groupName(scope.row.parentId) : '顶级分组' }}
-            </template>
-          </el-table-column>
           <el-table-column prop="parameterKind" label="参数类型" width="130">
             <template #default="scope">
               <el-tag>{{ scope.row.parameterKind === 'Monitoring' ? '监测参数' : '系统参数' }}</el-tag>

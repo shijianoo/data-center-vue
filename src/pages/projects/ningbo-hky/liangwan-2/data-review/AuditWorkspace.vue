@@ -92,23 +92,6 @@ function canReview(cell: MeasurementCell | null) {
   return (cell.manualReview?.currentLevel ?? 0) === props.level - 1
 }
 
-/** 单元格只展示当前人工审核等级和人工结论，不混入自动审核状态。 */
-function manualReviewText(cell: MeasurementCell) {
-  const review = cell.manualReview
-  if (!review?.currentLevel) return "未审核"
-  const statusLabel = review.currentStatus ? manualReviewLabels[review.currentStatus] : "已审核"
-  return `${review.currentLevel}级 · ${statusLabel}`
-}
-
-/** 人工审核结论对应标签颜色。 */
-function manualReviewTagType(cell: MeasurementCell) {
-  const status = cell.manualReview?.currentStatus
-  if (status === "Valid") return "success"
-  if (status === "Invalid" || status === "Fault") return "danger"
-  if (status) return "warning"
-  return "info"
-}
-
 /** 打开单点审核对话框，并保留当前有效值用于可选修正。 */
 function openReview(column: MeasurementColumn, cell: MeasurementCell | null) {
   if (!cell?.pointId) return
@@ -151,6 +134,33 @@ async function submitReview() {
     ElMessage.error(getApiErrorMessage(error, "审核提交失败"))
   } finally {
     loading.value = false
+  }
+}
+
+/** 动态计算表格单元格的 class，用于显示未审核背景色和可审核样式 */
+function getCellClassName({ row, column }: { row: any, column: any }) {
+  if (!column.property) return ""
+  const cell = row.values?.[column.property]
+  if (!cell) return ""
+
+  const classes = []
+  const currentLevel = cell.manualReview?.currentLevel ?? 0
+  if (currentLevel < props.level) {
+    classes.push("cell-unreviewed")
+  }
+  if (canReview(cell)) {
+    classes.push("is-reviewable")
+  }
+  return classes.join(" ")
+}
+
+/** 单元格点击事件，用于触发人工审核 */
+function handleCellClick(row: any, column: any) {
+  if (!column.property) return
+  const colDef = result.value?.columns.find(c => c.code === column.property)
+  const cell = row.values?.[column.property]
+  if (colDef && cell) {
+    openReview(colDef, cell)
   }
 }
 
@@ -231,27 +241,16 @@ onMounted(async () => {
     </QueryFilter>
 
     <section class="lw2-content">
-      <el-table v-loading="loading || batchLoading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询">
+      <el-table v-loading="loading || batchLoading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
         <el-table-column fixed prop="time" label="数据时间" width="170">
           <template #default="scope">
             {{ displayTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column v-for="column in result?.columns" :key="column.code" :label="displayParameterLabel(column)" min-width="160">
+        <el-table-column v-for="column in result?.columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" width="150">
           <template #default="scope">
-            <div
-              v-if="scope.row.values[column.code]"
-              class="review-cell" :class="[{ 'is-reviewable': canReview(scope.row.values[column.code]) }]"
-              @click="openReview(column, scope.row.values[column.code])"
-            >
-              <div class="audit-cell__value">
-                {{ displayMeasurementValue(scope.row.values[column.code], column) }}
-              </div>
-              <div class="audit-cell__status">
-                <el-tag size="small" :type="manualReviewTagType(scope.row.values[column.code])">
-                  {{ manualReviewText(scope.row.values[column.code]) }}
-                </el-tag>
-              </div>
+            <div v-if="scope.row.values[column.code]" class="audit-cell__value">
+              {{ displayMeasurementValue(scope.row.values[column.code], column) }}
             </div>
             <span v-else>—</span>
           </template>
@@ -299,23 +298,18 @@ onMounted(async () => {
   width: auto;
   max-width: 680px;
 }
-.is-reviewable {
-  outline: 1px solid rgba(64, 158, 255, 0.35);
+:deep(.cell-unreviewed) {
+  background-color: var(--el-fill-color-light) !important;
+}
+:deep(.is-reviewable) {
   cursor: pointer;
 }
-.is-reviewable:hover {
-  background: rgba(64, 158, 255, 0.12);
+:deep(.is-reviewable:hover) {
+  box-shadow: inset 0 0 0 1px rgba(64, 158, 255, 0.55) !important;
+  background-color: rgba(64, 158, 255, 0.12) !important;
 }
 .audit-cell__value {
   font-weight: 600;
-}
-.audit-cell__status {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 3px;
-  color: var(--el-text-color-secondary);
-  font-size: 11px;
 }
 .review-form {
   margin-top: 18px;

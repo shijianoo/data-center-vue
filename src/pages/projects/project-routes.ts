@@ -7,9 +7,9 @@ import { getTianjinRoute } from "./tianjin/route"
 export function getProjectRoutes(project: Project): RouteRecordRaw[] {
   if (project.projectCode === "QHH0180-2025187") {
     return getTianjinRoute(project)
-  } else if (project.projectCode === "4324234234") {
+  } else if (project.projectCode === "QHH0148-2026184-1") {
     return getNingboHKYRoute(project)
-  } else if (project.projectCode === "P-123456") {
+  } else if (project.projectCode === "QHH0148-2026184-2") {
     return getLiangWanRoute(project)
   }
   return []

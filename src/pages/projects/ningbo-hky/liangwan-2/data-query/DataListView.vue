@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Granularity, MeasurementCell, MeasurementColumn, MeasurementQueryResult } from "../types"
-import { Download, WarningFilled } from "@element-plus/icons-vue"
+import { Download } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
@@ -138,6 +138,32 @@ function isAutoReviewWarning(cell: MeasurementCell | null) {
   return cell?.autoReviewStatus === "Failed" || cell?.autoReviewStatus === "Error"
 }
 
+/** 动态计算表格单元格的 class，用于显示告警背景色和可修正样式 */
+function getCellClassName({ row, column }: { row: any, column: any }) {
+  if (!column.property) return ""
+  const cell = row.values?.[column.property]
+  if (!cell) return ""
+
+  const classes = []
+  if (isAutoReviewWarning(cell)) {
+    classes.push("measurement-cell--warning")
+  }
+  if (canCorrect(cell)) {
+    classes.push("is-correctable")
+  }
+  return classes.join(" ")
+}
+
+/** 单元格点击事件，用于触发管理员修正 */
+function handleCellClick(row: any, column: any) {
+  if (!column.property) return
+  const colDef = columns.value.find(c => c.code === column.property)
+  const cell = row.values?.[column.property]
+  if (colDef && cell) {
+    showCellDetail(colDef, cell)
+  }
+}
+
 /** 调用流式导出接口并使用后端文件名下载。 */
 async function exportFile() {
   const request = buildRequest()
@@ -187,42 +213,16 @@ onMounted(async () => {
     </QueryFilter>
 
     <section class="lw2-content">
-      <el-table v-loading="loading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询">
+      <el-table v-loading="loading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
         <el-table-column fixed prop="time" label="数据时间" width="170">
           <template #default="scope">
             {{ displayTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column v-for="column in columns" :key="column.code" :label="displayParameterLabel(column)" min-width="155">
+        <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="150">
           <template #default="scope">
-            <div
-              v-if="scope.row.values[column.code]"
-              class="measurement-cell" :class="[{ 'measurement-cell--warning': isAutoReviewWarning(scope.row.values[column.code]), 'is-correctable': canCorrect(scope.row.values[column.code]) }]"
-              @click="showCellDetail(column, scope.row.values[column.code])"
-            >
-              <div class="cell-value-row">
-                <div class="cell-value">
-                  {{ displayMeasurementValue(scope.row.values[column.code], column) }}
-                </div>
-                <el-tooltip v-if="isAutoReviewWarning(scope.row.values[column.code])" placement="top" effect="dark">
-                  <template #content>
-                    <div class="cell-warning-tooltip">
-                      <strong>{{ autoReviewLabels[scope.row.values[column.code].autoReviewStatus] || scope.row.values[column.code].autoReviewStatus }}</strong>
-                      <template v-if="parseReviewResults(scope.row.values[column.code].autoReviewResultsJson).length">
-                        <div v-for="(item, index) in parseReviewResults(scope.row.values[column.code].autoReviewResultsJson)" :key="index">
-                          {{ item.ruleName || item.name || `规则 ${index + 1}` }}：{{ item.message || item.resultCode || '未提供详细说明' }}
-                        </div>
-                      </template>
-                    </div>
-                  </template>
-                  <el-icon class="cell-warning-icon" @click.stop>
-                    <WarningFilled />
-                  </el-icon>
-                </el-tooltip>
-              </div>
-              <div v-if="scope.row.values[column.code].sampleCount" class="cell-status">
-                <span>样本 {{ scope.row.values[column.code].sampleCount }}</span>
-              </div>
+            <div v-if="scope.row.values[column.code]" class="cell-value">
+              {{ displayMeasurementValue(scope.row.values[column.code], column) }}
             </div>
             <span v-else class="empty-cell">—</span>
           </template>
@@ -231,7 +231,6 @@ onMounted(async () => {
     </section>
 
     <el-dialog v-if="userStore.isPlatformAdmin" v-model="detailVisible" :title="`${detailColumn?.name || ''} 数据修正`" width="600px">
-      <el-alert title="管理员作弊修改：只修改当前有效值，不会重新触发自动审核。" type="error" :closable="false" show-icon />
       <el-descriptions v-if="detailCell" :column="2" border>
         <el-descriptions-item label="当前值">
           {{ detailColumn ? displayMeasurementValue(detailCell, detailColumn) : '—' }} {{ detailColumn?.unit }}
@@ -257,7 +256,7 @@ onMounted(async () => {
         </el-form-item>
       </el-form>
       <el-divider content-position="left">
-        自动审核规则结果
+        自动审核结果
       </el-divider>
       <el-empty v-if="!parseReviewResults(detailCell?.autoReviewResultsJson).length" description="暂无规则详情" :image-size="60" />
       <el-collapse v-else>
@@ -287,40 +286,15 @@ onMounted(async () => {
 .cell-value {
   font-weight: 600;
 }
-.measurement-cell {
-  min-height: 44px;
-  padding: 5px 8px;
-  margin: -8px -12px;
-  background: #fff;
+:deep(.measurement-cell--warning) {
+  background-color: rgba(230, 162, 60, 0.14) !important;
 }
-.measurement-cell--warning {
-  background: rgba(230, 162, 60, 0.14);
-}
-.cell-value-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.cell-warning-icon {
-  flex: none;
-  color: var(--el-color-warning-dark-2);
-  font-size: 16px;
-  cursor: help;
-}
-:global(.cell-warning-tooltip) {
-  max-width: 420px;
-  line-height: 22px;
-}
-:global(.cell-warning-tooltip strong) {
-  display: block;
-  margin-bottom: 3px;
-}
-.is-correctable {
+:deep(.is-correctable) {
   cursor: pointer;
 }
-.is-correctable:hover {
-  box-shadow: inset 0 0 0 1px rgba(245, 108, 108, 0.55);
+:deep(.is-correctable:hover) {
+  box-shadow: inset 0 0 0 1px rgba(245, 108, 108, 0.55) !important;
+  background-color: rgba(245, 108, 108, 0.12) !important;
 }
 .cell-status {
   display: flex;

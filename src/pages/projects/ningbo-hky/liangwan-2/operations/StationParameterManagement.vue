@@ -154,7 +154,7 @@ onMounted(async () => {
       <h2>站点参数组与参数绑定</h2>
       <el-space>
         <el-select v-model="stationId" filterable placeholder="请选择站点" style="width: 230px">
-          <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
+          <el-option v-for="station in stations" :key="station.id" :label="station.name" :value="station.id" />
         </el-select>
         <el-button :icon="Refresh" @click="loadStationConfig">
           刷新
