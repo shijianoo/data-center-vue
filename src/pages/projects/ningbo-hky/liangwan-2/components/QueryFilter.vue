@@ -1,46 +1,43 @@
 <script setup lang="ts">
 import type { Granularity, Station } from "../types"
-import { WarningFilled } from "@element-plus/icons-vue"
 import { nextTick } from "vue"
 
 withDefaults(defineProps<{
   /** 可选站点。 */
   stations: Station[]
   /** 当前站点主键。 */
-  stationId?: string
+  stationId?: number | ""
   /** 当前站点参数组主键。 */
-  groupId?: string
+  groupId?: number | ""
   /** 当前时间范围。 */
   dateRange: [Date, Date]
   /** 当前数据粒度。 */
   granularity: Granularity
   /** 当前站点的参数组。 */
-  groups: Array<{ id: string, name: string }>
+  groups: Array<{ id: number, name: string }>
   /** 是否显示粒度选择。 */
   showGranularity?: boolean
   /** 查询按钮加载状态。 */
   loading?: boolean
-  /** 是否显示自动审核颜色图例。 */
-  showAutoReviewLegend?: boolean
-}>(), { showGranularity: true, loading: false, showAutoReviewLegend: false })
+}>(), { showGranularity: true, loading: false })
 
 const emit = defineEmits<{
-  "update:stationId": [value: string]
-  "update:groupId": [value: string]
+  "update:stationId": [value: number | ""]
+  "update:groupId": [value: number | ""]
   "update:dateRange": [value: [Date, Date]]
   "update:granularity": [value: Granularity]
   "search": []
 }>()
 
 /** 站点变化时清空旧参数组，避免提交跨站点的参数组主键。 */
-function handleStationChange(value: string) {
+function handleStationChange(value: number | "") {
   emit("update:stationId", value)
   emit("update:groupId", "")
 }
 
 /** 切换参数组时，更新值并自动触发查询。 */
-function handleTabChange(value: string) {
-  emit("update:groupId", value)
+function handleTabChange(value: import("element-plus").TabPaneName) {
+  emit("update:groupId", typeof value === "number" ? value : Number(value))
   nextTick(() => {
     emit("search")
   })
@@ -86,27 +83,13 @@ function handleTabChange(value: string) {
       </el-button>
       <slot name="actions" />
     </el-form-item>
-    <el-form-item v-if="showAutoReviewLegend" class="auto-review-legend-item">
-      <el-tooltip placement="bottom-end" effect="dark">
-        <template #content>
-          <div class="auto-review-legend-tooltip">
-            <div><i class="legend-dot legend-dot--failed" />红色：自动审核未通过</div>
-            <div><i class="legend-dot legend-dot--error" />橙色：规则执行异常</div>
-            <div><i class="legend-dot legend-dot--no-rule" />灰色：未配置规则</div>
-          </div>
-        </template>
-        <el-icon class="auto-review-legend-trigger" tabindex="0" aria-label="自动审核状态颜色说明">
-          <WarningFilled />
-        </el-icon>
-      </el-tooltip>
-    </el-form-item>
   </el-form>
   <div class="parameter-group-tabs">
     <el-tabs
       v-if="groups.length"
       :model-value="groupId"
       class="parameter-group-tabs__content"
-      @tab-change="handleTabChange(String($event))"
+      @tab-change="handleTabChange($event)"
     >
       <el-tab-pane v-for="item in groups" :key="item.id" :label="item.name" :name="item.id" />
     </el-tabs>

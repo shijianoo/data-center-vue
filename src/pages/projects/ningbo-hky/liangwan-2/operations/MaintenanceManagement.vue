@@ -8,14 +8,14 @@ import { useProjectOptions } from "../composables/useProjectOptions"
 import { displayTime, toLocalIso } from "../utils"
 
 const { stations, loadStations, stationById } = useProjectOptions()
-const stationId = ref("")
+const stationId = ref<number | "">("")
 const rows = ref<MaintenancePeriod[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
-const editingId = ref("")
+const editingId = ref<number | "">("")
 const form = reactive({ maintenanceType: "Routine" as MaintenanceType, timeRange: [new Date(), new Date(Date.now() + 24 * 60 * 60 * 1000)] as [Date, Date], reason: "" })
 
-const selectedStation = computed(() => stationById.value.get(stationId.value))
+const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
 const typeOptions: Array<{ value: MaintenanceType, label: string }> = [
   { value: "AnnualOverhaul", label: "年度大修" },
   { value: "Emergency", label: "应急维护" },
@@ -95,7 +95,7 @@ onMounted(async () => {
       <h2>大修与运维时段</h2>
       <el-space>
         <el-select v-model="stationId" filterable placeholder="请选择站点" style="width: 230px">
-          <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
+          <el-option v-for="station in stations" :key="station.id" :label="station.name" :value="station.id" />
         </el-select><el-button :icon="Refresh" @click="loadData">
           刷新
         </el-button><el-button type="primary" :icon="Plus" :disabled="!stationId" @click="edit()">

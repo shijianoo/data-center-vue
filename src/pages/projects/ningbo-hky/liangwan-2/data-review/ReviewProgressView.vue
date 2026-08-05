@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ReviewProgress } from "../types"
+import type { ReviewProgressResult } from "../types"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { getApiErrorMessage, getManualReviewProgress } from "../apis"
@@ -8,10 +8,9 @@ import { displayRate, displayTime, getDefaultDateRange, toDayEndIso, toDayStartI
 
 const { stations, loadStations } = useProjectOptions()
 const stationId = ref("")
-const parameterCode = ref("")
 const dateRange = ref<[Date, Date]>(getDefaultDateRange(24 * 7))
 const granularity = ref<"Day" | "Month">("Day")
-const progress = ref<ReviewProgress>()
+const progress = ref<ReviewProgressResult>()
 const loading = ref(false)
 
 /** 头部统计卡按三级审核进度统一生成。 */
@@ -27,8 +26,7 @@ async function search() {
   loading.value = true
   try {
     const { data } = await getManualReviewProgress({
-      stationId: stationId.value || undefined,
-      parameterCode: parameterCode.value.trim() || undefined,
+      stationId: typeof stationId.value === "number" ? stationId.value : undefined,
       from: toDayStartIso(dateRange.value[0]),
       to: toDayEndIso(dateRange.value[1]),
       granularity: granularity.value
@@ -51,9 +49,6 @@ onMounted(loadStations)
         <el-select v-model="stationId" clearable filterable placeholder="全部站点" style="width: 210px">
           <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
         </el-select>
-      </el-form-item>
-      <el-form-item label="参数编码">
-        <el-input v-model="parameterCode" clearable placeholder="全部参数" style="width: 150px" />
       </el-form-item>
       <el-form-item label="时间范围">
         <el-date-picker v-model="dateRange" type="daterange" format="YYYY-MM-DD" :clearable="false" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" />
@@ -82,9 +77,9 @@ onMounted(loadStations)
 
     <section class="lw2-content">
       <el-table :data="progress?.buckets || []" height="100%" empty-text="请选择范围并查询">
-        <el-table-column prop="time" label="统计时间" min-width="170">
+        <el-table-column prop="BucketStart" label="统计时间" min-width="170">
           <template #default="scope">
-            {{ displayTime(scope.row.time) }}
+            {{ displayTime(scope.row.bucketStart) }}
           </template>
         </el-table-column>
         <el-table-column prop="totalCount" label="总数" align="right" />

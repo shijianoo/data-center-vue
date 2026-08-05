@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { Station, StationLatestMeasurements } from "../types"
+import type { LatestMeasurementResult, Station, StationMapItem } from "../types"
 import { ElMessage } from "element-plus"
 import maplibregl from "maplibre-gl"
-import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue"
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue"
 import MapStyleSwitcher from "@/common/components/MapStyleSwitcher/index.vue"
 import { maplibreStyle } from "@/common/utils/tianditu-constants"
+import { createCirclePolygon } from "../../liangwan-1/DeviceLocation/map-utils"
 import { createMarkerEl } from "../../liangwan-1/DeviceLocation/marker"
-import { getApiErrorMessage, getStationLatestMeasurements, getStations, queryMeasurementSeries } from "../apis"
-import { toLocalIso } from "../utils"
+import { getApiErrorMessage, getStationLatestMeasurements, getStationMap, getStationTrajectory } from "../apis"
+import { formatWaterQualityGrade, toDayEndIso, toDayStartIso, waterQualityGradeTagType } from "../utils"
 import StationLatestPanel from "./StationLatestPanel.vue"
 import "maplibre-gl/dist/maplibre-gl.css"
 
@@ -20,13 +21,9 @@ interface LocatedStation {
   /** 地图使用的最新纬度。 */
   latitude: number | null
   /** 最新参数快照，点击后可直接复用。 */
-  latest?: StationLatestMeasurements
-  /** 各参数编码对应的最近 24 小时数值序列。 */
-  histories?: Record<string, Array<[string, number]>>
-  /** 是否正在加载历史曲线。 */
-  historyLoading?: boolean
-  /** 是否已经尝试加载历史曲线。 */
-  historyLoaded?: boolean
+  latest?: LatestMeasurementResult
+  /** 站点基本海水水质等级。 */
+  waterQualityGrade?: string
 }
 
 const mapContainer = ref<HTMLElement>()
@@ -39,43 +36,20 @@ const detailLoading = ref(false)
 
 const selectedItem = computed(() => locatedStations.value.find(item => item.station.mn === selectedMn.value))
 
-/** 从最新参数中读取独立 Longitude/Latitude 参数；没有实时坐标时退回站点配置坐标。 */
-function resolveLocation(station: Station, latest?: StationLatestMeasurements) {
-  const longitude = latest?.parameters.find(item => item.parameter.dataType === "Longitude")?.point?.effectiveNumericValue
-  const latitude = latest?.parameters.find(item => item.parameter.dataType === "Latitude")?.point?.effectiveNumericValue
-  return {
-    longitude: Number.isFinite(longitude) ? Number(longitude) : (station.longitude ?? null),
-    latitude: Number.isFinite(latitude) ? Number(latitude) : (station.latitude ?? null)
-  }
-}
-
-/** 以固定并发数拉取所有站点最新快照，避免站点较多时瞬间占满浏览器连接。 */
-async function loadLatestInBatches(stations: Station[], concurrency = 6) {
-  const results: LocatedStation[] = []
-  let cursor = 0
-  async function worker() {
-    while (cursor < stations.length) {
-      const station = stations[cursor++]
-      try {
-        const { data } = await getStationLatestMeasurements(station.mn)
-        results.push({ station, latest: data, ...resolveLocation(station, data) })
-      } catch {
-        results.push({ station, ...resolveLocation(station) })
-      }
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, stations.length) }, worker))
-  return results
-}
-
-/** 加载站点、最新坐标并绘制 Marker。 */
+/** 加载站点、最新坐标并绘制 Marker 和围栏。 */
 async function loadStations() {
   if (!map.value) return
   loading.value = true
   try {
-    const { data } = await getStations()
-    locatedStations.value = await loadLatestInBatches(data.items ?? [])
+    const { data } = await getStationMap()
+    locatedStations.value = data.map(item => ({
+      station: item.station,
+      longitude: item.latestCoordinates?.longitude ?? item.station.longitude ?? null,
+      latitude: item.latestCoordinates?.latitude ?? item.station.latitude ?? null,
+      waterQualityGrade: item.waterQualityGrade
+    }))
     renderMarkers()
+    drawGeofences(data)
   } catch (error) {
     ElMessage.error(getApiErrorMessage(error, "站点地图加载失败"))
   } finally {
@@ -109,63 +83,63 @@ function renderMarkers() {
   if (!bounds.isEmpty()) mapInstance.fitBounds(bounds, { padding: 100, maxZoom: 11, duration: 700 })
 }
 
-/** 数值、经纬度参数可以绘制历史曲线，其他数据类型只显示最新值。 */
-function isNumericParameter(dataType: string) {
-  return ["Decimal", "Integer", "Longitude", "Latitude"].includes(dataType)
-}
+/** 绘制电子围栏 */
+function drawGeofences(items: StationMapItem[]) {
+  const mapInstance = map.value
+  if (!mapInstance) return
 
-/**
- * 按站点参数组查询最近 24 小时原始序列，并拆分成逐参数迷你曲线数据。
- * 同一参数组只请求一次，避免为每个参数分别发送接口请求。
- */
-async function loadStationHistories(item: LocatedStation) {
-  if (!item.latest || item.historyLoading || item.historyLoaded) return
-  const groupIds = [...new Set(item.latest.parameters
-    .filter(parameter => isNumericParameter(parameter.parameter.dataType) && parameter.parameter.groupId)
-    .map(parameter => parameter.parameter.groupId!))]
+  const features = items.map((item) => {
+    const lng = item.station.longitude
+    const lat = item.station.latitude
+    const radius = item.station.geofenceRadiusMeters
+    if (lng == null || lat == null || !radius) return null
 
-  item.historyLoading = true
-  item.histories = {}
-  const to = new Date()
-  const from = new Date(to.getTime() - 24 * 60 * 60 * 1000)
-  try {
-    const responses = await Promise.allSettled(groupIds.map(async (parameterGroupId) => {
-      const { data } = await queryMeasurementSeries({
-        stationId: item.station.id,
-        parameterGroupId,
-        parameterDefinitionIds: null,
-        from: toLocalIso(from),
-        to: toLocalIso(to),
-        granularity: "Raw"
-      })
-      return { parameterGroupId, data }
-    }))
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [createCirclePolygon(lng, lat, radius)]
+      }
+    }
+  }).filter(Boolean) as any
 
-    responses.forEach((response) => {
-      if (response.status !== "fulfilled") return
-      response.value.data.columns.forEach((column, columnIndex) => {
-        const historyKey = `${response.value.parameterGroupId}:${column.code}`
-        item.histories![historyKey] = response.value.data.rows
-          .map(row => [String(row[0]), Number(row[columnIndex + 1])] as [string, number])
-          .filter(point => Number.isFinite(point[1]))
-      })
-    })
-  } finally {
-    item.historyLoading = false
-    item.historyLoaded = true
-  }
+  mapInstance.addSource("geofences", {
+    type: "geojson",
+    data: { type: "FeatureCollection", features }
+  })
+
+  mapInstance.addLayer({
+    id: "geofence-fill",
+    type: "fill",
+    source: "geofences",
+    paint: {
+      "fill-color": "#3b82f6",
+      "fill-opacity": 0.08
+    }
+  })
+
+  mapInstance.addLayer({
+    id: "geofence-line",
+    type: "line",
+    source: "geofences",
+    paint: {
+      "line-color": "#3b82f6",
+      "line-width": 2,
+      "line-dasharray": [2, 2]
+    }
+  })
 }
 
 /** 列表和 Marker 共用定位逻辑，放大到站点并打开右侧最新数据面板。 */
 async function selectStation(item: LocatedStation) {
   selectedMn.value = item.station.mn
   if (item.longitude != null && item.latitude != null) {
-    map.value?.flyTo({ center: [item.longitude, item.latitude], zoom: 14, duration: 900 })
+    map.value?.flyTo({ center: [item.longitude, item.latitude], zoom: 10, duration: 900 })
   }
   if (!item.latest) {
     detailLoading.value = true
     try {
-      const { data } = await getStationLatestMeasurements(item.station.mn)
+      const { data } = await getStationLatestMeasurements(item.station.id)
       item.latest = data
     } catch (error) {
       ElMessage.error(getApiErrorMessage(error, "最新数据加载失败"))
@@ -173,7 +147,97 @@ async function selectStation(item: LocatedStation) {
       detailLoading.value = false
     }
   }
-  await loadStationHistories(item)
+}
+
+watch(selectedMn, (val) => {
+  if (!val) {
+    clearTrajectory()
+  } else {
+    clearTrajectory()
+  }
+})
+
+function clearTrajectory() {
+  const mapInstance = map.value
+  if (!mapInstance) return
+  const source = mapInstance.getSource("station-trajectory") as maplibregl.GeoJSONSource
+  if (source) {
+    source.setData({ type: "FeatureCollection", features: [] } as any)
+  }
+}
+
+async function queryAndDrawTrajectory(range?: [Date, Date]) {
+  const item = selectedItem.value
+  const mapInstance = map.value
+  if (!item || !mapInstance) return
+
+  let from: Date
+  let to: Date
+  if (range && range.length === 2) {
+    from = range[0]
+    to = range[1]
+  } else {
+    to = new Date()
+    from = new Date(to.getTime() - 7 * 24 * 3600 * 1000)
+  }
+
+  ElMessage.info("正在查询轨迹...")
+  try {
+    const { data } = await getStationTrajectory(item.station.id, {
+      from: toDayStartIso(from),
+      to: toDayEndIso(to)
+    })
+
+    if (!data.points || data.points.length === 0) {
+      ElMessage.warning("该时间段内无轨迹数据")
+      return
+    }
+
+    const coordinates = data.points.map(p => [p.longitude, p.latitude])
+
+    const geojson = {
+      type: "FeatureCollection",
+      features: coordinates.length > 1
+        ? [{
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates
+            }
+          }]
+        : []
+    }
+
+    const source = mapInstance.getSource("station-trajectory") as maplibregl.GeoJSONSource
+    if (source) {
+      source.setData(geojson as any)
+    } else {
+      mapInstance.addSource("station-trajectory", {
+        type: "geojson",
+        data: geojson as any
+      })
+      mapInstance.addLayer({
+        id: "station-trajectory-line",
+        type: "line",
+        source: "station-trajectory",
+        paint: {
+          "line-color": "#f59e0b",
+          "line-width": 3,
+          "line-opacity": 0.9
+        }
+      })
+    }
+
+    if (coordinates.length > 0) {
+      const bounds = new maplibregl.LngLatBounds()
+      coordinates.forEach(coord => bounds.extend(coord as [number, number]))
+      mapInstance.fitBounds(bounds, { padding: 80, duration: 800 })
+    }
+
+    ElMessage.success("轨迹加载完成")
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, "轨迹查询失败"))
+  }
 }
 
 onMounted(() => {
@@ -205,13 +269,10 @@ onUnmounted(() => {
     <MapStyleSwitcher :map="map" default-style="vector" />
 
     <aside class="station-list">
-      <div class="station-list__title">
-        <strong>站点列表</strong>
-        <el-tag size="small" effect="dark">
-          {{ locatedStations.length }}
-        </el-tag>
+      <div class="station-list_title">
+        站点列表
       </div>
-      <el-scrollbar class="station-list__body">
+      <el-scrollbar>
         <button
           v-for="item in locatedStations"
           :key="item.station.mn"
@@ -223,9 +284,15 @@ onUnmounted(() => {
           <span class="station-item__dot" :class="`is-${item.station.status.toLowerCase()}`" />
           <span>
             <b>{{ item.station.name }}</b>
-            <small>{{ item.station.mn }} · {{ item.station.groupName || '未分组' }}</small>
+            <small>{{ item.station.mn }}</small>
           </span>
-          <em>{{ item.longitude == null ? '无坐标' : '定位' }}</em>
+          <el-tag
+            v-if="item.waterQualityGrade"
+            size="small"
+            :type="waterQualityGradeTagType(item.waterQualityGrade)"
+          >
+            {{ formatWaterQualityGrade(item.waterQualityGrade) }}
+          </el-tag>
         </button>
         <el-empty v-if="!loading && !locatedStations.length" description="暂无站点" :image-size="64" />
       </el-scrollbar>
@@ -236,10 +303,10 @@ onUnmounted(() => {
         v-if="selectedItem"
         :station="selectedItem.station"
         :latest="selectedItem.latest"
+        :map-item-grade="selectedItem.waterQualityGrade"
         :loading="detailLoading"
-        :histories="selectedItem.histories"
-        :history-loading="Boolean(selectedItem.historyLoading)"
         @close="selectedMn = ''"
+        @query-trajectory="queryAndDrawTrajectory"
       />
     </Transition>
 
@@ -269,24 +336,22 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   width: 300px;
-  color: #e2e8f0;
-  background: rgba(8, 20, 39, 0.78);
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  border-radius: 0;
-  box-shadow: none;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(12px);
 }
 
-.station-list__title {
+.station-list_title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-}
-.station-list__body {
-  flex: 1;
-  padding: 8px;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .station-item {
@@ -296,28 +361,29 @@ onUnmounted(() => {
   align-items: center;
   width: 100%;
   padding: 11px 10px;
-  color: #dce7f5;
+  color: #334155;
   text-align: left;
   background: transparent;
   border: 0;
-  border-radius: 0;
+  border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
 
   &:hover,
   &--active {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.1);
   }
   b,
   small {
     display: block;
   }
   b {
+    color: #1e293b;
     font-size: 14px;
   }
   small {
     margin-top: 3px;
-    color: #8da2ba;
+    color: #64748b;
     font-size: 11px;
   }
   em {

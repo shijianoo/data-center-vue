@@ -1,58 +1,56 @@
 <script setup lang="ts">
-import type { ManualReviewStatus, MeasurementCell, MeasurementColumn, MeasurementQueryResult } from "../types"
+import type { ManualReviewStatus, MeasurementReviewCell, MeasurementReviewResult, MeasurementTableColumn } from "../types"
 import { Check, EditPen } from "@element-plus/icons-vue"
-import { ElMessage, ElMessageBox } from "element-plus"
+import { ElMessage } from "element-plus"
 import { computed, onMounted, reactive, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
-import { getApiErrorMessage, queryMeasurements, saveManualReview } from "../apis"
+import { getApiErrorMessage, queryMeasurementReview, saveBatchManualReview, saveManualReview } from "../apis"
 import QueryFilter from "../components/QueryFilter.vue"
-import { getLatestGroupDayRange, useProjectOptions } from "../composables/useProjectOptions"
-import { displayMeasurementValue, displayParameterLabel, displayTime, getDefaultDateRange, manualReviewLabels, toDayEndIso, toDayStartIso } from "../utils"
+import { useProjectOptions } from "../composables/useProjectOptions"
+import { displayMeasurementValue, displayParameterLabel, displayTime, getWholeDayRange, manualReviewLabels, toDayEndIso, toDayStartIso } from "../utils"
 
 const props = defineProps<{
-  /** 当前人工审核等级。 */
   level: 1 | 2 | 3
 }>()
 
-const userStore = useUserStore()
 const { stations, stationGroups, loadStations, loadStationGroups, stationById } = useProjectOptions()
-const stationId = ref("")
-const groupId = ref("")
-const dateRange = ref<[Date, Date]>(getDefaultDateRange())
-const result = ref<MeasurementQueryResult>()
+const userStore = useUserStore()
+const stationId = ref<number | "">("")
+const groupId = ref<number | "">("")
+const dateRange = ref<[Date, Date]>(getWholeDayRange())
+const result = ref<MeasurementReviewResult>()
 const loading = ref(false)
 const batchLoading = ref(false)
 const dialogVisible = ref(false)
-const activeCell = ref<MeasurementCell>()
-const activeColumn = ref<MeasurementColumn>()
+const batchDialogVisible = ref(false)
+const activeCell = ref<MeasurementReviewCell>()
+const activeColumn = ref<MeasurementTableColumn>()
 const form = reactive({
   status: "Valid" as ManualReviewStatus,
   reviewer: "",
   comment: ""
 })
+const batchForm = reactive({
+  status: "Valid" as ManualReviewStatus,
+  reviewer: "",
+  comment: ""
+})
+
+/** 表格时间列加动态参数列。 */
+const columns = computed(() => result.value?.columns ?? [])
 
 /** 当前审核人优先使用实名，其次使用昵称、用户名和租户成员名。 */
 const defaultReviewer = computed(() => userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName || userStore.memberProfile?.memberName || "")
 
 watch(stationId, async (value) => {
-  const station = stationById.value.get(value)
+  const station = typeof value === "number" ? stationById.value.get(value) : undefined
   const groups = await loadStationGroups(station?.mn)
   if (stationId.value !== value) return
   const defaultGroupId = groups[0]?.id || ""
   groupId.value = defaultGroupId
   result.value = undefined
-  if (!station || !defaultGroupId) return
-  loading.value = true
-  try {
-    const range = await getLatestGroupDayRange(station.mn, defaultGroupId)
-    if (stationId.value !== value || groupId.value !== defaultGroupId) return
-    dateRange.value = range
-    await search()
-  } catch (error) {
-    ElMessage.error(getApiErrorMessage(error, "参数组最新数据时间加载失败"))
-  } finally {
-    loading.value = false
-  }
+  dateRange.value = getWholeDayRange()
+  await search()
 })
 
 /** 组装固定为 Raw 粒度的审核查询，聚合数据没有 pointId，不能人工审核。 */
@@ -64,10 +62,9 @@ function buildRequest() {
   return {
     stationId: stationId.value,
     parameterGroupId: groupId.value,
-    parameterDefinitionIds: null,
     from: toDayStartIso(dateRange.value[0]),
     to: toDayEndIso(dateRange.value[1]),
-    granularity: "Raw" as const
+    reviewLevel: props.level
   }
 }
 
@@ -77,7 +74,7 @@ async function search() {
   if (!request) return
   loading.value = true
   try {
-    const { data } = await queryMeasurements(request)
+    const { data } = await queryMeasurementReview(request)
     result.value = data
   } catch (error) {
     ElMessage.error(getApiErrorMessage(error, "审核数据加载失败"))
@@ -86,30 +83,53 @@ async function search() {
   }
 }
 
-/** 判断数据点是否符合严格的逐级审核顺序。 */
-function canReview(cell: MeasurementCell | null) {
-  if (!cell?.pointId) return false
-  return (cell.manualReview?.currentLevel ?? 0) === props.level - 1
+/** 判断数据点是否符合可审核/查看条件。 */
+function canReview(cell: MeasurementReviewCell | null) {
+  return Boolean(cell?.pointId)
 }
 
-/** 打开单点审核对话框，并保留当前有效值用于可选修正。 */
-function openReview(column: MeasurementColumn, cell: MeasurementCell | null) {
+/** 动态计算表格单元格的 class，根据 reviewStatus 显示对应背景色 */
+function getCellClassName({ row, column }: { row: any, column: any }) {
+  if (!column.property) return ""
+  const cell: MeasurementReviewCell | null = row.values?.[column.property]
+  if (!cell) return ""
+
+  const classes = []
+  if (!cell.reviewStatus) {
+    classes.push("cell-unreviewed")
+  } else if (cell.reviewStatus === "Valid") {
+    classes.push("cell-reviewed-valid")
+  } else {
+    classes.push("cell-reviewed-abnormal")
+  }
+
+  if (canReview(cell)) {
+    classes.push("is-reviewable")
+  }
+  return classes.join(" ")
+}
+
+// #region 单元格点击与人工审核
+
+/** 单元格点击事件，用于触发人工审核 */
+function handleCellClick(row: any, column: any) {
+  if (!column.property) return
+  const colDef = columns.value.find(c => c.code === column.property)
+  const cell = row.values?.[column.property]
+  if (colDef && cell) {
+    openReview(colDef, cell)
+  }
+}
+
+/** 打开单点审核对话框，自动带出当前数据点的审核结论与审核意见。 */
+function openReview(column: MeasurementTableColumn, cell: MeasurementReviewCell | null) {
   if (!cell?.pointId) return
-  const currentLevel = cell.manualReview?.currentLevel ?? 0
-  if (currentLevel < props.level - 1) {
-    ElMessage.warning(`请先完成${props.level - 1}级审核`)
-    return
-  }
-  if (currentLevel >= props.level) {
-    ElMessage.info(`该数据已完成${currentLevel}级审核`)
-    return
-  }
   activeCell.value = cell
   activeColumn.value = column
   Object.assign(form, {
-    status: "Valid",
+    status: cell.reviewStatus || "Valid",
     reviewer: defaultReviewer.value,
-    comment: ""
+    comment: cell.reviewComment || ""
   })
   dialogVisible.value = true
 }
@@ -122,7 +142,8 @@ async function submitReview() {
   }
   loading.value = true
   try {
-    await saveManualReview(activeCell.value.pointId, props.level, {
+    await saveManualReview(activeCell.value.pointId, {
+      level: props.level,
       status: form.status,
       reviewer: form.reviewer.trim(),
       comment: form.comment.trim() || undefined
@@ -137,78 +158,53 @@ async function submitReview() {
   }
 }
 
-/** 动态计算表格单元格的 class，用于显示未审核背景色和可审核样式 */
-function getCellClassName({ row, column }: { row: any, column: any }) {
-  if (!column.property) return ""
-  const cell = row.values?.[column.property]
-  if (!cell) return ""
+// #endregion
 
-  const classes = []
-  const currentLevel = cell.manualReview?.currentLevel ?? 0
-  if (currentLevel < props.level) {
-    classes.push("cell-unreviewed")
-  }
-  if (canReview(cell)) {
-    classes.push("is-reviewable")
-  }
-  return classes.join(" ")
-}
-
-/** 单元格点击事件，用于触发人工审核 */
-function handleCellClick(row: any, column: any) {
-  if (!column.property) return
-  const colDef = result.value?.columns.find(c => c.code === column.property)
-  const cell = row.values?.[column.property]
-  if (colDef && cell) {
-    openReview(colDef, cell)
-  }
-}
-
-/** 当前表格中符合逐级审核顺序、可批量提交的数据点。 */
+/** 当前表格中符合条件、可批量提交的数据点。 */
 const reviewableCells = computed(() => {
   const ids = new Set<string>()
-  result.value?.rows.forEach((row) => {
-    Object.values(row.values).forEach((cell) => {
-      if (canReview(cell) && cell?.pointId) ids.add(cell.pointId)
+  result.value?.rows.forEach((row: any) => {
+    Object.values(row.values || {}).forEach((cell: any) => {
+      if (cell?.pointId) ids.add(cell.pointId)
     })
   })
   return [...ids]
 })
 
-/** 按 10 个并发批量提交当前范围所有可审核参数，并报告成功和失败数量。 */
-async function reviewAll() {
+/** 打开批量审核弹窗。 */
+function openBatchReview() {
   if (!reviewableCells.value.length) {
     ElMessage.info("当前范围没有可提交的数据点")
     return
   }
-  if (!defaultReviewer.value) {
-    ElMessage.warning("当前账号缺少审核人名称")
+  Object.assign(batchForm, {
+    status: "Valid",
+    reviewer: defaultReviewer.value,
+    comment: "批量审核"
+  })
+  batchDialogVisible.value = true
+}
+
+/** 提交批量人工审核。 */
+async function submitBatchReview() {
+  if (!batchForm.reviewer.trim()) {
+    ElMessage.warning("请填写审核人")
     return
   }
-  await ElMessageBox.confirm(
-    `将以“有效”结论提交 ${reviewableCells.value.length} 个数据点的${props.level}级审核，是否继续？`,
-    "批量审核确认",
-    { type: "warning", confirmButtonText: "全部审核", cancelButtonText: "取消" }
-  )
   batchLoading.value = true
-  let succeeded = 0
-  let failed = 0
   try {
-    const queue = [...reviewableCells.value]
-    async function worker() {
-      while (queue.length) {
-        const pointId = queue.shift()!
-        try {
-          await saveManualReview(pointId, props.level, { status: "Valid", reviewer: defaultReviewer.value, comment: "批量审核" })
-          succeeded++
-        } catch {
-          failed++
-        }
-      }
-    }
-    await Promise.all(Array.from({ length: Math.min(10, queue.length) }, worker))
-    failed ? ElMessage.warning(`批量审核完成：成功 ${succeeded} 条，失败 ${failed} 条`) : ElMessage.success(`批量审核完成，共 ${succeeded} 条`)
+    const { data } = await saveBatchManualReview({
+      pointIds: reviewableCells.value,
+      level: props.level,
+      status: batchForm.status,
+      reviewer: batchForm.reviewer.trim(),
+      comment: batchForm.comment.trim() || undefined
+    })
+    ElMessage.success(`批量审核成功，共更新 ${data.updated} 条`)
+    batchDialogVisible.value = false
     await search()
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, "批量审核提交失败"))
   } finally {
     batchLoading.value = false
   }
@@ -234,7 +230,7 @@ onMounted(async () => {
       @search="search"
     >
       <template #actions>
-        <el-button type="success" :icon="Check" :loading="batchLoading" :disabled="!reviewableCells.length" @click="reviewAll">
+        <el-button type="success" :icon="Check" :disabled="!reviewableCells.length" @click="openBatchReview">
           全部审核（{{ reviewableCells.length }}）
         </el-button>
       </template>
@@ -247,12 +243,12 @@ onMounted(async () => {
             {{ displayTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column v-for="column in result?.columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" width="150">
+        <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="150">
           <template #default="scope">
-            <div v-if="scope.row.values[column.code]" class="audit-cell__value">
+            <div v-if="scope.row.values[column.code]" class="cell-value">
               {{ displayMeasurementValue(scope.row.values[column.code], column) }}
             </div>
-            <span v-else>—</span>
+            <span v-else class="empty-cell">—</span>
           </template>
         </el-table-column>
       </el-table>
@@ -284,6 +280,30 @@ onMounted(async () => {
         </el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="batchDialogVisible" :title="`批量 ${level} 级审核 (${reviewableCells.length} 条)`" width="560px" destroy-on-close>
+      <el-form label-width="92px" class="review-form">
+        <el-form-item label="审核结论" required>
+          <el-select v-model="batchForm.status" style="width: 100%">
+            <el-option v-for="(label, value) in manualReviewLabels" :key="value" :label="label" :value="value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核人" required>
+          <el-input v-model="batchForm.reviewer" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="审核意见">
+          <el-input v-model="batchForm.comment" type="textarea" :rows="3" maxlength="500" show-word-limit />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchDialogVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" :icon="Check" :loading="batchLoading" @click="submitBatchReview">
+          批量提交
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -298,8 +318,20 @@ onMounted(async () => {
   width: auto;
   max-width: 680px;
 }
+.cell-value {
+  font-weight: 600;
+}
+.empty-cell {
+  color: var(--el-text-color-placeholder);
+}
 :deep(.cell-unreviewed) {
   background-color: var(--el-fill-color-light) !important;
+}
+:deep(.cell-reviewed-valid) {
+  background-color: #ffffff !important;
+}
+:deep(.cell-reviewed-abnormal) {
+  background-color: rgba(230, 162, 60, 0.16) !important;
 }
 :deep(.is-reviewable) {
   cursor: pointer;

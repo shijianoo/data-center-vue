@@ -1,74 +1,105 @@
 <script setup lang="ts">
-import type { LatestParameterMeta, MeasurementPoint, Station, StationLatestMeasurements } from "../types"
-import { Close, Location } from "@element-plus/icons-vue"
-import { autoReviewLabels, autoReviewTagType, displayParameterLabel, displayTime } from "../utils"
-import MiniHistoryChart from "./MiniHistoryChart.vue"
+import type { LatestMeasurementResult, Station } from "../types"
+import { Close } from "@element-plus/icons-vue"
+import { computed, ref } from "vue"
+import { formatHybridAgo } from "@/common/utils/datetime"
+import { formatWaterQualityGrade, waterQualityGradeTagType } from "../utils"
 
-defineProps<{
+const props = defineProps<{
   /** 当前选中的站点。 */
   station: Station
   /** 站点全部最新参数数据。 */
-  latest?: StationLatestMeasurements
+  latest?: LatestMeasurementResult
+  /** 站点地图数据项包含的水质等级（选填）。 */
+  mapItemGrade?: string
   /** 最新数据加载状态。 */
   loading: boolean
-  /** 参数编码对应的最近 24 小时数值序列。 */
-  histories?: Record<string, Array<[string, number]>>
-  /** 历史曲线加载状态。 */
-  historyLoading?: boolean
 }>()
 
-defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: [], queryTrajectory: [range: [Date, Date]] }>()
 
-/** 最新值按参数小数位配置显示，0 表示保留后端完整文本。 */
-function displayLatestValue(parameter: LatestParameterMeta, point: MeasurementPoint | null) {
-  if (!point) return "—"
-  if (parameter.decimalPlaces > 0 && Number.isFinite(point.effectiveNumericValue)) {
-    return Number(point.effectiveNumericValue).toFixed(parameter.decimalPlaces)
-  }
-  return point.effectiveValueText ?? point.effectiveNumericValue?.toString() ?? "—"
+const currentGrade = computed(() => props.latest?.waterQualityGrade || props.mapItemGrade)
+
+const to = new Date()
+const from = new Date(to.getTime() - 7 * 24 * 3600 * 1000)
+const trackDateRange = ref<[Date, Date]>([from, to])
+
+function displayValue(value?: string, unit?: string) {
+  if (value == null || value === "") return "—"
+  return unit ? `${value} ${unit}` : value
 }
 </script>
 
 <template>
   <section class="latest-panel">
-    <header class="latest-panel__header">
-      <div>
-        <h3>{{ station.name }}</h3>
-        <span>{{ station.mn }} · {{ station.groupName || '未分组' }}</span>
+    <div class="latest-panel_title">
+      <div class="title-left">
+        <span class="station-name">{{ station.name }}</span>
+        <el-tag
+          v-if="currentGrade"
+          size="small"
+          :type="waterQualityGradeTagType(currentGrade)"
+          effect="light"
+        >
+          {{ formatWaterQualityGrade(currentGrade) }}
+        </el-tag>
       </div>
-      <el-button text circle :icon="Close" aria-label="关闭站点详情" @click="$emit('close')" />
-    </header>
-
-    <div class="latest-panel__meta">
-      <el-icon><Location /></el-icon>
-      <span>{{ station.address || '暂无站点地址' }}</span>
-      <el-tag size="small" :type="station.status === 'Active' ? 'success' : 'info'">
-        {{ station.status }}
-      </el-tag>
+      <div class="header-actions">
+        <el-popover placement="bottom-end" width="320" trigger="click">
+          <template #reference>
+            <el-button size="small" type="primary" plain>
+              查询轨迹
+            </el-button>
+          </template>
+          <div class="trajectory-popover">
+            <div class="trajectory-popover__title">
+              轨迹查询
+            </div>
+            <el-date-picker
+              v-model="trackDateRange"
+              type="daterange"
+              size="small"
+              range-separator="-"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              style="width: 100%;"
+              :clearable="false"
+              :teleported="false"
+            />
+            <div style="text-align: right; margin-top: 12px;">
+              <el-button size="small" type="primary" @click="emit('queryTrajectory', trackDateRange)">
+                查询
+              </el-button>
+            </div>
+          </div>
+        </el-popover>
+        <el-button text circle :icon="Close" aria-label="关闭站点详情" @click="$emit('close')" />
+      </div>
     </div>
 
     <el-skeleton v-if="loading" :rows="8" animated class="latest-panel__loading" />
     <el-scrollbar v-else class="latest-panel__body">
-      <el-empty v-if="!latest?.parameters.length" description="该站点暂无参数数据" />
-      <article v-for="item in latest?.parameters" v-else :key="`${item.parameter.groupId}:${item.parameter.code}:${item.parameter.kind}`" class="parameter-card">
-        <div class="parameter-card__meta">
-          <strong>{{ displayParameterLabel(item.parameter) }}</strong>
-          <small>{{ item.parameter.code }} · {{ item.parameter.groupName || '未分组' }}</small>
-        </div>
-        <div class="parameter-card__value">
-          <b>{{ displayLatestValue(item.parameter, item.point) }}</b>
-        </div>
-        <MiniHistoryChart :points="histories?.[`${item.parameter.groupId}:${item.parameter.code}`]" :loading="historyLoading" />
-        <div class="parameter-card__latest">
-          <span :title="displayTime(item.point?.observedAt)">{{ displayTime(item.point?.observedAt) }}</span>
-          <el-tag v-if="item.point" size="small" :type="autoReviewTagType(item.point.autoReviewStatus)">
-            {{ autoReviewLabels[item.point.autoReviewStatus] || item.point.autoReviewStatus }}
-          </el-tag>
-          <el-tag v-else size="small" type="info">
-            无数据
-          </el-tag>
-        </div>
-      </article>
+      <el-empty v-if="!latest?.parameterGroups?.length" description="该站点暂无参数数据" />
+      <template v-else>
+        <section v-for="group in latest.parameterGroups" :key="group.ParameterGroupId" class="data-section">
+          <div class="section-head">
+            <span>{{ group.parameterGroupName }}</span>
+            <small v-if="group.observedAt">
+              最新 {{ formatHybridAgo(group.observedAt) }}
+            </small>
+          </div>
+
+          <div v-if="!group.parameters?.length" class="section-empty">
+            暂无数据
+          </div>
+          <div v-else class="field-grid">
+            <div v-for="param in group.parameters" :key="param.code" class="field-item">
+              <span>{{ param.name }}</span>
+              <strong>{{ displayValue(param.value, param.unit) }}</strong>
+            </div>
+          </div>
+        </section>
+      </template>
     </el-scrollbar>
   </section>
 </template>
@@ -82,46 +113,42 @@ function displayLatestValue(parameter: LatestParameterMeta, point: MeasurementPo
   z-index: 12;
   display: flex;
   flex-direction: column;
-  width: min(640px, calc(100vw - 32px));
-  color: #e5eef9;
-  background: rgba(8, 20, 39, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 0;
-  box-shadow: none;
+  width: min(340px, calc(100vw - 32px));
+  color: #334155;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(14px);
 }
 
-.latest-panel__header {
+.latest-panel_title {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: 18px 18px 12px;
+  padding: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 16px;
+}
 
-  h3 {
-    margin: 0 0 4px;
-    font-size: 20px;
-  }
-  span {
-    color: #94a3b8;
-    font-size: 12px;
-  }
-  :deep(.el-button) {
-    color: #cbd5e1;
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  .station-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-.latest-panel__meta {
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 18px 14px;
-  color: #a8b8cc;
-  font-size: 13px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-
-  > span {
-    flex: 1;
-  }
+  gap: 8px;
 }
 
 .latest-panel__loading {
@@ -132,58 +159,68 @@ function displayLatestValue(parameter: LatestParameterMeta, point: MeasurementPo
   padding: 12px;
 }
 
-.parameter-card {
-  display: grid;
-  grid-template-columns: minmax(125px, 1fr) 90px minmax(150px, 1.25fr) 142px;
-  gap: 12px;
+.data-section {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.section-head {
+  display: flex;
   align-items: center;
-  padding: 12px 6px;
-  margin-bottom: 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 0;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  span {
+    font-weight: 700;
+    color: #111827;
+  }
+
+  small {
+    color: #64748b;
+  }
 }
 
-.parameter-card__meta {
-  min-width: 0;
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
 
-  strong,
-  small {
+.field-item {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: #f8fafc;
+
+  span {
     display: block;
+    overflow: hidden;
+    color: #64748b;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  small {
+
+  strong {
+    display: block;
     margin-top: 4px;
-    overflow: hidden;
-    color: #8294aa;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #0f172a;
+    font-size: 15px;
   }
 }
 
-.parameter-card__value {
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  b {
-    color: #60a5fa;
-    font-size: 19px;
-  }
+.section-empty {
+  color: #94a3b8;
+  font-size: 13px;
 }
-
-.parameter-card__latest {
-  min-width: 0;
-  color: #7f92a9;
-  font-size: 11px;
-
-  > span {
-    display: block;
-    margin-bottom: 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.trajectory-popover__title {
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
 }
 </style>

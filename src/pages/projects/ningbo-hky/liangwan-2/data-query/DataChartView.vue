@@ -9,22 +9,22 @@ import { computed, onMounted, ref, watch } from "vue"
 import VChart from "vue-echarts"
 import { getApiErrorMessage, queryMeasurementSeries } from "../apis"
 import QueryFilter from "../components/QueryFilter.vue"
-import { getLatestGroupDayRange, useProjectOptions } from "../composables/useProjectOptions"
-import { getDefaultDateRange, toDayEndIso, toDayStartIso } from "../utils"
+import { useProjectOptions } from "../composables/useProjectOptions"
+import { getWholeDayRange, toDayEndIso, toDayStartIso } from "../utils"
 
 echarts.use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent])
 
 const { stations, stationGroups, loadStations, loadStationGroups, stationById } = useProjectOptions()
-const stationId = ref("")
-const groupId = ref("")
-const dateRange = ref<[Date, Date]>(getDefaultDateRange(24 * 7))
+const stationId = ref<number | "">("")
+const groupId = ref<number | "">("")
+const dateRange = ref<[Date, Date]>(getWholeDayRange())
 const granularity = ref<Granularity>("Raw")
 const result = ref<MeasurementSeriesResult>()
 const selectedCode = ref("")
 const loading = ref(false)
 
 watch(stationId, async (value) => {
-  const station = stationById.value.get(value)
+  const station = typeof value === "number" ? stationById.value.get(value) : undefined
   const groups = await loadStationGroups(station?.mn)
   if (stationId.value !== value) return
   const defaultGroupId = groups[0]?.id || ""
@@ -32,17 +32,8 @@ watch(stationId, async (value) => {
   result.value = undefined
   selectedCode.value = ""
   if (!station || !defaultGroupId) return
-  loading.value = true
-  try {
-    const range = await getLatestGroupDayRange(station.mn, defaultGroupId)
-    if (stationId.value !== value || groupId.value !== defaultGroupId) return
-    dateRange.value = range
-    await search()
-  } catch (error) {
-    ElMessage.error(getApiErrorMessage(error, "参数组最新数据时间加载失败"))
-  } finally {
-    loading.value = false
-  }
+  dateRange.value = getWholeDayRange()
+  await search()
 })
 
 /** 当前选择的数值参数列。 */

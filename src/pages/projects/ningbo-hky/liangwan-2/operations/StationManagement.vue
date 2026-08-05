@@ -10,7 +10,7 @@ const keyword = ref("")
 const loading = ref(false)
 const dialogVisible = ref(false)
 const editingMn = ref("")
-const form = reactive<SaveStation>({ mn: "", name: "", groupName: "", longitude: null, latitude: null, status: "Active", address: "", metadataJson: "{}" })
+const form = reactive<SaveStation>({ mn: "", name: "", groupName: "", longitude: null, latitude: null, geofenceRadiusMeters: null, status: "Active", address: "", metadataJson: "{}" })
 
 const statusOptions: Array<{ value: StationStatus, label: string }> = [
   { value: "Active", label: "正常" },
@@ -42,11 +42,12 @@ function edit(row?: Station) {
         groupName: row.groupName || "",
         longitude: row.longitude ?? null,
         latitude: row.latitude ?? null,
+        geofenceRadiusMeters: row.geofenceRadiusMeters ?? null,
         status: row.status,
         address: row.address || "",
         metadataJson: row.metadataJson || "{}"
       }
-    : { mn: "", name: "", groupName: "", longitude: null, latitude: null, status: "Active", address: "", metadataJson: "{}" })
+    : { mn: "", name: "", groupName: "", longitude: null, latitude: null, geofenceRadiusMeters: null, status: "Active", address: "", metadataJson: "{}" })
   dialogVisible.value = true
 }
 
@@ -129,7 +130,7 @@ onMounted(loadData)
         <el-row :gutter="18">
           <el-col :span="12">
             <el-form-item label="站点 MN" required>
-              <el-input v-model="form.mn" :disabled="Boolean(editingMn)" />
+              <el-input v-model="form.mn" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -157,6 +158,11 @@ onMounted(loadData)
           <el-col :span="12">
             <el-form-item label="配置纬度">
               <el-input-number v-model="form.latitude" :min="-90" :max="90" :precision="6" controls-position="right" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="围栏半径(m)">
+              <el-input-number v-model="form.geofenceRadiusMeters" :min="1" :max="10000" :step="100" controls-position="right" />
             </el-form-item>
           </el-col>
         </el-row>

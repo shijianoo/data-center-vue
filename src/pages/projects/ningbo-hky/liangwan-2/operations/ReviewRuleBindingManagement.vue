@@ -9,12 +9,12 @@ import { useProjectOptions } from "../composables/useProjectOptions"
 const { stations, loadStations, stationById } = useProjectOptions()
 const rules = ref<any[]>([])
 const bindings = ref<ReviewRuleBinding[]>([])
-const stationId = ref("")
+const stationId = ref<number | "">("")
 const loading = ref(false)
 const dialogVisible = ref(false)
-const editingId = ref("")
-const form = reactive({ ruleDefinitionId: "", stationId: "", configOverrideJson: "{}", priority: 10 })
-const selectedStation = computed(() => stationById.value.get(stationId.value))
+const editingId = ref<number | "">("")
+const form = reactive({ ruleDefinitionId: "" as number | "", stationId: "" as number | "", configOverrideJson: "{}", priority: 10 })
+const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
 
 watch(stationId, loadBindings)
 
@@ -51,7 +51,7 @@ async function save() {
     return ElMessage.warning("阈值覆盖必须是合法 JSON")
   }
   try {
-    editingId.value ? await updateReviewRuleBinding(editingId.value, { ...form, configOverrideJson: form.configOverrideJson || "{}" }) : await createReviewRuleBinding({ ...form, configOverrideJson: form.configOverrideJson || "{}" })
+    editingId.value ? await updateReviewRuleBinding(editingId.value as number, { ...form, ruleDefinitionId: form.ruleDefinitionId as number, stationId: form.stationId as number, configOverrideJson: form.configOverrideJson || "{}" }) : await createReviewRuleBinding({ ...form, ruleDefinitionId: form.ruleDefinitionId as number, stationId: form.stationId as number, configOverrideJson: form.configOverrideJson || "{}" })
     ElMessage.success("规则绑定保存成功")
     dialogVisible.value = false
     stationId.value = form.stationId
@@ -73,10 +73,10 @@ async function remove(row: ReviewRuleBinding) {
   }
 }
 
-function ruleName(id: string) {
+function ruleName(id: number | string | "") {
   return rules.value.find(item => item.id === id)?.name || id
 }
-function defaultConfig(id: string) {
+function defaultConfig(id: number | string | "") {
   return rules.value.find(item => item.id === id)?.defaultConfigJson || "{}"
 }
 
@@ -97,7 +97,7 @@ onMounted(async () => {
       <h2>站点规则绑定</h2>
       <el-space>
         <el-select v-model="stationId" filterable placeholder="请选择站点" style="width: 230px">
-          <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
+          <el-option v-for="station in stations" :key="station.id" :label="station.name" :value="station.id" />
         </el-select><el-button :icon="Refresh" @click="loadBindings">
           刷新
         </el-button><el-button type="primary" :icon="Plus" :disabled="!stationId" @click="edit()">

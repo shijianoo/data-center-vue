@@ -1,4 +1,4 @@
-import type { AutoReviewStatus, ManualReviewStatus, MeasurementCell, MeasurementColumn } from "./types"
+import type { AutoReviewStatus, ManualReviewStatus } from "./types"
 import dayjs from "dayjs"
 
 /** 自动审核状态的中文名称。 */
@@ -64,17 +64,81 @@ export function displayRate(value?: number | null) {
 }
 
 /** 参数表头单行显示为“名称(单位)”，无单位时仅显示名称。 */
-export function displayParameterLabel(column: Pick<MeasurementColumn, "name" | "unit">) {
+export function displayParameterLabel(column: { name: string, unit?: string | null }) {
   return column.unit ? `${column.name}(${column.unit})` : column.name
+}
+
+/** 水质等级 numericValue 到中文标准等级的映射。 */
+export const waterQualityGradeMap: Record<number, string> = {
+  1: "Ⅰ类",
+  2: "Ⅱ类",
+  3: "Ⅲ类",
+  4: "Ⅳ类",
+  5: "Ⅴ类",
+  6: "劣Ⅴ类"
+}
+
+/** 水质等级字符串映射。 */
+export const waterQualityGradeLabels: Record<string, string> = {
+  ClassI: "Ⅰ类",
+  ClassII: "Ⅱ类",
+  ClassIII: "Ⅲ类",
+  ClassIV: "Ⅳ类",
+  ClassV: "Ⅴ类",
+  ClassInferiorV: "劣Ⅴ类",
+  1: "Ⅰ类",
+  2: "Ⅱ类",
+  3: "Ⅲ类",
+  4: "Ⅳ类",
+  5: "Ⅴ类",
+  6: "劣Ⅴ类",
+  一类: "Ⅰ类",
+  二类: "Ⅱ类",
+  三类: "Ⅲ类",
+  四类: "Ⅳ类",
+  五类: "Ⅴ类",
+  劣五类: "劣Ⅴ类"
+}
+
+/** 格式化水质等级字符串。 */
+export function formatWaterQualityGrade(grade?: string | null): string {
+  if (!grade) return "—"
+  return waterQualityGradeLabels[grade] || grade
+}
+
+/** 水质等级对应 Element Plus 标签类型。 */
+export function waterQualityGradeTagType(grade?: string | null): "success" | "info" | "warning" | "danger" {
+  if (!grade) return "info"
+  const formatted = formatWaterQualityGrade(grade)
+  if (formatted === "Ⅰ类" || formatted === "Ⅱ类") return "success"
+  if (formatted === "Ⅲ类") return "info"
+  if (formatted === "Ⅳ类") return "warning"
+  if (formatted === "Ⅴ类" || formatted === "劣Ⅴ类") return "danger"
+  return "info"
+}
+
+/** 格式化水质等级单元格。 */
+export function displayWaterQualityGrade(cell: { valueText?: string | null, numericValue?: number | null } | null | undefined): string {
+  if (!cell) return "—"
+  if (cell.numericValue != null && waterQualityGradeMap[cell.numericValue]) {
+    return waterQualityGradeMap[cell.numericValue]
+  }
+  return formatWaterQualityGrade(cell.valueText ?? cell.numericValue?.toString())
 }
 
 /**
  * 按参数配置格式化测量值。
- * decimalPlaces 为 0 时保留后端完整值文本；大于 0 时严格保留指定小数位。
+ * decimalPlaces 大于等于 0 时严格保留指定小数位（为 0 时不显示小数部分）；为 null/undefined 时保留后端完整值文本。
  */
-export function displayMeasurementValue(cell: MeasurementCell | null | undefined, column: Pick<MeasurementColumn, "decimalPlaces">) {
+export function displayMeasurementValue(
+  cell: { valueText?: string | null, numericValue?: number | null } | null | undefined,
+  column: { decimalPlaces?: number | null, code?: string, dataType?: string, isDerived?: boolean }
+) {
   if (!cell) return "—"
-  if (column.decimalPlaces > 0) {
+  if (column.code === "waterQualityGrade" || column.dataType === "Enum" || column.isDerived) {
+    return displayWaterQualityGrade(cell)
+  }
+  if (typeof column.decimalPlaces === "number" && column.decimalPlaces >= 0) {
     const numericValue = cell.numericValue ?? Number(cell.valueText)
     if (Number.isFinite(numericValue)) return Number(numericValue).toFixed(column.decimalPlaces)
   }

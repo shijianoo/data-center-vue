@@ -1,22 +1,7 @@
 import type { ParameterDefinition, Station, StationParameterGroup } from "../types"
 import { ElMessage } from "element-plus"
 import { computed, ref } from "vue"
-import { getApiErrorMessage, getParameterDefinitions, getStationLatestMeasurements, getStationParameterGroups, getStations } from "../apis"
-import { getWholeDayRange } from "../utils"
-
-/**
- * 获取站点参数组最新数据所在的完整一天。
- * 参数组没有任何数据时回退到今天，确保首次进入页面仍能自动发起查询。
- */
-export async function getLatestGroupDayRange(mn: string, groupId: string) {
-  const { data } = await getStationLatestMeasurements(mn)
-  const timestamps = data.parameters
-    .filter(item => item.parameter.groupId === groupId && item.point?.observedAt)
-    .map(item => new Date(item.point!.observedAt).getTime())
-    .filter(Number.isFinite)
-  const latestTimestamp = timestamps.length ? Math.max(...timestamps) : Date.now()
-  return getWholeDayRange(new Date(latestTimestamp))
-}
+import { getApiErrorMessage, getParameterDefinitions, getStationParameterGroups, getStations } from "../apis"
 
 /**
  * 复用站点、参数定义和站点参数组选择数据。

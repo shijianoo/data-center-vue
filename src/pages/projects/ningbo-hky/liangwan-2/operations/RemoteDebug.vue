@@ -1,39 +1,14 @@
 <script setup lang="ts">
-import { Link, Refresh } from "@element-plus/icons-vue"
 import { ref } from "vue"
 import { getTcpGatewayUrl } from "../apis"
 
 /** TCP Gateway 调试页面与 EcoCenter API 使用同一个服务端根地址。 */
 const gatewayUrl = getTcpGatewayUrl()
 const frameKey = ref(0)
-
-/** 通过重建 iframe 刷新外部调试页面及其连接状态。 */
-function refreshFrame() {
-  frameKey.value++
-}
-
-/** 浏览器禁止 iframe 时，可在新标签页直接打开同一调试地址。 */
-function openInNewWindow() {
-  window.open(gatewayUrl, "_blank", "noopener,noreferrer")
-}
 </script>
 
 <template>
   <section class="remote-debug-page">
-    <header class="remote-debug-toolbar">
-      <div>
-        <strong>远程调试</strong>
-        <span>{{ gatewayUrl }}</span>
-      </div>
-      <el-space>
-        <el-button :icon="Refresh" @click="refreshFrame">
-          刷新
-        </el-button>
-        <el-button :icon="Link" @click="openInNewWindow">
-          新窗口打开
-        </el-button>
-      </el-space>
-    </header>
     <iframe
       :key="frameKey"
       :src="gatewayUrl"

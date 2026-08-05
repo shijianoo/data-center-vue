@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { ReviewRuleDefinition } from "../types"
-import { Edit, MagicStick, Plus, Refresh } from "@element-plus/icons-vue"
+import { Delete, Edit, MagicStick, Plus, Refresh } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, reactive, ref, watch } from "vue"
-import { createReviewRule, getApiErrorMessage, getReviewRules, updateReviewRule } from "../apis"
+import { createReviewRule, deleteReviewRule, getApiErrorMessage, getReviewRules, updateReviewRule } from "../apis"
 import { useProjectOptions } from "../composables/useProjectOptions"
 
 type RuleKey = "Range" | "Comparison" | "ConsecutiveSameValue" | "CircularGeofence"
@@ -13,13 +13,13 @@ const rules = ref<ReviewRuleDefinition[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const defaultDialogVisible = ref(false)
-const editingId = ref("")
-const defaultParameterId = ref("")
+const editingId = ref<number | "">("")
+const defaultParameterId = ref<number | "">("")
 const form = reactive({
   code: "",
   name: "",
   implementationKey: "Range" as RuleKey,
-  parameterDefinitionId: "",
+  parameterDefinitionId: "" as number | "",
   description: "",
   metric: "Rtd",
   minimum: 0 as number | null,
@@ -30,11 +30,11 @@ const form = reactive({
   operator: "LessThanOrEqual",
   rightSource: "Constant",
   rightValue: 100 as number | null,
-  rightParameterCode: "",
+  rightParameterDefinitionId: "" as number | "",
   rightMetric: "Rtd",
   count: 3,
-  longitudeParameterCode: "",
-  latitudeParameterCode: "",
+  longitudeParameterDefinitionId: "" as number | "",
+  latitudeParameterDefinitionId: "" as number | "",
   centerSource: "Station" as "Station" | "Manual",
   centerLongitude: null as number | null,
   centerLatitude: null as number | null,
@@ -50,15 +50,38 @@ const templates: Array<{ key: RuleKey, label: string, description: string }> = [
 
 /** 圆形围栏只允许选择独立配置的经度和纬度参数。 */
 const coordinateParameters = computed(() => parameterDefinitions.value.filter(item => item.dataType === "Longitude" || item.dataType === "Latitude"))
-const selectedParameter = computed(() => parameterById.value.get(form.parameterDefinitionId))
+const selectedParameter = computed(() => typeof form.parameterDefinitionId === "number" ? parameterById.value.get(form.parameterDefinitionId) : undefined)
+
+const previewAlertType = computed(() => {
+  if (form.implementationKey === "ConsecutiveSameValue") return "warning"
+  return "success"
+})
 
 const previewText = computed(() => {
-  const parameter = parameterById.value.get(form.parameterDefinitionId)?.name || "目标参数"
-  if (form.implementationKey === "Range") return `${parameter} ${form.metric} 必须在 ${form.minimum ?? "-∞"} 至 ${form.maximum ?? "+∞"} 之间`
-  if (form.implementationKey === "Comparison") return `${parameter} ${form.metric} 必须满足 ${operatorLabel(form.operator)} ${form.rightSource === "Constant" ? form.rightValue : `${form.rightParameterCode}.${form.rightMetric}`}`
-  if (form.implementationKey === "ConsecutiveSameValue") return `${parameter} ${form.metric} 连续 ${form.count} 次相同时判为未通过`
+  const parameter = (typeof form.parameterDefinitionId === "number" ? parameterById.value.get(form.parameterDefinitionId)?.name : undefined) || "目标参数"
+  if (form.implementationKey === "Range") {
+    if (form.minimum != null && form.maximum != null) {
+      return `${parameter} ${form.metric} 在 ${form.minimum} 至 ${form.maximum} 之间判定为【正常通过】，超出范围判定为【异常未通过】`
+    }
+    if (form.minimum != null) {
+      return `${parameter} ${form.metric} ≥ ${form.minimum} 判定为【正常通过】，低于 ${form.minimum} 判定为【异常未通过】`
+    }
+    if (form.maximum != null) {
+      return `${parameter} ${form.metric} ≤ ${form.maximum} 判定为【正常通过】，高于 ${form.maximum} 判定为【异常未通过】`
+    }
+    return `${parameter} ${form.metric} 未配置范围边界`
+  }
+  if (form.implementationKey === "Comparison") {
+    const rightDesc = form.rightSource === "Constant"
+      ? form.rightValue
+      : `${typeof form.rightParameterDefinitionId === "number" ? (parameterById.value.get(form.rightParameterDefinitionId)?.name || form.rightParameterDefinitionId) : "同帧参数"}.${form.rightMetric}`
+    return `${parameter} ${form.metric} ${operatorLabel(form.operator)} ${rightDesc} 时判定为【正常通过】，不满足条件判定为【异常未通过】`
+  }
+  if (form.implementationKey === "ConsecutiveSameValue") {
+    return `${parameter} ${form.metric} 连续 ${form.count} 次值相同判定为【异常未通过】，未出现连续同值判定为【正常通过】`
+  }
   const center = form.centerSource === "Station" ? "站点档案坐标" : `${form.centerLongitude ?? "—"}, ${form.centerLatitude ?? "—"}`
-  return `设备当前坐标必须位于以 ${center} 为圆心、半径 ${form.radiusMeters} 米的范围内`
+  return `设备当前坐标位于以 ${center} 为圆心、半径 ${form.radiusMeters} 米范围内判定为【正常通过】，超出围栏判定为【异常未通过】`
 })
 
 /** 加载全局规则及参数定义。 */
@@ -103,11 +126,11 @@ function edit(row?: ReviewRuleDefinition) {
     operator: config.operator || "LessThanOrEqual",
     rightSource: right.source || "Constant",
     rightValue: right.value ?? 100,
-    rightParameterCode: right.parameterCode || "",
+    rightParameterDefinitionId: right.parameterDefinitionId || right.parameterId || (right.parameterCode ? parameterDefinitions.value.find(p => p.code === right.parameterCode)?.id : "") || "",
     rightMetric: right.metric || "Rtd",
     count: config.count ?? 3,
-    longitudeParameterCode: config.longitudeParameterCode || "",
-    latitudeParameterCode: config.latitudeParameterCode || "",
+    longitudeParameterDefinitionId: config.longitudeParameterDefinitionId || config.longitudeParameterId || (config.longitudeParameterCode ? parameterDefinitions.value.find(p => p.code === config.longitudeParameterCode)?.id : "") || "",
+    latitudeParameterDefinitionId: config.latitudeParameterDefinitionId || config.latitudeParameterId || (config.latitudeParameterCode ? parameterDefinitions.value.find(p => p.code === config.latitudeParameterCode)?.id : "") || "",
     centerSource: config.useStationCoordinates === false ? "Manual" : "Station",
     centerLongitude: config.centerLongitude ?? null,
     centerLatitude: config.centerLatitude ?? null,
@@ -119,7 +142,7 @@ function edit(row?: ReviewRuleDefinition) {
 /** 根据所选参数和规则模板自动生成唯一规则编码、规则名称及说明。 */
 function generateRuleIdentity() {
   if (editingId.value) return
-  const parameter = parameterById.value.get(form.parameterDefinitionId)
+  const parameter = typeof form.parameterDefinitionId === "number" ? parameterById.value.get(form.parameterDefinitionId) : undefined
   const template = templates.find(item => item.key === form.implementationKey)
   if (parameter && template) {
     const suffixes: Record<RuleKey, string> = {
@@ -131,9 +154,9 @@ function generateRuleIdentity() {
     form.code = `${parameter.code}-${suffixes[form.implementationKey]}`
     form.name = `${parameter.name}${template.label}规则`
     form.description = template.description
-    // 选择经纬度目标参数后同步填入对应的围栏参数编码，减少重复选择。
-    if (parameter.dataType === "Longitude") form.longitudeParameterCode = parameter.code
-    if (parameter.dataType === "Latitude") form.latitudeParameterCode = parameter.code
+    // 选择经纬度目标参数后同步填入对应的围栏参数 ID，减少重复选择。
+    if (parameter.dataType === "Longitude") form.longitudeParameterDefinitionId = parameter.id
+    if (parameter.dataType === "Latitude") form.latitudeParameterDefinitionId = parameter.id
   }
 }
 
@@ -155,7 +178,9 @@ function buildConfig() {
     return {
       leftMetric: form.metric,
       operator: form.operator,
-      right: form.rightSource === "Constant" ? { source: "Constant", value: form.rightValue } : { source: "FrameParameter", parameterCode: form.rightParameterCode, metric: form.rightMetric },
+      right: form.rightSource === "Constant"
+        ? { source: "Constant", value: form.rightValue }
+        : { source: "FrameParameter", parameterDefinitionId: form.rightParameterDefinitionId, metric: form.rightMetric },
       missingValuePolicy: form.missingValuePolicy
     }
   }
@@ -163,8 +188,8 @@ function buildConfig() {
     return { count: form.count, metric: form.metric, missingValuePolicy: form.missingValuePolicy }
   }
   return {
-    longitudeParameterCode: form.longitudeParameterCode,
-    latitudeParameterCode: form.latitudeParameterCode,
+    longitudeParameterDefinitionId: form.longitudeParameterDefinitionId,
+    latitudeParameterDefinitionId: form.latitudeParameterDefinitionId,
     radiusMeters: form.radiusMeters,
     useStationCoordinates: form.centerSource === "Station",
     ...(form.centerSource === "Manual" ? { centerLongitude: form.centerLongitude, centerLatitude: form.centerLatitude } : {}),
@@ -178,7 +203,7 @@ function buildSchema(key: RuleKey) {
   if (key === "Range") return { type: "object", properties: { metric: { type: "string" }, minimum: { type: "number" }, maximum: { type: "number" }, includeMinimum: { type: "boolean" }, includeMaximum: { type: "boolean" }, missingValuePolicy: commonPolicy }, required: ["includeMinimum", "includeMaximum", "missingValuePolicy"] }
   if (key === "Comparison") return { type: "object", properties: { leftMetric: { type: "string" }, operator: { type: "string" }, right: { type: "object" }, missingValuePolicy: commonPolicy }, required: ["leftMetric", "operator", "right", "missingValuePolicy"] }
   if (key === "ConsecutiveSameValue") return { type: "object", properties: { count: { type: "integer", minimum: 2, maximum: 100 }, metric: { type: "string" }, missingValuePolicy: commonPolicy }, required: ["count", "metric", "missingValuePolicy"] }
-  return { type: "object", properties: { longitudeParameterCode: { type: "string" }, latitudeParameterCode: { type: "string" }, radiusMeters: { type: "number", exclusiveMinimum: 0 }, useStationCoordinates: { type: "boolean" }, centerLongitude: { type: "number", minimum: -180, maximum: 180 }, centerLatitude: { type: "number", minimum: -90, maximum: 90 }, missingValuePolicy: commonPolicy }, required: ["longitudeParameterCode", "latitudeParameterCode", "radiusMeters", "useStationCoordinates", "missingValuePolicy"] }
+  return { type: "object", properties: { longitudeParameterDefinitionId: { type: "integer" }, latitudeParameterDefinitionId: { type: "integer" }, radiusMeters: { type: "number", exclusiveMinimum: 0 }, useStationCoordinates: { type: "boolean" }, centerLongitude: { type: "number", minimum: -180, maximum: 180 }, centerLatitude: { type: "number", minimum: -90, maximum: 90 }, missingValuePolicy: commonPolicy }, required: ["longitudeParameterDefinitionId", "latitudeParameterDefinitionId", "radiusMeters", "useStationCoordinates", "missingValuePolicy"] }
 }
 
 /** 保存规则并执行模板对应的前端校验。 */
@@ -186,9 +211,11 @@ async function save() {
   if (!form.code.trim() || !form.name.trim() || !form.parameterDefinitionId) return ElMessage.warning("请填写编码、名称并选择参数")
   if (form.implementationKey === "Range" && form.minimum == null && form.maximum == null) return ElMessage.warning("范围规则至少填写一个边界")
   if (form.implementationKey === "Range" && form.minimum != null && form.maximum != null && form.minimum > form.maximum) return ElMessage.warning("最小值不能大于最大值")
-  if (form.implementationKey === "Comparison" && form.rightSource === "FrameParameter" && !form.rightParameterCode) return ElMessage.warning("请选择同帧比较参数")
+  if (form.implementationKey === "Comparison" && form.rightSource === "FrameParameter" && !form.rightParameterDefinitionId) return ElMessage.warning("请选择同帧比较参数")
   if (form.implementationKey === "CircularGeofence" && !["Longitude", "Latitude"].includes(selectedParameter.value?.dataType || "")) return ElMessage.warning("圆形围栏规则的目标参数必须是经度或纬度类型")
-  if (form.implementationKey === "CircularGeofence" && (!form.longitudeParameterCode || !form.latitudeParameterCode)) return ElMessage.warning("请选择经度参数和纬度参数")
+  if (form.implementationKey === "CircularGeofence" && (!form.longitudeParameterDefinitionId || !form.latitudeParameterDefinitionId)) return ElMessage.warning("请选择经度参数和纬度参数")
+  if (form.implementationKey === "CircularGeofence" && form.radiusMeters <= 0) return ElMessage.warning("围栏半径必须大于 0 米")
+  if (form.implementationKey === "CircularGeofence" && form.centerSource === "Manual" && (form.centerLongitude == null || form.centerLatitude == null)) return ElMessage.warning("请输入完整的围栏圆心经纬度")
   if (form.implementationKey === "CircularGeofence" && form.radiusMeters <= 0) return ElMessage.warning("围栏半径必须大于 0 米")
   if (form.implementationKey === "CircularGeofence" && form.centerSource === "Manual" && (form.centerLongitude == null || form.centerLatitude == null)) return ElMessage.warning("请输入完整的围栏圆心经纬度")
   const payload = {
@@ -201,7 +228,7 @@ async function save() {
     description: form.description.trim()
   }
   try {
-    editingId.value ? await updateReviewRule(editingId.value, payload) : await createReviewRule(payload)
+    editingId.value ? await updateReviewRule(editingId.value as number, payload) : await createReviewRule(payload)
     ElMessage.success("审核规则保存成功")
     dialogVisible.value = false
     await loadData()
@@ -210,9 +237,21 @@ async function save() {
   }
 }
 
+/** 删除规则定义。 */
+async function removeRule(row: ReviewRuleDefinition) {
+  await ElMessageBox.confirm(`确认删除规则“${row.name}”？`, "删除确认", { type: "warning" })
+  try {
+    await deleteReviewRule(row.id)
+    ElMessage.success("删除成功")
+    await loadData()
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, "删除失败"))
+  }
+}
+
 /** 为一个参数快速创建范围、比较和连续同值三个可继续调整的默认规则。 */
 async function createDefaults() {
-  const parameter = parameterById.value.get(defaultParameterId.value)
+  const parameter = typeof defaultParameterId.value === "number" ? parameterById.value.get(defaultParameterId.value) : undefined
   if (!parameter) return ElMessage.warning("请选择目标参数")
   await ElMessageBox.confirm("将创建数值范围、条件比较、连续同值三个默认规则（默认阈值可继续编辑），是否继续？", "创建默认规则", { type: "info" })
   loading.value = true
@@ -225,7 +264,7 @@ async function createDefaults() {
   try {
     for (const item of defaults) {
       try {
-        await createReviewRule({ code: `${parameter.code}-${item.suffix}`, name: `${parameter.name}${item.name}规则`, implementationKey: item.key, parameterDefinitionId: parameter.id, defaultConfigJson: JSON.stringify(item.config), configSchemaJson: JSON.stringify(buildSchema(item.key)), description: item.name })
+        await createReviewRule({ code: `${parameter.code}-${item.suffix}`, name: `${parameter.name}${item.name}规则`, implementationKey: item.key, parameterDefinitionId: parameter.id, defaultConfigJson: JSON.stringify(item.config), description: item.name })
         success++
       } catch { /* 编码冲突时继续创建其他模板，最后统一反馈。 */ }
     }
@@ -237,7 +276,7 @@ async function createDefaults() {
   }
 }
 
-function parameterName(id: string) {
+function parameterName(id: number) {
   const item = parameterById.value.get(id)
   return item ? `${item.name}（${item.code}）` : id
 }
@@ -265,7 +304,7 @@ onMounted(loadData)
         </el-button>
       </el-space>
     </div>
-    <el-alert title="规则定义由全局复用；本站点的阈值差异请在“规则绑定”中覆盖。当前后端未提供规则定义删除接口。" type="info" :closable="false" show-icon />
+    <el-alert title="规则定义由全局复用；本站点的阈值差异请在“规则绑定”中覆盖。" type="info" :closable="false" show-icon />
     <el-table v-loading="loading" :data="rules" class="rule-table" height="100%">
       <el-table-column prop="code" label="规则编码" min-width="170" fixed />
       <el-table-column prop="name" label="规则名称" min-width="190" />
@@ -281,10 +320,12 @@ onMounted(loadData)
       </el-table-column>
       <el-table-column prop="defaultConfigJson" label="默认配置" min-width="250" show-overflow-tooltip />
       <el-table-column prop="description" label="说明" min-width="170" show-overflow-tooltip />
-      <el-table-column label="操作" width="90" fixed="right">
+      <el-table-column label="操作" width="160" fixed="right">
         <template #default="scope">
           <el-button link type="primary" :icon="Edit" @click="edit(scope.row)">
             编辑
+          </el-button><el-button link type="danger" :icon="Delete" @click="removeRule(scope.row)">
+            删除
           </el-button>
         </template>
       </el-table-column>
@@ -361,9 +402,9 @@ onMounted(loadData)
           </el-form-item>
           <el-row v-else :gutter="16">
             <el-col :span="14">
-              <el-form-item label="参数编码">
-                <el-select v-model="form.rightParameterCode" filterable>
-                  <el-option v-for="item in parameterDefinitions" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.code" />
+              <el-form-item label="比较参数">
+                <el-select v-model="form.rightParameterDefinitionId" filterable style="width: 100%">
+                  <el-option v-for="item in parameterDefinitions" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.id" />
                 </el-select>
               </el-form-item>
             </el-col><el-col :span="10">
@@ -381,14 +422,14 @@ onMounted(loadData)
           <el-row :gutter="16" class="geofence-fields">
             <el-col :span="12">
               <el-form-item label="经度参数" required>
-                <el-select v-model="form.longitudeParameterCode" filterable style="width: 100%">
-                  <el-option v-for="item in coordinateParameters.filter(item => item.dataType === 'Longitude')" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.code" />
+                <el-select v-model="form.longitudeParameterDefinitionId" filterable style="width: 100%">
+                  <el-option v-for="item in coordinateParameters.filter(item => item.dataType === 'Longitude')" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.id" />
                 </el-select>
               </el-form-item>
             </el-col><el-col :span="12">
               <el-form-item label="纬度参数" required>
-                <el-select v-model="form.latitudeParameterCode" filterable style="width: 100%">
-                  <el-option v-for="item in coordinateParameters.filter(item => item.dataType === 'Latitude')" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.code" />
+                <el-select v-model="form.latitudeParameterDefinitionId" filterable style="width: 100%">
+                  <el-option v-for="item in coordinateParameters.filter(item => item.dataType === 'Latitude')" :key="item.id" :label="`${item.name}（${item.code}）`" :value="item.id" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -396,7 +437,7 @@ onMounted(loadData)
           <el-form-item label="围栏圆心">
             <el-radio-group v-model="form.centerSource">
               <el-radio value="Station">
-                使用站点档案坐标
+                使用站点坐标
               </el-radio><el-radio value="Manual">
                 手动指定坐标
               </el-radio>
@@ -423,7 +464,7 @@ onMounted(loadData)
             <el-option label="标记为规则错误（建议）" value="Error" /><el-option label="视为通过" value="Pass" /><el-option label="视为失败" value="Fail" />
           </el-select>
         </el-form-item>
-        <el-alert :title="previewText" type="success" :closable="false" show-icon />
+        <el-alert :title="previewText" :type="previewAlertType" :closable="false" show-icon />
         <el-form-item label="说明" class="description-item">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
