@@ -126,15 +126,41 @@ export function displayWaterQualityGrade(cell: { valueText?: string | null, nume
   return formatWaterQualityGrade(cell.valueText ?? cell.numericValue?.toString())
 }
 
+/** 特定参数 code 的值映射配置（例如状态码转为可读文本）。 */
+export const parameterValueMap: Record<string, Record<string | number, string>> = {
+  leakst: {
+    0: "未进水",
+    1: "已进水",
+    2: "断路",
+    3: "短路"
+  },
+  doorst: {
+    0: "关舱",
+    1: "开舱"
+  }
+}
+
 /**
  * 按参数配置格式化测量值。
  * decimalPlaces 大于等于 0 时严格保留指定小数位（为 0 时不显示小数部分）；为 null/undefined 时保留后端完整值文本。
  */
 export function displayMeasurementValue(
   cell: { valueText?: string | null, numericValue?: number | null } | null | undefined,
-  column: { decimalPlaces?: number | null, code?: string, dataType?: string, isDerived?: boolean }
+  column: { decimalPlaces?: number | null, code?: string, dataType?: string, isDerived?: boolean },
+  customValueMap: Record<string, Record<string | number, string>> = parameterValueMap
 ) {
   if (!cell) return "—"
+
+  if (column.code && customValueMap[column.code]) {
+    const codeMap = customValueMap[column.code]
+    const candidates = [cell.numericValue, cell.valueText].filter((val): val is string | number => val != null)
+    for (const val of candidates) {
+      if (val in codeMap) {
+        return codeMap[val]
+      }
+    }
+  }
+
   if (column.code === "waterQualityGrade" || column.dataType === "Enum" || column.isDerived) {
     return displayWaterQualityGrade(cell)
   }
