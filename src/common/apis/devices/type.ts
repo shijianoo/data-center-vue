@@ -2,6 +2,7 @@ import type { Entity } from "@/common/apis/type"
 
 export interface DeviceExtra {
   id?: string
+  uiProfile?: string
   richText?: string
   tags?: string[]
 }
@@ -51,6 +52,7 @@ export interface Device extends Entity<string> {
   lastUploadTime: string
   description?: string
   isActive: boolean
+  extra?: DeviceExtra
   modelNumber?: string
   modelName?: string
   upgradeTasks?: DeviceUpgrade[]

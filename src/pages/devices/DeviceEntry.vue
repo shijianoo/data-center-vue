@@ -8,6 +8,10 @@ const pageMap: Record<string, any> = {
     loader: () => import("./SOB23BSv1t1/Device.vue"),
     loadingComponent: AsyncLoading
   }),
+  SOB23BSv2t1: defineAsyncComponent({
+    loader: () => import("./SOB23BSv2t1/Device.vue"),
+    loadingComponent: AsyncLoading
+  }),
   SOB10: defineAsyncComponent({
     loader: () => import("./SOB10v1t1/Device.vue"),
     loadingComponent: AsyncLoading
@@ -26,7 +30,12 @@ const tenantContextStore = useTenantContextStore()
 const deviceComponent = shallowRef()
 watch(() => tenantContextStore.currentDevice, (device) => {
   if (device) {
-    deviceComponent.value = getDevicePage(device.modelNumber!)
+    const uiProfile = device.extra?.uiProfile
+    if (uiProfile) {
+      deviceComponent.value = getDevicePage(uiProfile)
+    } else {
+      deviceComponent.value = getDevicePage(device.modelNumber!)
+    }
   } else if (device === null) {
     deviceComponent.value = pageMap.NotFound
   }

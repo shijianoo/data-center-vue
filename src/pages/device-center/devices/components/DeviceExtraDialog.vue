@@ -104,6 +104,9 @@ function handleRemoveTag(tag: string) {
       <el-form :model="formData" label-width="100px">
         <el-tabs type="border-card">
           <el-tab-pane label="基础配置">
+            <el-form-item label="UI 配置">
+              <el-input v-model="formData.uiProfile" placeholder="请输入 UI 配置" />
+            </el-form-item>
             <el-form-item prop="tags" label="设备标签">
               <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
                 <el-tag

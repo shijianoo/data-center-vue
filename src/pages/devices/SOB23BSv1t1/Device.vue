@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { MonitorItem } from "../components/MonitorGrid.vue"
 import type { Device } from "@/common/apis/devices/type"
-import { Clock } from "@element-plus/icons-vue"
+import { Clock, Upload } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
 import { getLatestTelemetryData } from "@/common/apis/telemetry"
 import { formatHybridAgo } from "@/common/utils/datetime"
@@ -9,6 +9,7 @@ import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb
 import DynamicCmdBtn from "../components/device-ctrl/DynamicCmdBtn.vue"
 import StaticCmdBtn from "../components/device-ctrl/StaticCmdBtn.vue"
 import DeviceLocation from "../components/DeviceLocation.vue"
+import FirmwareUpgradeDialog from "../components/FirmwareUpgradeDialog.vue"
 import MonitorGrid from "../components/MonitorGrid.vue"
 import TelemetryChart from "../components/TelemetryChart.vue"
 
@@ -26,6 +27,8 @@ const latestDataTime = ref<string | undefined>(undefined)
 const csq = ref(0)
 const lon = ref(0)
 const lat = ref(0)
+const showFirmwareDialog = ref(false)
+
 async function fetchLatestData() {
   try {
     monitorItems.value = []
@@ -95,6 +98,9 @@ watch(() => device.deviceCode, () => {
         <el-button :icon="Clock" @click="goToHistoryPage">
           历史数据
         </el-button>
+        <el-button v-role="['platform_admin', 'platform_ops']" type="primary" :icon="Upload" @click="showFirmwareDialog = true">
+          固件升级
+        </el-button>
       </div>
     </div>
 
@@ -157,6 +163,11 @@ watch(() => device.deviceCode, () => {
         :latitude="lat"
       />
     </div>
+
+    <FirmwareUpgradeDialog
+      v-model:visible="showFirmwareDialog"
+      :device-id="device.id"
+    />
   </div>
 </template>
 
@@ -221,11 +232,11 @@ watch(() => device.deviceCode, () => {
   }
   .dh-actions {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
     .el-button {
-      flex: 1;
+      margin-left: 0 !important;
       justify-content: center;
     }
   }
