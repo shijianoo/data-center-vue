@@ -240,8 +240,15 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="140">
           <template #default="scope">
-            <div v-if="scope.row.values[column.code]" class="cell-value">
-              {{ displayMeasurementValue(scope.row.values[column.code], column) }}
+            <div v-if="scope.row.values[column.code]" class="cell-value-container">
+              <span class="cell-value">
+                {{ displayMeasurementValue(scope.row.values[column.code], column) }}
+              </span>
+              <span
+                v-if="scope.row.values[column.code]?.source === 'Beidou'"
+                class="beidou-badge"
+                title="数据来源：北斗转发"
+              >北</span>
             </div>
             <span v-else class="empty-cell">—</span>
           </template>
@@ -315,8 +322,24 @@ onMounted(async () => {
   justify-content: flex-end;
   margin-bottom: 0;
 }
+.cell-value-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
 .cell-value {
   font-weight: 600;
+}
+.beidou-badge {
+  position: absolute;
+  top: -2px;
+  right: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--el-color-warning, #e6a23c);
+  cursor: help;
+  user-select: none;
 }
 :deep(.measurement-cell--warning) {
   background-color: rgba(230, 162, 60, 0.14) !important;
