@@ -9,7 +9,7 @@ import { useUserStore } from "@/pinia/stores/user"
 import { exportMeasurements, getApiErrorMessage, queryMeasurementAutoReviewResult, queryMeasurements, updateEffectiveValue } from "../apis"
 import QueryFilter from "../components/QueryFilter.vue"
 import { useProjectOptions } from "../composables/useProjectOptions"
-import { autoReviewLabels, autoReviewTagType, displayMeasurementValue, displayParameterLabel, displayTime, getWholeDayRange, toDayEndIso, toDayStartIso } from "../utils"
+import { autoReviewLabels, autoReviewTagType, displayIngestionSource, displayMeasurementValue, displayParameterLabel, displayTime, getWholeDayRange, ingestionSourceTagType, toDayEndIso, toDayStartIso } from "../utils"
 
 const { stations, stationGroups, loadStations, loadStationGroups, stationById, groupById } = useProjectOptions()
 const userStore = useUserStore()
@@ -249,21 +249,30 @@ onMounted(async () => {
       </el-table>
     </section>
 
-    <el-dialog v-if="userStore.isPlatformUser" v-model="detailVisible" :title="`${detailColumn?.name || ''} 数据修正`" width="600px">
+    <el-dialog v-if="userStore.isPlatformUser" v-model="detailVisible" :title="`${detailColumn?.name || ''} 数据点详情`" width="600px">
       <el-descriptions v-if="detailCell" :column="2" border>
+        <el-descriptions-item label="参数名称">
+          {{ detailColumn?.name || '—' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="数据点 ID">
+          {{ detailCell.pointId || '—' }}
+        </el-descriptions-item>
         <el-descriptions-item label="当前值">
           {{ detailColumn ? displayMeasurementValue(detailCell, detailColumn) : '—' }} {{ detailColumn?.unit }}
         </el-descriptions-item>
         <el-descriptions-item label="接收时间">
           {{ displayTime(detailCell.receivedAt) }}
         </el-descriptions-item>
+        <el-descriptions-item label="数据来源">
+          <el-tag v-if="detailCell.source" size="small" :type="ingestionSourceTagType(detailCell.source)">
+            {{ displayIngestionSource(detailCell.source) }}
+          </el-tag>
+          <span v-else>—</span>
+        </el-descriptions-item>
         <el-descriptions-item label="自动审核">
           <el-tag :type="autoReviewTagType(detailCell.autoReviewStatus)">
             {{ autoReviewLabels[detailCell.autoReviewStatus || ''] || detailCell.autoReviewStatus || '—' }}
           </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="数据点 ID" :span="2">
-          {{ detailCell.pointId || '聚合数据无数据点 ID' }}
         </el-descriptions-item>
       </el-descriptions>
       <el-form label-width="100px" class="correction-form">

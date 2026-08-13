@@ -1,4 +1,4 @@
-import type { EntityId, WaterQualityGrade } from "../common/type"
+import type { EntityId, IngestionSource, WaterQualityGrade } from "../common/type"
 import type { ParameterDefinition } from "../parameter/type"
 
 /** 站点状态。 */
@@ -119,6 +119,8 @@ export interface IngestionMessageModel {
   id: EntityId
   /** 接收时间 */
   receivedAt: string
+  /** 原始报文进入平台的来源 */
+  source?: IngestionSource
   /** 唯一交互号 */
   qn: string
   /** 命令编码 */

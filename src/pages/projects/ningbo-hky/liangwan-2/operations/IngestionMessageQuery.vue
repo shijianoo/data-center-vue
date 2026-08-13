@@ -6,7 +6,7 @@ import { onMounted, ref, watch } from "vue"
 import { getApiErrorMessage } from "../apis"
 import { getIngestionMessages } from "../apis/station"
 import { useProjectOptions } from "../composables/useProjectOptions"
-import { displayTime } from "../utils"
+import { displayIngestionSource, displayTime, ingestionSourceTagType } from "../utils"
 
 const { stations, loadStations } = useProjectOptions()
 const stationId = ref<number | "">("")
@@ -71,6 +71,14 @@ onMounted(async () => {
         <el-table-column prop="receivedAt" label="接收时间" width="180">
           <template #default="scope">
             {{ displayTime(scope.row.receivedAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="source" label="报文来源" width="120">
+          <template #default="scope">
+            <el-tag v-if="scope.row.source" size="small" :type="ingestionSourceTagType(scope.row.source)">
+              {{ displayIngestionSource(scope.row.source) }}
+            </el-tag>
+            <span v-else>—</span>
           </template>
         </el-table-column>
         <el-table-column prop="qn" label="交互号(QN)" width="200" />

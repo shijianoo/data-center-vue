@@ -1,4 +1,4 @@
-import type { AutoReviewStatus, EntityId, Granularity, WaterQualityGrade } from "../common/type"
+import type { AutoReviewStatus, EntityId, Granularity, IngestionSource, WaterQualityGrade } from "../common/type"
 
 export type CalculationMode = "Direct" | "TimeSlot"
 
@@ -42,6 +42,8 @@ export interface MeasurementTableCell {
   autoReviewStatus?: AutoReviewStatus
   /** 聚合样本数。 */
   sampleCount?: number
+  /** 原始数据的接收来源；仅原始查询返回 */
+  source?: IngestionSource
 }
 
 /** 修正测量点的有效值。 */

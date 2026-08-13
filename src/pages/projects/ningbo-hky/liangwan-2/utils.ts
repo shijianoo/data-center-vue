@@ -1,4 +1,5 @@
-import type { AutoReviewStatus, ManualReviewStatus } from "./types"
+import type { AutoReviewStatus, IngestionSource, ManualReviewStatus } from "./types"
+
 import dayjs from "dayjs"
 
 /** 自动审核状态的中文名称。 */
@@ -7,6 +8,28 @@ export const autoReviewLabels: Record<string, string> = {
   Failed: "未通过",
   Error: "规则异常",
   NoRule: "未配置规则"
+}
+
+/** 报文/数据来源中文名称。 */
+export const ingestionSourceLabels: Record<string, string> = {
+  Tcp: "TCP 网关",
+  Beidou: "北斗转发",
+  HttpApi: "HTTP 接口",
+  Unknown: "未知"
+}
+
+/** 格式化报文/数据来源。 */
+export function displayIngestionSource(source?: IngestionSource | string | null): string {
+  if (!source) return "—"
+  return ingestionSourceLabels[source] || source
+}
+
+/** 报文/数据来源对应 Element Plus 标签类型。 */
+export function ingestionSourceTagType(source?: IngestionSource | string | null): "info" | "warning" | "success" | "primary" {
+  if (source === "Tcp") return "info"
+  if (source === "Beidou") return "warning"
+  if (source === "HttpApi") return "success"
+  return "info"
 }
 
 /** 人工审核状态的中文名称。 */
