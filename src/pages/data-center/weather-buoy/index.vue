@@ -70,7 +70,7 @@ async function handleDownload() {
     return
   }
 
-  const dateRange = await selectDateRange({ maxDays: 30 })
+  const dateRange = await selectDateRange({ maxDays: 365 })
   if (!dateRange) {
     // 用户取消了选择
     return
