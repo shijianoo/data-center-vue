@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Granularity, Station } from "../types"
-import { nextTick } from "vue"
+import { computed, nextTick, watch } from "vue"
+import { useUserStore } from "@/pinia/stores/user"
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   /** 可选站点。 */
   stations: Station[]
   /** 当前站点主键。 */
@@ -28,6 +29,27 @@ const emit = defineEmits<{
   "update:granularity": [value: Granularity]
   "search": []
 }>()
+
+const userStore = useUserStore()
+const HIDDEN_GROUP_KEYWORDS = ["系统", "GPS", "太阳能"]
+
+/** 仅平台管理员可查看系统、GPS、太阳能等特殊参数组 */
+const filteredGroups = computed(() => {
+  if (userStore.isPlatformAdmin) return props.groups
+  return props.groups.filter(g =>
+    !HIDDEN_GROUP_KEYWORDS.some(kw => g.name.includes(kw) || g.name.toLowerCase().includes(kw.toLowerCase()))
+  )
+})
+
+/** 当可用参数组列表变化且当前选中的 groupId 无效时，自动切到首个可用参数组 */
+watch([filteredGroups, () => props.groupId], ([validGroups, currentGroupId]) => {
+  if (validGroups.length > 0) {
+    const exists = validGroups.some(g => g.id === currentGroupId)
+    if (!exists) {
+      emit("update:groupId", validGroups[0].id)
+    }
+  }
+}, { immediate: true })
 
 /** 站点变化时清空旧参数组，避免提交跨站点的参数组主键。 */
 function handleStationChange(value: number | "") {
@@ -86,12 +108,12 @@ function handleTabChange(value: import("element-plus").TabPaneName) {
   </el-form>
   <div class="parameter-group-tabs">
     <el-tabs
-      v-if="groups.length"
+      v-if="filteredGroups.length"
       :model-value="groupId"
       class="parameter-group-tabs__content"
       @tab-change="handleTabChange($event)"
     >
-      <el-tab-pane v-for="item in groups" :key="item.id" :label="item.name" :name="item.id" />
+      <el-tab-pane v-for="item in filteredGroups" :key="item.id" :label="item.name" :name="item.id" />
     </el-tabs>
     <span v-else class="parameter-group-tabs__empty">{{ stationId ? '当前站点暂无参数组' : '请先选择站点' }}</span>
   </div>

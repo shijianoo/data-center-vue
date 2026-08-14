@@ -13,10 +13,43 @@ const stationId = ref<number | "">("")
 const loading = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref<number | "">("")
-const form = reactive({ ruleDefinitionId: "" as number | "", stationId: "" as number | "", configOverrideJson: "{}", priority: 10 })
+const form = reactive({ ruleDefinitionId: "" as number | "", ruleDefinitionIds: [] as number[], stationId: "" as number | "", configOverrideJson: "{}", priority: 10 })
 const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
+const dialogBindings = ref<ReviewRuleBinding[]>([])
+
+/** 创建绑定时自动过滤已绑定的规则定义 */
+const availableRules = computed(() => {
+  if (editingId.value) return rules.value
+  const boundRuleIds = new Set(dialogBindings.value.map(b => b.ruleDefinitionId))
+  return rules.value.filter(rule => !boundRuleIds.has(rule.id))
+})
 
 watch(stationId, loadBindings)
+
+/** 当对话框打开、目标站点改变或当前站点绑定变化时，同步目标站点的已有规则绑定 */
+watch([dialogVisible, () => form.stationId, bindings], async ([visible, targetStationId]) => {
+  if (!visible || !targetStationId) {
+    dialogBindings.value = []
+    return
+  }
+  if (targetStationId === stationId.value) {
+    dialogBindings.value = bindings.value
+  } else {
+    try {
+      const { data } = await getReviewRuleBindings(targetStationId as number)
+      dialogBindings.value = data ?? []
+    } catch {
+      dialogBindings.value = []
+    }
+  }
+})
+
+/** 创建模式下在对话框中重选站点时，清空已选的规则 */
+watch(() => form.stationId, () => {
+  if (!editingId.value) {
+    form.ruleDefinitionIds = []
+  }
+})
 
 /** 加载当前站点的规则绑定。 */
 async function loadBindings() {
@@ -38,26 +71,56 @@ async function loadBindings() {
 /** 打开规则绑定新增或编辑表单。 */
 function edit(row?: ReviewRuleBinding) {
   editingId.value = row?.id || ""
-  Object.assign(form, row ? { ruleDefinitionId: row.ruleDefinitionId, stationId: row.stationId, configOverrideJson: row.configOverrideJson || "{}", priority: row.priority } : { ruleDefinitionId: "", stationId: stationId.value, configOverrideJson: "{}", priority: 10 })
+  if (row) {
+    form.ruleDefinitionId = row.ruleDefinitionId
+    form.ruleDefinitionIds = [row.ruleDefinitionId]
+    form.stationId = row.stationId
+    form.configOverrideJson = row.configOverrideJson || "{}"
+    form.priority = row.priority
+  } else {
+    form.ruleDefinitionId = ""
+    form.ruleDefinitionIds = []
+    form.stationId = stationId.value
+    form.configOverrideJson = "{}"
+    form.priority = 10
+  }
   dialogVisible.value = true
 }
 
 /** 校验站点覆盖 JSON 并保存规则绑定。 */
 async function save() {
-  if (!form.stationId || !form.ruleDefinitionId) return ElMessage.warning("请选择站点和规则")
-  try {
-    JSON.parse(form.configOverrideJson || "{}")
-  } catch {
-    return ElMessage.warning("阈值覆盖必须是合法 JSON")
-  }
-  try {
-    editingId.value ? await updateReviewRuleBinding(editingId.value as number, { ...form, ruleDefinitionId: form.ruleDefinitionId as number, stationId: form.stationId as number, configOverrideJson: form.configOverrideJson || "{}" }) : await createReviewRuleBinding({ ...form, ruleDefinitionId: form.ruleDefinitionId as number, stationId: form.stationId as number, configOverrideJson: form.configOverrideJson || "{}" })
-    ElMessage.success("规则绑定保存成功")
-    dialogVisible.value = false
-    stationId.value = form.stationId
-    await loadBindings()
-  } catch (error) {
-    ElMessage.error(getApiErrorMessage(error, "规则绑定保存失败"))
+  if (editingId.value) {
+    try {
+      JSON.parse(form.configOverrideJson || "{}")
+    } catch {
+      return ElMessage.warning("阈值覆盖必须是合法 JSON")
+    }
+    try {
+      await updateReviewRuleBinding(editingId.value as number, {
+        configOverrideJson: form.configOverrideJson || "{}",
+        priority: form.priority
+      })
+      ElMessage.success("规则绑定修改成功")
+      dialogVisible.value = false
+      await loadBindings()
+    } catch (error) {
+      ElMessage.error(getApiErrorMessage(error, "规则绑定修改失败"))
+    }
+  } else {
+    if (!form.stationId) return ElMessage.warning("请选择站点")
+    if (!form.ruleDefinitionIds.length) return ElMessage.warning("请选择至少一条审核规则")
+    try {
+      await createReviewRuleBinding({
+        stationId: form.stationId as number,
+        ruleDefinitionIds: form.ruleDefinitionIds
+      })
+      ElMessage.success("规则绑定创建成功")
+      dialogVisible.value = false
+      stationId.value = form.stationId
+      await loadBindings()
+    } catch (error) {
+      ElMessage.error(getApiErrorMessage(error, "规则绑定创建失败"))
+    }
   }
 }
 
@@ -143,24 +206,42 @@ onMounted(async () => {
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑规则绑定' : '新增规则绑定'" width="620px">
       <el-form :model="form" label-width="115px">
         <el-form-item label="站点" required>
-          <el-select v-model="form.stationId" filterable style="width: 100%">
+          <el-select v-model="form.stationId" :disabled="!!editingId" filterable style="width: 100%">
             <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="审核规则" required>
-          <el-select v-model="form.ruleDefinitionId" filterable style="width: 100%">
-            <el-option v-for="rule in rules" :key="rule.id" :label="`${rule.name}（${rule.code}）`" :value="rule.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="全局默认配置">
-          <pre class="default-config">{{ defaultConfig(form.ruleDefinitionId) }}</pre>
-        </el-form-item>
-        <el-form-item label="本站阈值覆盖">
-          <el-input v-model="form.configOverrideJson" type="textarea" :rows="5" placeholder="不覆盖时填写 {}；仅填写变化字段，如 {&quot;maximum&quot;:35}" />
-        </el-form-item>
-        <el-form-item label="优先级">
-          <el-input-number v-model="form.priority" :min="0" /><span class="priority-help">数字越小越先执行</span>
-        </el-form-item>
+        <template v-if="editingId">
+          <el-form-item label="审核规则">
+            <el-select :model-value="form.ruleDefinitionId" disabled style="width: 100%">
+              <el-option v-for="rule in rules" :key="rule.id" :label="`${rule.name}（${rule.code}）`" :value="rule.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="全局默认配置">
+            <pre class="default-config">{{ defaultConfig(form.ruleDefinitionId) }}</pre>
+          </el-form-item>
+          <el-form-item label="本站阈值覆盖">
+            <el-input v-model="form.configOverrideJson" type="textarea" :rows="5" placeholder="不覆盖时填写 {}；仅填写变化字段，如 {&quot;maximum&quot;:35}" />
+          </el-form-item>
+          <el-form-item label="优先级">
+            <el-input-number v-model="form.priority" :min="0" /><span class="priority-help">数字越小越先执行</span>
+          </el-form-item>
+        </template>
+        <template v-else>
+          <el-form-item label="审核规则" required>
+            <el-select
+              v-model="form.ruleDefinitionIds"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
+              filterable
+              placeholder="请选择审核规则（可多选）"
+              no-data-text="该站点所有规则均已绑定"
+              style="width: 100%"
+            >
+              <el-option v-for="rule in availableRules" :key="rule.id" :label="`${rule.name}（${rule.code}）`" :value="rule.id" />
+            </el-select>
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">

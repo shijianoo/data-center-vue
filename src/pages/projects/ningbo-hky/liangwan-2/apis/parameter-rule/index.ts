@@ -1,4 +1,4 @@
-import type { ReviewRuleBinding, ReviewRuleDefinition } from "./type"
+import type { BatchCreateReviewRuleBindingsCommand, ReviewRuleBinding, ReviewRuleDefinition, UpdateReviewRuleBindingCommand } from "./type"
 import { ecoClient } from "../client"
 
 /** 查询自动审核规则定义。 */
@@ -24,12 +24,12 @@ export function getReviewRuleBindings(stationId?: number) {
   return ecoClient.get<ReviewRuleBinding[]>("/review-rule-bindings", { params: { stationId } })
 }
 
-export function createReviewRuleBinding(data: Omit<ReviewRuleBinding, "id">) {
-  return ecoClient.post<ReviewRuleBinding>("/review-rule-bindings", data)
+export function createReviewRuleBinding(data: BatchCreateReviewRuleBindingsCommand) {
+  return ecoClient.post("/review-rule-bindings", data)
 }
 
-export function updateReviewRuleBinding(id: number, data: Omit<ReviewRuleBinding, "id">) {
-  return ecoClient.put(`/review-rule-bindings/${id}`, data)
+export function updateReviewRuleBinding(id: number, data: UpdateReviewRuleBindingCommand) {
+  return ecoClient.put<ReviewRuleBinding>(`/review-rule-bindings/${id}`, data)
 }
 
 export function deleteReviewRuleBinding(id: number) {
