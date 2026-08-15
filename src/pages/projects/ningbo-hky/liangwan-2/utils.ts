@@ -24,6 +24,31 @@ export function displayIngestionSource(source?: IngestionSource | string | null)
   return ingestionSourceLabels[source] || source
 }
 
+/** 仅平台用户可见的内部系统/运维类参数组关键词。 */
+export const INTERNAL_SYSTEM_GROUP_KEYWORDS = ["系统", "GPS", "太阳能"]
+
+/**
+ * 判断指定参数组名称在当前用户身份下是否可见。
+ * 只要当前用户为平台用户（isPlatformUser 为 truthy）即显示；非平台用户隐藏“系统”、“GPS”、“太阳能”等参数组。
+ */
+export function isParameterGroupVisible(groupName?: string | null, isPlatformUser?: boolean | string): boolean {
+  if (!groupName) return false
+  if (isPlatformUser) return true
+  const lowerName = groupName.toLowerCase()
+  return !INTERNAL_SYSTEM_GROUP_KEYWORDS.some(kw => lowerName.includes(kw.toLowerCase()))
+}
+
+/**
+ * 根据用户身份过滤可展示的参数组列表。
+ */
+export function filterVisibleParameterGroups<T extends { name?: string, parameterGroupName?: string }>(
+  groups: T[],
+  isPlatformUser?: boolean | string
+): T[] {
+  if (isPlatformUser) return groups
+  return groups.filter(g => isParameterGroupVisible(g.name ?? g.parameterGroupName, isPlatformUser))
+}
+
 /** 报文/数据来源对应 Element Plus 标签类型。 */
 export function ingestionSourceTagType(source?: IngestionSource | string | null): "info" | "warning" | "success" | "primary" {
   if (source === "Tcp") return "info"

@@ -2,11 +2,14 @@
 import type { DataRateResult } from "../types"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref, watch } from "vue"
+import { useUserStore } from "@/pinia/stores/user"
 import { getApiErrorMessage, getDataRates } from "../apis"
 import { useProjectOptions } from "../composables/useProjectOptions"
-import { displayRate, getDefaultDateRange, toDayEndIso, toDayStartIso } from "../utils"
+import { displayRate, filterVisibleParameterGroups, getDefaultDateRange, toDayEndIso, toDayStartIso } from "../utils"
 
 const { stations, stationGroups, loadStations, loadStationGroups, stationById } = useProjectOptions()
+const userStore = useUserStore()
+
 const stationId = ref<number | "">("")
 const groupId = ref<number | "">("")
 const dateRange = ref<[Date, Date]>(getDefaultDateRange(24 * 30))
@@ -16,9 +19,17 @@ const loading = ref(false)
 
 const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
 
+/** 根据用户身份过滤后可展示的参数组 */
+const filteredStationGroups = computed(() => filterVisibleParameterGroups(stationGroups.value, userStore.isPlatformUser))
+
 watch(stationId, async (value) => {
   groupId.value = ""
+  rows.value = []
   await loadStationGroups(typeof value === "number" ? stationById.value.get(value)?.mn : undefined)
+  if (filteredStationGroups.value[0]) {
+    groupId.value = filteredStationGroups.value[0].id
+    await search()
+  }
 })
 
 /** 查询参数组内每个参数的应收、实收、有效、缺失与重复指标。 */
@@ -62,7 +73,7 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="参数组">
           <el-select v-model="groupId" placeholder="请选择参数组" style="width: 180px">
-            <el-option v-for="group in stationGroups" :key="group.id" :label="group.name" :value="group.id" />
+            <el-option v-for="group in filteredStationGroups" :key="group.id" :label="group.name" :value="group.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="时间范围">

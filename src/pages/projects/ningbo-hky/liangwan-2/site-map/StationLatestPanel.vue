@@ -3,7 +3,8 @@ import type { LatestMeasurementResult, Station } from "../types"
 import { Close } from "@element-plus/icons-vue"
 import { computed, ref } from "vue"
 import { formatHybridAgo } from "@/common/utils/datetime"
-import { formatWaterQualityGrade, waterQualityGradeTagType } from "../utils"
+import { useUserStore } from "@/pinia/stores/user"
+import { filterVisibleParameterGroups, formatWaterQualityGrade, waterQualityGradeTagType } from "../utils"
 
 const props = defineProps<{
   /** 当前选中的站点。 */
@@ -18,7 +19,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: [], queryTrajectory: [range: [Date, Date]] }>()
 
+const userStore = useUserStore()
+
 const currentGrade = computed(() => props.latest?.waterQualityGrade || props.mapItemGrade)
+
+/** 根据用户身份过滤后可展示的最新参数组 */
+const displayParameterGroups = computed(() =>
+  filterVisibleParameterGroups(props.latest?.parameterGroups ?? [], userStore.isPlatformUser)
+)
 
 const to = new Date()
 const from = new Date(to.getTime() - 7 * 24 * 3600 * 1000)
@@ -79,9 +87,9 @@ function displayValue(value?: string, unit?: string) {
 
     <el-skeleton v-if="loading" :rows="8" animated class="latest-panel__loading" />
     <el-scrollbar v-else class="latest-panel__body">
-      <el-empty v-if="!latest?.parameterGroups?.length" description="该站点暂无参数数据" />
+      <el-empty v-if="!displayParameterGroups.length" description="该站点暂无参数数据" />
       <template v-else>
-        <section v-for="group in latest.parameterGroups" :key="group.ParameterGroupId" class="data-section">
+        <section v-for="group in displayParameterGroups" :key="group.ParameterGroupId" class="data-section">
           <div class="section-head">
             <span>{{ group.parameterGroupName }}</span>
             <small v-if="group.observedAt">
