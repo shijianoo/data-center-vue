@@ -42,12 +42,16 @@ async function loadStations() {
   loading.value = true
   try {
     const { data } = await getStationMap()
-    locatedStations.value = data.map(item => ({
-      station: item.station,
-      longitude: item.latestCoordinates?.longitude ?? item.station.longitude ?? null,
-      latitude: item.latestCoordinates?.latitude ?? item.station.latitude ?? null,
-      waterQualityGrade: item.waterQualityGrade
-    }))
+    locatedStations.value = data.map((item) => {
+      const hasLatest
+        = item.latestCoordinates?.longitude != null && Number(item.latestCoordinates.longitude) !== 0
+      return {
+        station: item.station,
+        longitude: hasLatest ? item.latestCoordinates.longitude : (item.station.longitude ?? null),
+        latitude: hasLatest ? item.latestCoordinates.latitude : (item.station.latitude ?? null),
+        waterQualityGrade: item.waterQualityGrade
+      }
+    })
     renderMarkers()
     drawGeofences(data)
   } catch (error) {
