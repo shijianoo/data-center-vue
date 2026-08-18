@@ -11,6 +11,7 @@ import StaticCmdBtn from "../components/device-ctrl/StaticCmdBtn.vue"
 import DeviceLocation from "../components/DeviceLocation.vue"
 import FirmwareUpgradeDialog from "../components/FirmwareUpgradeDialog.vue"
 import MonitorGrid from "../components/MonitorGrid.vue"
+import RemoteControlCard from "../components/RemoteControlCard.vue"
 import TelemetryChart from "../components/TelemetryChart.vue"
 
 const { device } = defineProps<{
@@ -107,33 +108,26 @@ watch(() => device.deviceCode, () => {
     <div class="layout-grid">
       <MonitorGrid :device="device" :items="monitorItems" />
 
-      <div class="card remote-control-card">
-        <div class="card-header">
-          远程控制
-        </div>
-        <div class="card-body">
-          <div class="control-grid">
-            <StaticCmdBtn
-              v-role-enable="['platform_admin', 'platform_ops']"
-              :device="device"
-              command="Reset"
-              command-name="重启"
-              btn-icon="fas fa-power-off"
-              btn-color="var(--danger)"
-            />
-            <DynamicCmdBtn
-              v-role-enable="['platform_admin', 'platform_ops']"
-              :device="device"
-              command="SetReportInterval"
-              command-name="设置上报间隔"
-              btn-icon="fas fa-clock"
-              btn-color="var(--primary)"
-              param-type="numeric"
-              unit="分钟"
-            />
-          </div>
-        </div>
-      </div>
+      <RemoteControlCard :device="device">
+        <StaticCmdBtn
+          v-role-enable="['platform_admin', 'platform_ops']"
+          :device="device"
+          command="Reset"
+          command-name="重启"
+          btn-icon="fas fa-power-off"
+          btn-color="var(--danger)"
+        />
+        <DynamicCmdBtn
+          v-role-enable="['platform_admin', 'platform_ops']"
+          :device="device"
+          command="SetReportInterval"
+          command-name="设置上报间隔"
+          btn-icon="fas fa-clock"
+          btn-color="var(--primary)"
+          param-type="numeric"
+          unit="分钟"
+        />
+      </RemoteControlCard>
 
       <TelemetryChart
         bucket="sob23bs_v1_t1"
