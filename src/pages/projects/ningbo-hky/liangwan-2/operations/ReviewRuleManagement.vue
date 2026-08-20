@@ -304,7 +304,6 @@ onMounted(loadData)
         </el-button>
       </el-space>
     </div>
-    <el-alert title="规则定义由全局复用；本站点的阈值差异请在“规则绑定”中覆盖。" type="info" :closable="false" show-icon />
     <el-table v-loading="loading" :data="rules" class="rule-table" height="100%">
       <el-table-column prop="code" label="规则编码" min-width="170" fixed />
       <el-table-column prop="name" label="规则名称" min-width="190" />
@@ -505,9 +504,7 @@ onMounted(loadData)
 
 <style scoped lang="scss">
 @use "../styles.scss";
-.rule-table {
-  margin-top: 14px;
-}
+
 .description-item {
   margin-top: 16px;
 }
