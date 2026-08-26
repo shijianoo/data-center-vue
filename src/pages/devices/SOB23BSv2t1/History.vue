@@ -139,8 +139,8 @@ async function handleDownload() {
                   <span class="value">{{ parseLeakStatus(row.leak_stat) }}</span>
                 </div>
                 <div class="data-row">
-                  <span class="label">绝对湿度</span>
-                  <span class="value">{{ formatNumber(row.humi, 4) }} {{ row.humi != null ? 'g/m³' : '' }}</span>
+                  <span class="label">相对湿度</span>
+                  <span class="value">{{ formatNumber(row.humi, 3) }} {{ row.humi != null ? '%' : '' }}</span>
                 </div>
               </td>
               <td>
@@ -204,11 +204,11 @@ async function handleDownload() {
               <td>
                 <div class="data-row">
                   <span class="label">气压</span>
-                  <span class="value">{{ formatNumber(row.air_press, 4) }} {{ row.air_press != null ? 'bar' : '' }}</span>
+                  <span class="value">{{ formatNumber(row.air_press, 4) }} {{ row.air_press != null ? 'hPa' : '' }}</span>
                 </div>
                 <div class="data-row">
                   <span class="label">气温</span>
-                  <span class="value">{{ formatNumber(row.air_temp, 4) }} {{ row.air_temp != null ? '℃' : '' }}</span>
+                  <span class="value">{{ formatNumber(row.air_temp, 1) }} {{ row.air_temp != null ? '℃' : '' }}</span>
                 </div>
                 <div class="data-row">
                   <span class="label">风向</span>
