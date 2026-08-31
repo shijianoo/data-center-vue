@@ -34,7 +34,7 @@ async function fetchLatestData() {
   try {
     monitorItems.value = []
     const { data } = await getLatestTelemetryData(
-      { modelNumber: device.modelNumber!, version: 2, dataType: 1 },
+      { modelNumber: device.modelNumber!, version: 1, dataType: 1 },
       device.serialNumber
     )
     if (data.data) {
@@ -130,7 +130,7 @@ watch(() => device.deviceCode, () => {
       </RemoteControlCard>
 
       <TelemetryChart
-        bucket="sob23bs_v2_t1"
+        bucket="sob23mg_v1_t1"
         measurement="data"
         :device="device"
         :latest-time="latestDataTime"
@@ -141,12 +141,10 @@ watch(() => device.deviceCode, () => {
           { label: '最大波周期', field: 'tmax', unit: 's' },
           { label: '1/3波高', field: 'h13', unit: 'm' },
           { label: '1/3波周期', field: 't13', unit: 's' },
-          { label: '1/10波高', field: 'h10', unit: 'm' },
-          { label: '1/10波周期', field: 't10', unit: 's' },
-          { label: '谱有效波高', field: 'spec_hm', unit: 'm' },
-          { label: '谱平均周期', field: 'spec_tm', unit: 's' },
+          { label: '风速', field: 'wind_spd', unit: 'dBar' },
+          { label: '气温', field: 'air_temp', unit: 'dBar' },
           { label: '气压', field: 'air_press', unit: 'dBar' },
-          { label: '温度', field: 'water_temp', unit: '℃' },
+          { label: '水温', field: 'water_temp', unit: '℃' },
           { label: '主板温度', field: 'board_temp', unit: '℃' },
           { label: '电池电压', field: 'bat_volt', unit: 'V' },
         ]"

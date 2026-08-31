@@ -8,8 +8,8 @@ const pageMap: Record<string, any> = {
     loader: () => import("./SOB23BSv1t1/Device.vue"),
     loadingComponent: AsyncLoading
   }),
-  SOB23BSv2t1: defineAsyncComponent({
-    loader: () => import("./SOB23BSv2t1/Device.vue"),
+  SOB23MG: defineAsyncComponent({
+    loader: () => import("./SOB23MGv1t1/Device.vue"),
     loadingComponent: AsyncLoading
   }),
   SOB10: defineAsyncComponent({

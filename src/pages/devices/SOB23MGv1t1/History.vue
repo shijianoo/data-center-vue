@@ -21,7 +21,7 @@ const {
   uploadChannel,
   total,
   fetchFirstPageData
-} = useHistoryDataQuery(deviceRef, 2, 1)
+} = useHistoryDataQuery(deviceRef, 1, 1)
 
 async function handleDownload() {
   const data = await selectDateRange({ maxDays: 30 })
@@ -204,7 +204,7 @@ async function handleDownload() {
               <td>
                 <div class="data-row">
                   <span class="label">气压</span>
-                  <span class="value">{{ formatNumber(row.air_press, 4) }} {{ row.air_press != null ? 'hPa' : '' }}</span>
+                  <span class="value">{{ formatNumber(row.air_press, 3) }} {{ row.air_press != null ? 'hPa' : '' }}</span>
                 </div>
                 <div class="data-row">
                   <span class="label">气温</span>
