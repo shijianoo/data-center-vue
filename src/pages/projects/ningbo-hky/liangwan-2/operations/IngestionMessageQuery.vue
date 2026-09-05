@@ -73,7 +73,12 @@ onMounted(async () => {
             {{ displayTime(scope.row.receivedAt) }}
           </template>
         </el-table-column>
-        <el-table-column prop="source" label="报文来源" width="120">
+        <el-table-column prop="receivedMn" label="设备MN" width="180">
+          <template #default="scope">
+            {{ scope.row.receivedMn || '—' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="source" label="报文来源" width="90">
           <template #default="scope">
             <el-tag v-if="scope.row.source" size="small" :type="ingestionSourceTagType(scope.row.source)">
               {{ displayIngestionSource(scope.row.source) }}
@@ -81,8 +86,7 @@ onMounted(async () => {
             <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="qn" label="交互号(QN)" width="200" />
-        <el-table-column prop="commandCode" label="命令编码" width="120" />
+        <el-table-column prop="qn" label="交互号(QN)" width="160" />
         <el-table-column prop="rawMessage" label="完整原始报文" show-overflow-tooltip min-width="300" />
       </el-table>
     </div>

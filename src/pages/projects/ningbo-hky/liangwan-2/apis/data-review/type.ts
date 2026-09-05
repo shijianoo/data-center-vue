@@ -34,6 +34,8 @@ export interface MeasurementReviewCell {
   reviewStatus?: ManualReviewStatus
   /** 审核评论 */
   reviewComment?: string | null
+  /** 审核人 */
+  reviewer?: string | null
 }
 
 /** 审核数据查询响应。 */
@@ -48,8 +50,6 @@ export interface ManualReviewRequest {
   level: number
   /** 审核状态 */
   status: ManualReviewStatus
-  /** 审核人 */
-  reviewer: string
   /** 审核评论 */
   comment?: string
 }
@@ -72,8 +72,6 @@ export interface BatchManualReviewRequest {
   level: number
   /** 审核状态 */
   status: ManualReviewStatus
-  /** 审核人 */
-  reviewer: string
   /** 审核评论 */
   comment?: string
 }

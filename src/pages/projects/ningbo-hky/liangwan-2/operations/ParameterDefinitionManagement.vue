@@ -25,7 +25,7 @@ const parameterForm = reactive({
   dataType: "Decimal" as ParameterDataType,
   unit: "",
   decimalPlaces: 2,
-  primaryMetricSuffix: "Rtd",
+  metricSuffixes: "Rtd",
   sortOrder: 0,
   description: ""
 })
@@ -109,11 +109,11 @@ function editParameter(row?: ParameterDefinition) {
         dataType: row.dataType,
         unit: row.unit || "",
         decimalPlaces: row.decimalPlaces,
-        primaryMetricSuffix: row.primaryMetricSuffix || "Rtd",
+        metricSuffixes: row.metricSuffixes,
         sortOrder: row.sortOrder,
         description: row.description || ""
       }
-    : { code: "", name: "", parameterKind: "Monitoring", groupName: "", dataType: "Decimal", unit: "", decimalPlaces: 2, primaryMetricSuffix: "Rtd", sortOrder: 0, description: "" })
+    : { code: "", name: "", parameterKind: "Monitoring", groupName: "", dataType: "Decimal", unit: "", decimalPlaces: 2, metricSuffixes: "Rtd,Avg", sortOrder: 0, description: "" })
   parameterDialog.value = true
 }
 
@@ -173,7 +173,7 @@ onMounted(loadData)
         <el-table-column prop="dataType" label="数据类型" width="120" />
         <el-table-column prop="unit" label="单位" width="90" />
         <el-table-column prop="decimalPlaces" label="小数位" width="90" align="right" />
-        <el-table-column prop="primaryMetricSuffix" label="主值后缀" width="110" />
+        <el-table-column prop="metricSuffixes" label="指标后缀" min-width="120" show-overflow-tooltip />
         <el-table-column prop="description" label="说明" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="scope">
@@ -225,8 +225,8 @@ onMounted(loadData)
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="主值后缀">
-              <el-input v-model="parameterForm.primaryMetricSuffix" placeholder="Rtd" />
+            <el-form-item label="指标后缀">
+              <el-input v-model="parameterForm.metricSuffixes" placeholder="逗号分隔，如 Rtd,Avg" />
             </el-form-item>
           </el-col>
           <el-col :span="12">

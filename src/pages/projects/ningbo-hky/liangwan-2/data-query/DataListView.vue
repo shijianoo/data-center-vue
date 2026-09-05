@@ -3,8 +3,6 @@ import type { EntityId } from "../apis/common/type"
 import type { Granularity, MeasurementTableCell, MeasurementTableColumn, MeasurementTableResult } from "../types"
 import { Download } from "@element-plus/icons-vue"
 import dayjs from "dayjs"
-import { ElMessage, ElMessageBox } from "element-plus"
-import { computed, onMounted, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
 import { exportMeasurements, getApiErrorMessage, queryMeasurementAutoReviewResult, queryMeasurements, updateEffectiveValue } from "../apis"
 import QueryFilter from "../components/QueryFilter.vue"
@@ -24,9 +22,15 @@ const detailVisible = ref(false)
 const detailCell = ref<MeasurementTableCell>()
 const detailColumn = ref<MeasurementTableColumn>()
 const correctionValue = ref("")
+const initialCorrectionValue = ref("")
 const correctionSaving = ref(false)
 const autoReviewLoading = ref(false)
 const autoReviewResults = ref<any[]>([])
+
+/** 仅当修改了修正有效值且不为空时，才允许提交修正 */
+const isCorrectionModified = computed(() => {
+  return Boolean(correctionValue.value.trim() && correctionValue.value.trim() !== initialCorrectionValue.value.trim())
+})
 
 /** 表格时间列加动态参数列，保证水质等级派生列优先排在数据时间右侧。 */
 const columns = computed(() => {
@@ -38,7 +42,7 @@ const columns = computed(() => {
 
 watch(stationId, async (value) => {
   const station = typeof value === "number" ? stationById.value.get(value) : undefined
-  const groups = await loadStationGroups(station?.mn)
+  const groups = await loadStationGroups(station?.id)
   if (stationId.value !== value) return
   const defaultGroupId = groups[0]?.id || ""
   groupId.value = defaultGroupId
@@ -48,14 +52,16 @@ watch(stationId, async (value) => {
   await search()
 })
 
-/** 组装所有查询/导出共用的请求体。只在参数组名称包含“水质”时带入 includeWaterQualityGrade 为 true。 */
+/** 组装所有查询/导出共用的请求体。只在参数组名称包含“水质”且站点编号以“26”开头时带入 includeWaterQualityGrade 为 true。 */
 function buildRequest() {
   if (!stationId.value || !groupId.value) {
     ElMessage.warning("请选择站点和参数组")
     return null
   }
+  const currentStation = typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined
+  const stationCode = String(currentStation?.code || (currentStation as any)?.mn || "")
   const currentGroup = groupById.value.get(groupId.value) || stationGroups.value.find(g => g.id === groupId.value)
-  const isWaterQualityGroup = currentGroup?.name?.includes("水质") ?? false
+  const isWaterQualityGroup = (currentGroup?.name?.includes("水质") ?? false) && stationCode.startsWith("26")
 
   return {
     stationId: stationId.value,
@@ -93,6 +99,60 @@ function isAutoReviewWarning(cell: MeasurementTableCell | null) {
   return cell?.autoReviewStatus === "Failed" || cell?.autoReviewStatus === "Error"
 }
 
+interface CellBadge {
+  key: string
+  text: string
+  title: string
+}
+
+/** 测量数据标志 (measurementDataFlag) 字典配置，可扩展 */
+const MEASUREMENT_FLAG_MAP: Record<string, { text: string, title: string }> = {
+  C: { text: "标液", title: "数据标志：校准/标定数据 (C)" },
+  F: { text: "停", title: "数据标志：停运数据 (F)" },
+  T: { text: "超", title: "数据标志：超标数据 (T)" },
+  D: { text: "故", title: "数据标志：故障数据 (D)" },
+  M: { text: "维", title: "数据标志：维护数据 (M)" },
+  B: { text: "采", title: "数据标志：采样数据 (B)" },
+  S: { text: "手", title: "数据标志：手工数据 (S)" }
+}
+
+/** 动态计算单元格右上角展示的角标（来源标志 + 测量标志） */
+function getCellBadges(cell: MeasurementTableCell | null | undefined): CellBadge[] {
+  if (!cell) return []
+  const badges: CellBadge[] = []
+
+  // 1. 北斗来源标志
+  if (cell.source === "Beidou") {
+    badges.push({
+      key: "source-beidou",
+      text: "北斗",
+      title: "数据来源：北斗转发"
+    })
+  }
+
+  // 2. 测量数据标志 (measurementDataFlag)，忽略正常 N 标志
+  if (cell.measurementDataFlag && cell.measurementDataFlag.toUpperCase() !== "N") {
+    const flagKey = cell.measurementDataFlag.toUpperCase()
+    const known = MEASUREMENT_FLAG_MAP[flagKey]
+    if (known) {
+      badges.push({
+        key: `flag-${flagKey}`,
+        text: known.text,
+        title: known.title
+      })
+    } else {
+      // 未知扩展标志兜底展示
+      badges.push({
+        key: `flag-${flagKey}`,
+        text: flagKey.length > 2 ? flagKey.slice(0, 2) : flagKey,
+        title: `数据标志：${cell.measurementDataFlag}`
+      })
+    }
+  }
+
+  return badges
+}
+
 /** 动态计算表格单元格的 class，用于显示告警背景色和可修正样式 */
 function getCellClassName({ row, column }: { row: any, column: any }) {
   if (!column.property) return ""
@@ -126,7 +186,9 @@ function showCellDetail(column: MeasurementTableColumn, cell: MeasurementTableCe
   if (!canCorrect(cell) || !cell) return
   detailColumn.value = column
   detailCell.value = cell
-  correctionValue.value = cell.valueText ?? cell.numericValue?.toString() ?? ""
+  const initialVal = cell.valueText ?? cell.numericValue?.toString() ?? ""
+  initialCorrectionValue.value = initialVal
+  correctionValue.value = initialVal
   detailVisible.value = true
   if (cell.pointId) {
     loadAutoReviewResult(cell.pointId)
@@ -233,7 +295,7 @@ onMounted(async () => {
 
     <section class="lw2-content">
       <el-table v-loading="loading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
-        <el-table-column fixed prop="time" label="数据时间" width="170">
+        <el-table-column fixed prop="time" label="数据时间" width="160">
           <template #default="scope">
             {{ displayTime(scope.row.time) }}
           </template>
@@ -241,14 +303,17 @@ onMounted(async () => {
         <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="140">
           <template #default="scope">
             <div v-if="scope.row.values[column.code]" class="cell-value-container">
+              <div class="cell-badges-top-right">
+                <span
+                  v-for="badge in getCellBadges(scope.row.values[column.code])"
+                  :key="badge.key"
+                  class="beidou-badge"
+                  :title="badge.title"
+                >{{ badge.text }}</span>
+              </div>
               <span class="cell-value">
                 {{ displayMeasurementValue(scope.row.values[column.code], column) }}
               </span>
-              <span
-                v-if="scope.row.values[column.code]?.source === 'Beidou'"
-                class="beidou-badge"
-                title="数据来源：北斗转发"
-              >北</span>
             </div>
             <span v-else class="empty-cell">—</span>
           </template>
@@ -276,7 +341,8 @@ onMounted(async () => {
           </el-tag>
           <span v-else>—</span>
         </el-descriptions-item>
-        <el-descriptions-item label="自动审核">
+
+        <el-descriptions-item label="自动审核" :span="2">
           <el-tag :type="autoReviewTagType(detailCell.autoReviewStatus)">
             {{ autoReviewLabels[detailCell.autoReviewStatus || ''] || detailCell.autoReviewStatus || '—' }}
           </el-tag>
@@ -288,7 +354,7 @@ onMounted(async () => {
         </el-form-item>
       </el-form>
       <el-divider content-position="left">
-        自动审核结果
+        自动审核
       </el-divider>
       <div v-loading="autoReviewLoading">
         <el-empty v-if="!autoReviewLoading && !autoReviewResults.length" description="暂无规则详情" :image-size="60" />
@@ -307,7 +373,7 @@ onMounted(async () => {
         <el-button @click="detailVisible = false">
           取消
         </el-button>
-        <el-button type="danger" :loading="correctionSaving" @click="submitCorrection">
+        <el-button type="danger" :disabled="!isCorrectionModified" :loading="correctionSaving" @click="submitCorrection">
           确认修正
         </el-button>
       </template>
@@ -331,10 +397,17 @@ onMounted(async () => {
 .cell-value {
   font-weight: 600;
 }
-.beidou-badge {
+.cell-badges-top-right {
   position: absolute;
   top: -2px;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+  z-index: 1;
+}
+.beidou-badge {
   font-size: 10px;
   line-height: 1.2;
   color: var(--el-color-warning, #e6a23c);

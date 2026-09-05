@@ -207,7 +207,7 @@ onMounted(async () => {
       <el-form :model="form" label-width="115px">
         <el-form-item label="站点" required>
           <el-select v-model="form.stationId" :disabled="!!editingId" filterable style="width: 100%">
-            <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.mn}）`" :value="station.id" />
+            <el-option v-for="station in stations" :key="station.id" :label="`${station.name}（${station.code || station.id}）`" :value="station.id" />
           </el-select>
         </el-form-item>
         <template v-if="editingId">

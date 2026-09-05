@@ -25,7 +25,7 @@ const loading = ref(false)
 
 watch(stationId, async (value) => {
   const station = typeof value === "number" ? stationById.value.get(value) : undefined
-  const groups = await loadStationGroups(station?.mn)
+  const groups = await loadStationGroups(station?.id)
   if (stationId.value !== value) return
   const defaultGroupId = groups[0]?.id || ""
   groupId.value = defaultGroupId

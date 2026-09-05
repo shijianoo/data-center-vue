@@ -44,6 +44,8 @@ export interface MeasurementTableCell {
   sampleCount?: number
   /** 原始数据的接收来源；仅原始查询返回 */
   source?: IngestionSource
+  /** 原始数据的测量数据标志；仅原始查询返回 */
+  measurementDataFlag?: string
 }
 
 /** 修正测量点的有效值。 */
@@ -128,8 +130,10 @@ export interface LatestParameterGroup {
 
 /** 站点最新数据响应。 */
 export interface LatestMeasurementResult {
-  /** 站点 MN。 */
-  mn: string
+  /** 站点主键。 */
+  stationId: number
+  /** 站点编码。 */
+  code: string
   /** 站点名称。 */
   stationName: string
   /** 站点分组名称。 */
@@ -144,7 +148,7 @@ export interface LatestMeasurementResult {
 export interface DataRateRequest {
   /** 站点主键。 */
   stationId: number
-  /** 站点 MN。 */
+  /** 查询开始时间（包含）。 */
   from: string
   /** 查询结束时间（不包含）。 */
   to: string
@@ -180,6 +184,26 @@ export interface DataRateResult {
   validityRate?: number | null
 }
 
+/** 创建数据获取率和有效率统计 Excel 导出的请求 */
+export interface CreateDataRateExportRequest {
+  /** 站点主键。 */
+  stationId: number
+  /** 站点 MN。 */
+  from: string
+  /** 查询结束时间（不包含）。 */
+  to: string
+  /** 站点参数组主键。 */
+  parameterGroupId?: number
+  /** 有效人工审核状态列表。 */
+  validManualReviewStatuses?: string[]
+  /** 统计方式；Direct 为直接统计全部数据点，TimeSlot 为仅统计周期时间槽起点的数据 */
+  calculationMode: CalculationMode
+  /** 站点参数组主键。 */
+  excludeMaintenancePeriods?: boolean
+  /** 可选下载文件名主体 */
+  fileName: string
+}
+
 /** 站点轨迹点 */
 export interface StationTrajectoryPoint {
   /** 观测时间。 */
@@ -192,14 +216,96 @@ export interface StationTrajectoryPoint {
 
 /** 站点轨迹查询结果 */
 export interface StationTrajectoryResult {
-  /** 站点ID */
+  /** 站点主键 */
   stationId: number
   /** 站点编码 */
-  mn: string
+  code: string
   /** 站点名称 */
   stationName: string
   /** 轨迹点 */
   points: StationTrajectoryPoint[]
-  /** 是否达到临界点限制值 */
-  reachedRawPointLimit: boolean
+}
+
+/** 批量删除数据点请求 */
+export interface DeleteMeasurementPointsRequest {
+  /** 需要删除的数据点ID */
+  pointIds: number[]
+  /** 删除原因 */
+  reason: string
+  /** 是否确认 */
+  confirm: boolean
+}
+
+/** 批量删除数据点结果 */
+export interface DeleteMeasurementPointsResult {
+  /** 本次操作批次号 */
+  operationId: string
+  /** 去重后的请求数量 */
+  requestedCount: number
+  /** 实际删除数量 */
+  deletedCount: number
+  /** 不存在的数据点数量 */
+  notFoundCount: number
+  /** 不存在的数据点 ID */
+  notFoundPointIds: number[]
+}
+
+/** 质控数据时间范围查询条件 */
+export interface QualityControlDataQuery {
+  /** 站点Id */
+  stationId: number
+  /** 参数组主键 */
+  parameterGroupId?: number
+  /** 命令码 */
+  commandCodes: string[]
+  /** 业务时间结束 */
+  from: string
+  /** 业务时间结束 */
+  to: string
+}
+
+/** 质控数据中的动态指标列定义 */
+export interface QualityControlMetricColumn {
+  /** 指标后缀键，对应记录 Metrics 中的键 */
+  key: string
+  /** 显示名称；未知后缀默认使用 Key */
+  name: string
+}
+
+/** 质控数据查询返回的一条参数记录 */
+export interface QualityControlDataRecord {
+  /** 站点 ID */
+  id: EntityId
+  /** 参数定义 ID */
+  parameterDefinitionId: number
+  /** 参数编码 */
+  parameterCode: string
+  /** 参数名称 */
+  parameterName: string
+  /** 当前参数单位 */
+  unit: string
+  /** 质控报文的 HJ212 命令编码 */
+  commandCode: string
+  /** 业务时间 */
+  observedAt: string
+  /** 接收时间 */
+  receivedAt: string
+  /** 数据接收来源 */
+  source: number
+  /** 设备数据状态 */
+  measurementDataFlag: string
+  /** 完整的质控指标原始值 */
+  metrics: Map<string, string>
+}
+
+/** 质控数据时间范围查询结果 */
+export interface QualityControlDataResult {
+  /** 站点 ID */
+  stationId: string
+  /** 站点名称 */
+  stationName: string
+  /** 本次结果中出现的动态质控指标列，顺序已固定 */
+  metricColumns: QualityControlMetricColumn[]
+  /** 按业务时间升序排列的全部匹配记录 */
+  records: QualityControlDataRecord[]
 }

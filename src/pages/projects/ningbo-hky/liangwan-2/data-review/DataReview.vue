@@ -7,8 +7,8 @@ import SideMenuLayout from "../components/SideMenuLayout.vue"
 const menu = ref("level1")
 const menuItems = [
   { key: "level1", label: "一级审核", icon: CircleCheck },
-  { key: "level2", label: "二级审核", icon: CircleCheck },
-  { key: "level3", label: "三级审核", icon: CircleCheck },
+  // { key: "level2", label: "二级审核", icon: CircleCheck },
+  // { key: "level3", label: "三级审核", icon: CircleCheck },
   { key: "progress", label: "审核进度", icon: DataLine }
 ]
 

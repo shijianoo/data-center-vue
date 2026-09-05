@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { ManualReviewStatus, MeasurementReviewCell, MeasurementReviewResult, MeasurementTableColumn } from "../types"
 import { Check, EditPen } from "@element-plus/icons-vue"
-import { ElMessage } from "element-plus"
-import { computed, onMounted, reactive, ref, watch } from "vue"
+import { getToken } from "@/common/utils/cache/cookies"
 import { useUserStore } from "@/pinia/stores/user"
 import { getApiErrorMessage, queryMeasurementReview, saveBatchManualReview, saveManualReview } from "../apis"
 import QueryFilter from "../components/QueryFilter.vue"
@@ -25,26 +24,25 @@ const dialogVisible = ref(false)
 const batchDialogVisible = ref(false)
 const activeCell = ref<MeasurementReviewCell>()
 const activeColumn = ref<MeasurementTableColumn>()
+
+/** 表格复选框选中的行集合 */
+const selectedRows = ref<any[]>([])
+
 const form = reactive({
   status: "Valid" as ManualReviewStatus,
-  reviewer: "",
   comment: ""
 })
 const batchForm = reactive({
   status: "Valid" as ManualReviewStatus,
-  reviewer: "",
   comment: ""
 })
 
 /** 表格时间列加动态参数列。 */
 const columns = computed(() => result.value?.columns ?? [])
 
-/** 当前审核人优先使用实名，其次使用昵称、用户名和租户成员名。 */
-const defaultReviewer = computed(() => userStore.user?.realName || userStore.user?.nickName || userStore.user?.userName || userStore.memberProfile?.memberName || "")
-
 watch(stationId, async (value) => {
   const station = typeof value === "number" ? stationById.value.get(value) : undefined
-  const groups = await loadStationGroups(station?.mn)
+  const groups = await loadStationGroups(station?.id)
   if (stationId.value !== value) return
   const defaultGroupId = groups[0]?.id || ""
   groupId.value = defaultGroupId
@@ -73,6 +71,7 @@ async function search() {
   const request = buildRequest()
   if (!request) return
   loading.value = true
+  selectedRows.value = []
   try {
     const { data } = await queryMeasurementReview(request)
     result.value = data
@@ -81,6 +80,10 @@ async function search() {
   } finally {
     loading.value = false
   }
+}
+
+function handleSelectionChange(rows: any[]) {
+  selectedRows.value = rows
 }
 
 /** 判断数据点是否符合可审核/查看条件。 */
@@ -121,33 +124,49 @@ function handleCellClick(row: any, column: any) {
   }
 }
 
-/** 打开单点审核对话框，自动带出当前数据点的审核结论与审核意见。 */
+/** 打开单点审核对话框，自动带出当前数据点的审核结论。审核意见默认为空。 */
 function openReview(column: MeasurementTableColumn, cell: MeasurementReviewCell | null) {
   if (!cell?.pointId) return
   activeCell.value = cell
   activeColumn.value = column
   Object.assign(form, {
     status: cell.reviewStatus || "Valid",
-    reviewer: defaultReviewer.value,
     comment: cell.reviewComment || ""
   })
   dialogVisible.value = true
 }
 
-/** 提交单点人工审核结论；数据修正由数据查询中的管理员功能独立处理。 */
+/** 提交单点人工审核结论；增加确认二次弹框。 */
 async function submitReview() {
-  if (!activeCell.value?.pointId || !form.reviewer.trim()) {
-    ElMessage.warning("请填写审核人")
+  if (!activeCell.value?.pointId) return
+  const statusText = manualReviewLabels[form.status] || form.status
+  const paramName = activeColumn.value?.name || "此参数"
+  try {
+    await ElMessageBox.confirm(
+      `确认将“${paramName}”数据点（ID: ${activeCell.value.pointId}）提交为“${statusText}”审核结论？`,
+      "单点审核确认",
+      {
+        type: "warning",
+        confirmButtonText: "确认提交",
+        cancelButtonText: "取消"
+      }
+    )
+  } catch {
     return
   }
   loading.value = true
   try {
+    const token = getToken() || userStore.token || ""
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
     await saveManualReview(activeCell.value.pointId, {
       level: props.level,
       status: form.status,
-      reviewer: form.reviewer.trim(),
       comment: form.comment.trim() || undefined
-    })
+    }, { headers })
     ElMessage.success(`${props.level}级审核提交成功`)
     dialogVisible.value = false
     await search()
@@ -160,7 +179,7 @@ async function submitReview() {
 
 // #endregion
 
-/** 当前表格中符合条件、可批量提交的数据点。 */
+/** 当前表格中所有符合条件、可批量提交的数据点。 */
 const reviewableCells = computed(() => {
   const ids = new Set<string>()
   result.value?.rows.forEach((row: any) => {
@@ -171,35 +190,78 @@ const reviewableCells = computed(() => {
   return [...ids]
 })
 
-/** 打开批量审核弹窗。 */
+/** 勾选行中包含的所有有效数据点 ID */
+const selectedRowPointIds = computed(() => {
+  const ids = new Set<string>()
+  selectedRows.value.forEach((row: any) => {
+    Object.values(row.values || {}).forEach((cell: any) => {
+      if (cell?.pointId) ids.add(cell.pointId)
+    })
+  })
+  return [...ids]
+})
+
+/** 批量审核的目标数据点 ID 列表：优先使用选中的行数据点；未勾选时退回为全量可审核数据点 */
+const targetBatchPointIds = computed(() => {
+  if (selectedRows.value.length > 0) {
+    return selectedRowPointIds.value
+  }
+  return reviewableCells.value
+})
+
+/** 打开批量审核弹窗。审核意见默认为空。 */
 function openBatchReview() {
-  if (!reviewableCells.value.length) {
-    ElMessage.info("当前范围没有可提交的数据点")
+  if (!targetBatchPointIds.value.length) {
+    ElMessage.info("当前选择范围内没有可提交的数据点")
     return
   }
   Object.assign(batchForm, {
     status: "Valid",
-    reviewer: defaultReviewer.value,
-    comment: "批量审核"
+    comment: ""
   })
   batchDialogVisible.value = true
 }
 
-/** 提交批量人工审核。 */
+/** 提交批量人工审核；增加确认二次弹框。 */
 async function submitBatchReview() {
-  if (!batchForm.reviewer.trim()) {
-    ElMessage.warning("请填写审核人")
+  const targetIds = targetBatchPointIds.value
+  if (!targetIds.length) {
+    ElMessage.warning("没有可提交的数据点")
     return
   }
+  const statusText = manualReviewLabels[batchForm.status] || batchForm.status
+  const targetDesc = selectedRows.value.length
+    ? `已勾选的 ${selectedRows.value.length} 行（共 ${targetIds.length} 条数据点）`
+    : `当前范围的全部 ${targetIds.length} 条数据点`
+
+  try {
+    await ElMessageBox.confirm(
+      `确认将 ${targetDesc} 统一提交为“${statusText}”审核结论？`,
+      "批量审核确认",
+      {
+        type: "warning",
+        confirmButtonText: "确认提交",
+        cancelButtonText: "取消"
+      }
+    )
+  } catch {
+    return
+  }
+
   batchLoading.value = true
   try {
+    const token = getToken() || userStore.token || ""
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
     const { data } = await saveBatchManualReview({
-      pointIds: reviewableCells.value,
+      pointIds: targetIds,
       level: props.level,
       status: batchForm.status,
-      reviewer: batchForm.reviewer.trim(),
       comment: batchForm.comment.trim() || undefined
-    })
+    }, { headers })
     ElMessage.success(`批量审核成功，共更新 ${data.updated} 条`)
     batchDialogVisible.value = false
     await search()
@@ -230,20 +292,34 @@ onMounted(async () => {
       @search="search"
     >
       <template #actions>
-        <el-button type="success" :icon="Check" :disabled="!reviewableCells.length" @click="openBatchReview">
-          全部审核（{{ reviewableCells.length }}）
+        <el-button type="success" :icon="Check" :disabled="!targetBatchPointIds.length" @click="openBatchReview">
+          <template v-if="selectedRows.length">
+            审核选中行（{{ selectedRows.length }}行 / {{ targetBatchPointIds.length }}条）
+          </template>
+          <template v-else>
+            全部审核（{{ targetBatchPointIds.length }}条）
+          </template>
         </el-button>
       </template>
     </QueryFilter>
 
     <section class="lw2-content">
-      <el-table v-loading="loading || batchLoading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
-        <el-table-column fixed prop="time" label="数据时间" width="170">
+      <el-table
+        v-loading="loading || batchLoading"
+        :data="result?.rows || []"
+        height="100%"
+        empty-text="请选择条件并查询"
+        :cell-class-name="getCellClassName"
+        @cell-click="handleCellClick"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="40" fixed />
+        <el-table-column fixed prop="time" label="数据时间" width="160">
           <template #default="scope">
             {{ displayTime(scope.row.time) }}
           </template>
         </el-table-column>
-        <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="150">
+        <el-table-column v-for="column in columns" :key="column.code" :prop="column.code" :label="displayParameterLabel(column)" align="left" width="130">
           <template #default="scope">
             <div v-if="scope.row.values[column.code]" class="cell-value">
               {{ displayMeasurementValue(scope.row.values[column.code], column) }}
@@ -259,13 +335,13 @@ onMounted(async () => {
         <el-form-item label="当前值">
           <strong>{{ activeColumn ? displayMeasurementValue(activeCell, activeColumn) : '—' }} {{ activeColumn?.unit }}</strong>
         </el-form-item>
+        <el-form-item label="审核人">
+          <span style="font-weight: 500;">{{ activeCell?.reviewer || '—' }}</span>
+        </el-form-item>
         <el-form-item label="审核结论" required>
           <el-select v-model="form.status" style="width: 100%">
             <el-option v-for="(label, value) in manualReviewLabels" :key="value" :label="label" :value="value" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="审核人" required>
-          <el-input v-model="form.reviewer" maxlength="50" />
         </el-form-item>
         <el-form-item label="审核意见">
           <el-input v-model="form.comment" type="textarea" :rows="3" maxlength="500" show-word-limit />
@@ -281,15 +357,17 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="batchDialogVisible" :title="`批量 ${level} 级审核 (${reviewableCells.length} 条)`" width="560px" destroy-on-close>
+    <el-dialog
+      v-model="batchDialogVisible"
+      :title="selectedRows.length ? `勾选行 ${level} 级批量审核 (${selectedRows.length} 行 / ${targetBatchPointIds.length} 条数据)` : `批量 ${level} 级审核 (${targetBatchPointIds.length} 条数据)`"
+      width="560px"
+      destroy-on-close
+    >
       <el-form label-width="92px" class="review-form">
         <el-form-item label="审核结论" required>
           <el-select v-model="batchForm.status" style="width: 100%">
             <el-option v-for="(label, value) in manualReviewLabels" :key="value" :label="label" :value="value" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="审核人" required>
-          <el-input v-model="batchForm.reviewer" maxlength="50" />
         </el-form-item>
         <el-form-item label="审核意见">
           <el-input v-model="batchForm.comment" type="textarea" :rows="3" maxlength="500" show-word-limit />

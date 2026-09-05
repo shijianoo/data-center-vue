@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from "vue"
-import { Connection, DataAnalysis, Document, Files, Link, Location, Monitor, Tools } from "@element-plus/icons-vue"
+import { Connection, DataAnalysis, Delete, Document, Files, Link, Location, Monitor, Tools } from "@element-plus/icons-vue"
 import { computed, defineAsyncComponent, markRaw, ref, shallowRef, watch } from "vue"
 import AsyncLoading from "@/common/components/AsyncLoading.vue"
 import { useUserStore } from "@/pinia/stores/user"
@@ -29,6 +29,7 @@ const platformAdminMenuItems: OperationMenuItem[] = [
 const platformOpsMenuItems: OperationMenuItem[] = [
   { key: "rules", label: "自动审核规则", icon: markRaw(DataAnalysis) },
   { key: "bindings", label: "规则绑定", icon: markRaw(Link) },
+  { key: "dataDelete", label: "数据删除", icon: markRaw(Delete) },
   { key: "remoteDebug", label: "远程调试", icon: markRaw(Monitor) },
   { key: "ingestionMessages", label: "原始报文查询", icon: markRaw(Document) }
 ]
@@ -63,6 +64,7 @@ const pages = {
   stationParameters: defineAsyncComponent({ loader: () => import("./StationParameterManagement.vue"), loadingComponent: AsyncLoading }),
   rules: defineAsyncComponent({ loader: () => import("./ReviewRuleManagement.vue"), loadingComponent: AsyncLoading }),
   bindings: defineAsyncComponent({ loader: () => import("./ReviewRuleBindingManagement.vue"), loadingComponent: AsyncLoading }),
+  dataDelete: defineAsyncComponent({ loader: () => import("./DataDeleteView.vue"), loadingComponent: AsyncLoading }),
   maintenance: defineAsyncComponent({ loader: () => import("./MaintenanceManagement.vue"), loadingComponent: AsyncLoading }),
   remoteDebug: defineAsyncComponent({ loader: () => import("./RemoteDebug.vue"), loadingComponent: AsyncLoading }),
   ingestionMessages: defineAsyncComponent({ loader: () => import("./IngestionMessageQuery.vue"), loadingComponent: AsyncLoading })

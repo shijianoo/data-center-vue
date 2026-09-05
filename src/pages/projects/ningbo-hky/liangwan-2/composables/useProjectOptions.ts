@@ -44,14 +44,25 @@ export function useProjectOptions() {
     }
   }
 
-  /** 根据站点 MN 加载其参数组。 */
-  async function loadStationGroups(mn?: string) {
-    if (!mn) {
+  /** 根据站点 ID 或编码/MN 加载其参数组。 */
+  async function loadStationGroups(stationIdOrMn?: number | string) {
+    if (!stationIdOrMn) {
+      stationGroups.value = []
+      return []
+    }
+    let targetId: number | undefined
+    if (typeof stationIdOrMn === "number") {
+      targetId = stationIdOrMn
+    } else {
+      const found = stations.value.find(s => s.code === stationIdOrMn || (s as any).mn === stationIdOrMn || String(s.id) === stationIdOrMn)
+      targetId = found?.id
+    }
+    if (!targetId) {
       stationGroups.value = []
       return []
     }
     try {
-      const { data } = await getStationParameterGroups(mn)
+      const { data } = await getStationParameterGroups(targetId)
       stationGroups.value = data ?? []
       return stationGroups.value
     } catch (error) {

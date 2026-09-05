@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ReviewRuleDefinition } from "../types"
-import { Delete, Edit, MagicStick, Plus, Refresh } from "@element-plus/icons-vue"
+import { Delete, Edit, Plus, Refresh } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, reactive, ref, watch } from "vue"
 import { createReviewRule, deleteReviewRule, getApiErrorMessage, getReviewRules, updateReviewRule } from "../apis"
@@ -255,10 +255,11 @@ async function createDefaults() {
   if (!parameter) return ElMessage.warning("请选择目标参数")
   await ElMessageBox.confirm("将创建数值范围、条件比较、连续同值三个默认规则（默认阈值可继续编辑），是否继续？", "创建默认规则", { type: "info" })
   loading.value = true
+  const primaryMetric = parameter.metricSuffixes?.split(",")[0]?.trim() || "Rtd"
   const defaults = [
-    { suffix: "range", name: "数值范围", key: "Range" as RuleKey, config: { metric: parameter.primaryMetricSuffix || "Rtd", minimum: 0, maximum: 100, includeMinimum: true, includeMaximum: true, missingValuePolicy: "Error" } },
-    { suffix: "comparison", name: "条件比较", key: "Comparison" as RuleKey, config: { leftMetric: parameter.primaryMetricSuffix || "Rtd", operator: "LessThanOrEqual", right: { source: "Constant", value: 100 }, missingValuePolicy: "Error" } },
-    { suffix: "same-value", name: "连续同值", key: "ConsecutiveSameValue" as RuleKey, config: { count: 3, metric: parameter.primaryMetricSuffix || "Rtd", missingValuePolicy: "Error" } }
+    { suffix: "range", name: "数值范围", key: "Range" as RuleKey, config: { metric: primaryMetric, minimum: 0, maximum: 100, includeMinimum: true, includeMaximum: true, missingValuePolicy: "Error" } },
+    { suffix: "comparison", name: "条件比较", key: "Comparison" as RuleKey, config: { leftMetric: primaryMetric, operator: "LessThanOrEqual", right: { source: "Constant", value: 100 }, missingValuePolicy: "Error" } },
+    { suffix: "same-value", name: "连续同值", key: "ConsecutiveSameValue" as RuleKey, config: { count: 3, metric: primaryMetric, missingValuePolicy: "Error" } }
   ]
   let success = 0
   try {
@@ -297,8 +298,6 @@ onMounted(loadData)
       <el-space>
         <el-button :icon="Refresh" @click="loadData">
           刷新
-        </el-button><el-button :icon="MagicStick" @click="defaultDialogVisible = true">
-          创建默认规则
         </el-button><el-button type="primary" :icon="Plus" @click="edit()">
           新增规则
         </el-button>

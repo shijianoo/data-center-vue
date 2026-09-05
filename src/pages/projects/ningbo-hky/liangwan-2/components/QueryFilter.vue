@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Granularity, Station } from "../types"
 import { computed, nextTick, watch } from "vue"
+import { formatHybridAgo } from "@/common/utils/datetime"
 import { useUserStore } from "@/pinia/stores/user"
 import { filterVisibleParameterGroups } from "../utils"
 
@@ -33,6 +34,15 @@ const emit = defineEmits<{
 
 const userStore = useUserStore()
 
+/** 当前选中的站点实体 */
+const currentStation = computed(() => props.stations.find(s => s.id === props.stationId))
+
+/** 当前选中的站点 lastSeenAt 格式化文案 */
+const currentStationLastSeen = computed(() => {
+  if (!currentStation.value?.lastSeenAt) return ""
+  return formatHybridAgo(currentStation.value.lastSeenAt)
+})
+
 /** 根据用户身份过滤后可展示的参数组 */
 const visibleGroups = computed(() => filterVisibleParameterGroups(props.groups, userStore.isPlatformUser))
 
@@ -64,15 +74,32 @@ function handleTabChange(value: import("element-plus").TabPaneName) {
 <template>
   <el-form inline class="query-filter" @submit.prevent="emit('search')">
     <el-form-item label="站点">
-      <el-select
-        :model-value="stationId"
-        filterable
-        placeholder="请选择站点"
-        style="width: 190px"
-        @update:model-value="handleStationChange"
-      >
-        <el-option v-for="item in stations" :key="item.id" :label="item.name" :value="item.id" />
-      </el-select>
+      <div class="station-select-wrapper">
+        <el-select
+          :model-value="stationId"
+          filterable
+          placeholder="请选择站点"
+          style="width: 200px"
+          @update:model-value="handleStationChange"
+        >
+          <el-option
+            v-for="item in stations"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          >
+            <div class="station-option-item">
+              <span class="station-option-name">{{ item.name }}</span>
+              <span v-if="formatHybridAgo(item.lastSeenAt)" class="station-option-time">
+                {{ formatHybridAgo(item.lastSeenAt) }}
+              </span>
+            </div>
+          </el-option>
+        </el-select>
+        <span v-if="currentStationLastSeen" class="current-station-last-seen" :title="`最近通信时间：${currentStation?.lastSeenAt || '—'}`">
+          ({{ currentStationLastSeen }})
+        </span>
+      </div>
     </el-form-item>
     <el-form-item label="时间范围">
       <el-date-picker
@@ -196,5 +223,34 @@ function handleTabChange(value: import("element-plus").TabPaneName) {
   padding-bottom: 12px;
   color: var(--el-text-color-placeholder);
   font-size: 13px;
+}
+
+.station-select-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.current-station-last-seen {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+}
+
+.station-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.station-option-name {
+  font-weight: 500;
+}
+
+.station-option-time {
+  font-size: 12px;
+  color: var(--el-text-color-placeholder);
 }
 </style>

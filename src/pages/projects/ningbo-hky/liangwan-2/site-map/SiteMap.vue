@@ -28,13 +28,13 @@ interface LocatedStation {
 
 const mapContainer = ref<HTMLElement>()
 const map = shallowRef<maplibregl.Map | null>(null)
-const markerMap = shallowRef(new Map<string, maplibregl.Marker>())
+const markerMap = shallowRef(new Map<number, maplibregl.Marker>())
 const locatedStations = ref<LocatedStation[]>([])
-const selectedMn = ref("")
+const selectedStationId = ref<number | null>(null)
 const loading = ref(false)
 const detailLoading = ref(false)
 
-const selectedItem = computed(() => locatedStations.value.find(item => item.station.mn === selectedMn.value))
+const selectedItem = computed(() => locatedStations.value.find(item => item.station.id === selectedStationId.value))
 
 /** 加载站点、最新坐标并绘制 Marker 和围栏。 */
 async function loadStations() {
@@ -72,7 +72,7 @@ function renderMarkers() {
   locatedStations.value.forEach((item) => {
     if (item.longitude == null || item.latitude == null) return
     const element = createMarkerEl(item.station.status === "Active" ? "#2f80ed" : "#8b9bb0")
-    element.title = `${item.station.name}（${item.station.mn}）`
+    element.title = `${item.station.name}（${item.station.code || item.station.id}）`
     element.addEventListener("click", (event) => {
       event.stopPropagation()
       selectStation(item)
@@ -80,7 +80,7 @@ function renderMarkers() {
     const marker = new maplibregl.Marker({ element, anchor: "bottom" })
       .setLngLat([item.longitude, item.latitude])
       .addTo(mapInstance)
-    markerMap.value.set(item.station.mn, marker)
+    markerMap.value.set(item.station.id, marker)
     bounds.extend([item.longitude, item.latitude])
   })
 
@@ -136,7 +136,7 @@ function drawGeofences(items: StationMapItem[]) {
 
 /** 列表和 Marker 共用定位逻辑，放大到站点并打开右侧最新数据面板。 */
 async function selectStation(item: LocatedStation) {
-  selectedMn.value = item.station.mn
+  selectedStationId.value = item.station.id
   if (item.longitude != null && item.latitude != null) {
     map.value?.flyTo({ center: [item.longitude, item.latitude], zoom: 10, duration: 900 })
   }
@@ -153,12 +153,8 @@ async function selectStation(item: LocatedStation) {
   }
 }
 
-watch(selectedMn, (val) => {
-  if (!val) {
-    clearTrajectory()
-  } else {
-    clearTrajectory()
-  }
+watch(selectedStationId, () => {
+  clearTrajectory()
 })
 
 function clearTrajectory() {
@@ -255,7 +251,7 @@ onMounted(() => {
   map.value.on("load", loadStations)
   // 点击底图空白区域收起详情；Marker 的 DOM 事件会停止冒泡。
   map.value.on("click", () => {
-    selectedMn.value = ""
+    selectedStationId.value = null
   })
 })
 
@@ -279,16 +275,16 @@ onUnmounted(() => {
       <el-scrollbar>
         <button
           v-for="item in locatedStations"
-          :key="item.station.mn"
+          :key="item.station.id"
           type="button"
           class="station-item"
-          :class="{ 'station-item--active': item.station.mn === selectedMn }"
+          :class="{ 'station-item--active': item.station.id === selectedStationId }"
           @click="selectStation(item)"
         >
           <span class="station-item__dot" :class="`is-${item.station.status.toLowerCase()}`" />
           <span>
             <b>{{ item.station.name }}</b>
-            <small>{{ item.station.mn }}</small>
+            <small>{{ item.station.code || item.station.id }}</small>
           </span>
           <el-tag
             v-if="item.waterQualityGrade"
@@ -309,7 +305,7 @@ onUnmounted(() => {
         :latest="selectedItem.latest"
         :map-item-grade="selectedItem.waterQualityGrade"
         :loading="detailLoading"
-        @close="selectedMn = ''"
+        @close="selectedStationId = null"
         @query-trajectory="queryAndDrawTrajectory"
       />
     </Transition>

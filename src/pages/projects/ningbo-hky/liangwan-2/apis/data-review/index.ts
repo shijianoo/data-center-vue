@@ -8,13 +8,13 @@ export function queryMeasurementReview(data: MeasurementReviewQuery) {
 }
 
 /** 提交单点指定级别人工审核。 */
-export function saveManualReview(pointId: EntityId, data: ManualReviewRequest) {
-  return ecoClient.put<ManualReviewResult>(`/measurement-points/${pointId}/review`, data)
+export function saveManualReview(pointId: EntityId, data: ManualReviewRequest, options?: { headers?: Record<string, string> }) {
+  return ecoClient.put<ManualReviewResult>(`/measurement-points/${pointId}/review`, data, options)
 }
 
 /** 批量提交人工审核。 */
-export function saveBatchManualReview(data: BatchManualReviewRequest) {
-  return ecoClient.put<BatchManualReviewResult>(`/measurement-points/reviews/batch`, data)
+export function saveBatchManualReview(data: BatchManualReviewRequest, options?: { headers?: Record<string, string> }) {
+  return ecoClient.put<BatchManualReviewResult>(`/measurement-points/reviews/batch`, data, options)
 }
 
 /** 查询人工审核完成率。 */

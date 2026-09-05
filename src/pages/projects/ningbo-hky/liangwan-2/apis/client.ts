@@ -1,7 +1,7 @@
 import axios from "axios"
 
 /** 开发环境服务地址。 */
-const DEV_BASE_URL = "http://121.40.241.229:9000/api/v1"
+const DEV_BASE_URL = "http://127.0.0.1:5114/api/v1"
 
 /** 生产环境服务地址。默认使用同源 `/api/v1`，便于网关反向代理。 */
 const PROD_BASE_URL = "http://121.40.241.229:9000/api/v1"

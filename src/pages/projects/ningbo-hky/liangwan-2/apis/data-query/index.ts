@@ -1,5 +1,5 @@
 import type { EntityId } from "../common/type"
-import type { DataRateRequest, DataRateResult, LatestMeasurementResult, MeasurementCorrectionRequest, MeasurementSeriesResult, MeasurementTableQuery, MeasurementTableResult, StationTrajectoryResult } from "./type"
+import type { CreateDataRateExportRequest, DataRateRequest, DataRateResult, DeleteMeasurementPointsRequest, DeleteMeasurementPointsResult, LatestMeasurementResult, MeasurementCorrectionRequest, MeasurementSeriesResult, MeasurementTableQuery, MeasurementTableResult, QualityControlDataQuery, QualityControlDataResult, StationTrajectoryResult } from "./type"
 import { ecoClient } from "../client"
 
 /** 查询时间对齐的表格数据。 */
@@ -24,7 +24,7 @@ export function queryMeasurementSeries(data: MeasurementTableQuery) {
 
 /** 导出查询结果为 Excel 文件。 */
 export function exportMeasurements(data: MeasurementTableQuery & { fileName?: string }) {
-  return ecoClient.post<Blob>("/exports", data, { responseType: "blob" })
+  return ecoClient.post<Blob>("/exports/measurements", data, { responseType: "blob" })
 }
 
 /** 获取站点当前所有参数的最新数据。 */
@@ -37,7 +37,22 @@ export function getDataRates(data: DataRateRequest) {
   return ecoClient.post<DataRateResult[]>("/data-rates", data)
 }
 
+/** 导出数据获取率和有效率统计 Excel 文件。 */
+export function exportDataRates(data: CreateDataRateExportRequest) {
+  return ecoClient.post<Blob>("/exports/data-rates", data, { responseType: "blob" })
+}
+
 /** 查询站点轨迹 */
 export function getStationTrajectory(stationId: number, data: { from: string, to: string }) {
   return ecoClient.post<StationTrajectoryResult>(`/stations/${encodeURIComponent(stationId)}/trajectory`, data)
+}
+
+/** 批量删除数据点 */
+export function deleteMeasurementPoints(data: DeleteMeasurementPointsRequest, options?: { headers?: Record<string, string> }) {
+  return ecoClient.post<DeleteMeasurementPointsResult>("/measurement-points/delete", data, options)
+}
+
+/** 按站点和业务时间范围返回全部质控数据 */
+export function queryQualityControlData(data: QualityControlDataQuery) {
+  return ecoClient.post<QualityControlDataResult>("/quality-control-data", data)
 }

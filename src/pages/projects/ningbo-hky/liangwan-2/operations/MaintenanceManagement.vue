@@ -13,14 +13,15 @@ const rows = ref<MaintenancePeriod[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref<number | "">("")
-const form = reactive({ maintenanceType: "Routine" as MaintenanceType, timeRange: [new Date(), new Date(Date.now() + 24 * 60 * 60 * 1000)] as [Date, Date], reason: "" })
+const form = reactive({ maintenanceType: "MonthlyMaintenance" as MaintenanceType, timeRange: [new Date(), new Date(Date.now() + 24 * 60 * 60 * 1000)] as [Date, Date], reason: "" })
 
 const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
 const typeOptions: Array<{ value: MaintenanceType, label: string }> = [
-  { value: "AnnualOverhaul", label: "年度大修" },
-  { value: "Emergency", label: "应急维护" },
-  { value: "Routine", label: "例行维护" },
-  { value: "Other", label: "其他" }
+  { value: "MonthlyMaintenance", label: "月度维护" },
+  { value: "AnnualMaintenance", label: "年度维护" },
+  { value: "InstrumentFailureMaintenance", label: "仪器故障维护" },
+  { value: "TyphoonMaintenance", label: "台风维护" },
+  { value: "EquipmentRelocation", label: "设备移位" }
 ]
 
 watch(stationId, loadData)
@@ -33,7 +34,7 @@ async function loadData() {
   }
   loading.value = true
   try {
-    const { data } = await getMaintenancePeriods(selectedStation.value.mn)
+    const { data } = await getMaintenancePeriods(selectedStation.value.id)
     rows.value = data ?? []
   } catch (error) {
     ElMessage.error(getApiErrorMessage(error, "维护时段加载失败"))
@@ -45,7 +46,7 @@ async function loadData() {
 /** 打开维护时段表单。 */
 function edit(row?: MaintenancePeriod) {
   editingId.value = row?.id || ""
-  Object.assign(form, row ? { maintenanceType: row.maintenanceType, timeRange: [new Date(row.startAt), new Date(row.endAt)], reason: row.reason || "" } : { maintenanceType: "Routine", timeRange: [new Date(), new Date(Date.now() + 24 * 60 * 60 * 1000)], reason: "" })
+  Object.assign(form, row ? { maintenanceType: row.maintenanceType, timeRange: [new Date(row.startAt), new Date(row.endAt)], reason: row.reason || "" } : { maintenanceType: "MonthlyMaintenance", timeRange: [new Date(), new Date(Date.now() + 24 * 60 * 60 * 1000)], reason: "" })
   dialogVisible.value = true
 }
 
@@ -57,7 +58,7 @@ async function save() {
   if (new Date(startAt) >= new Date(endAt)) return ElMessage.warning("结束时间必须晚于开始时间")
   const payload = { maintenanceType: form.maintenanceType, startAt, endAt, reason: form.reason.trim() }
   try {
-    editingId.value ? await updateMaintenancePeriod(selectedStation.value.mn, editingId.value, payload) : await createMaintenancePeriod(selectedStation.value.mn, payload)
+    editingId.value ? await updateMaintenancePeriod(selectedStation.value.id, editingId.value as number, payload) : await createMaintenancePeriod(selectedStation.value.id, payload)
     ElMessage.success("维护时段保存成功")
     dialogVisible.value = false
     await loadData()
@@ -71,7 +72,7 @@ async function remove(row: MaintenancePeriod) {
   if (!selectedStation.value) return
   await ElMessageBox.confirm(`确认删除 ${displayTime(row.startAt)} 开始的维护时段？`, "删除确认", { type: "warning" })
   try {
-    await deleteMaintenancePeriod(selectedStation.value.mn, row.id)
+    await deleteMaintenancePeriod(selectedStation.value.id, row.id)
     ElMessage.success("删除成功")
     await loadData()
   } catch (error) {
@@ -81,6 +82,14 @@ async function remove(row: MaintenancePeriod) {
 
 function typeName(value: MaintenanceType) {
   return typeOptions.find(item => item.value === value)?.label || value
+}
+
+function maintenanceTypeTagType(type?: MaintenanceType): "success" | "warning" | "danger" | "info" | "primary" {
+  if (type === "InstrumentFailureMaintenance") return "danger"
+  if (type === "TyphoonMaintenance") return "warning"
+  if (type === "AnnualMaintenance") return "primary"
+  if (type === "MonthlyMaintenance") return "success"
+  return "info"
 }
 
 onMounted(async () => {
@@ -105,9 +114,9 @@ onMounted(async () => {
     </div>
     <el-alert title="维护时段可供统计分析排除大修、应急和例行维护期间的数据。" type="info" :closable="false" show-icon />
     <el-table v-loading="loading" :data="rows" class="maintenance-table" height="100%">
-      <el-table-column label="维护类型" width="130">
+      <el-table-column label="维护类型" width="140">
         <template #default="scope">
-          <el-tag :type="scope.row.maintenanceType === 'Emergency' ? 'danger' : scope.row.maintenanceType === 'AnnualOverhaul' ? 'warning' : 'info'">
+          <el-tag :type="maintenanceTypeTagType(scope.row.maintenanceType)">
             {{ typeName(scope.row.maintenanceType) }}
           </el-tag>
         </template>

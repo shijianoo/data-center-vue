@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { DataRateResult } from "../types"
+import { Download } from "@element-plus/icons-vue"
+import dayjs from "dayjs"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
-import { getApiErrorMessage, getDataRates } from "../apis"
+import { exportDataRates, getApiErrorMessage, getDataRates } from "../apis"
 import { useProjectOptions } from "../composables/useProjectOptions"
 import { displayRate, filterVisibleParameterGroups, getDefaultDateRange, toDayEndIso, toDayStartIso } from "../utils"
 
@@ -16,6 +18,7 @@ const dateRange = ref<[Date, Date]>(getDefaultDateRange(24 * 30))
 const excludeMaintenancePeriods = ref(true)
 const rows = ref<DataRateResult[]>([])
 const loading = ref(false)
+const exportLoading = ref(false)
 
 const selectedStation = computed(() => typeof stationId.value === "number" ? stationById.value.get(stationId.value) : undefined)
 
@@ -25,7 +28,7 @@ const filteredStationGroups = computed(() => filterVisibleParameterGroups(statio
 watch(stationId, async (value) => {
   groupId.value = ""
   rows.value = []
-  await loadStationGroups(typeof value === "number" ? stationById.value.get(value)?.mn : undefined)
+  await loadStationGroups(typeof value === "number" ? value : undefined)
   if (filteredStationGroups.value[0]) {
     groupId.value = filteredStationGroups.value[0].id
     await search()
@@ -53,6 +56,45 @@ async function search() {
     ElMessage.error(getApiErrorMessage(error, "统计数据加载失败"))
   } finally {
     loading.value = false
+  }
+}
+
+/** 导出当前选择站点下的参数组统计 Excel 文件 */
+async function exportData() {
+  if (!selectedStation.value || !groupId.value) {
+    ElMessage.warning("请选择站点和参数组")
+    return
+  }
+  exportLoading.value = true
+  try {
+    const stationName = selectedStation.value.name || "站点"
+    const currentGroup = filteredStationGroups.value.find(g => g.id === groupId.value)
+    const groupName = currentGroup?.name || "参数组"
+    const startDate = dayjs(dateRange.value[0]).format("YYYY-MM-DD")
+    const endDate = dayjs(dateRange.value[1]).format("YYYY-MM-DD")
+    const fileName = `${stationName}_${startDate}_${endDate}_${groupName}_统计信息`
+
+    const response = await exportDataRates({
+      stationId: selectedStation.value.id,
+      parameterGroupId: Number(groupId.value),
+      from: toDayStartIso(dateRange.value[0]),
+      to: toDayEndIso(dateRange.value[1]),
+      calculationMode: "Direct",
+      excludeMaintenancePeriods: excludeMaintenancePeriods.value,
+      fileName
+    })
+
+    const url = URL.createObjectURL(response.data)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `${fileName}.xlsx`
+    anchor.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success("导出文件下载成功")
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, "统计导出失败"))
+  } finally {
+    exportLoading.value = false
   }
 }
 
@@ -87,6 +129,9 @@ onMounted(async () => {
         <el-form-item>
           <el-button type="primary" native-type="submit" :loading="loading">
             开始统计
+          </el-button>
+          <el-button :icon="Download" :loading="exportLoading" @click="exportData">
+            导出统计
           </el-button>
         </el-form-item>
       </el-form>

@@ -8,8 +8,8 @@ export type StationStatus = "Disabled" | "Active" | "Maintenance" | "Offline"
 export interface Station {
   /** 站点数据库主键。 */
   id: number
-  /** HJ212 设备唯一标识。 */
-  mn: string
+  /** 逻辑站点业务编码；创建和修改时必填 */
+  code: string
   /** 站点名称。 */
   name: string
   /** 站点分组名称。 */
@@ -31,14 +31,12 @@ export interface Station {
 }
 
 /** 保存站点时提交的字段。 */
-export type SaveStation = Omit<Station, "id" | "lastSeenAt">
+export type SaveStationCommand = Omit<Station, "id" | "lastSeenAt">
 
 /** 站点参数组实体。 */
 export interface StationParameterGroup {
   /** 参数组主键。 */
   id: number
-  /** 站点主键。 */
-  StationId: number
   /** 参数组名称。 */
   name: string
   /** 预期上报间隔（分钟）。 */
@@ -78,7 +76,12 @@ export interface BatchStationParameterBindings {
 }
 
 /** 站点维护期类型。 */
-export type MaintenanceType = "AnnualOverhaul" | "Emergency" | "Routine" | "Other"
+export type MaintenanceType
+  = | "MonthlyMaintenance"
+    | "AnnualMaintenance"
+    | "InstrumentFailureMaintenance"
+    | "TyphoonMaintenance"
+    | "EquipmentRelocation"
 
 /** 站点维护期。 */
 export interface MaintenancePeriod {
@@ -121,12 +124,26 @@ export interface IngestionMessageModel {
   receivedAt: string
   /** 原始报文进入平台的来源 */
   source?: IngestionSource
+  /** 报文接收时携带的完整设备 MN */
+  receivedMn: string
   /** 唯一交互号 */
   qn: string
   /** 命令编码 */
   commandCode: string
   /** 完整原始报文 */
   rawMessage: string
+}
+
+/** 站点参数组自动审核开关批量更新结果 */
+export interface StationParameterGroupAutoReviewResult {
+  /** 站点 ID */
+  stationId: number
+  /** 站点参数组 ID */
+  stationParameterGroupId: number
+  /** 设置后的自动审核状态 */
+  isAutoReviewEnabled: boolean
+  /** 实际更新的参数绑定数量 */
+  updatedCount: number
 }
 
 export type { ParameterDefinition }

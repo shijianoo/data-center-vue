@@ -17,8 +17,8 @@ export interface ParameterDefinition {
   unit?: string
   /** 小数位数。 */
   decimalPlaces: number
-  /** HJ212 主值指标后缀。 */
-  primaryMetricSuffix?: string
+  /** 优先级排列的指标后缀，使用逗号分隔。例如Rtd,Avg */
+  metricSuffixes?: string
   /** 显示顺序。 */
   sortOrder: number
   /** 参数说明。 */

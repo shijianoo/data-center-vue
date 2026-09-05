@@ -15,6 +15,7 @@ export const ingestionSourceLabels: Record<string, string> = {
   Tcp: "TCP 网关",
   Beidou: "北斗转发",
   HttpApi: "HTTP 接口",
+  HistoricalBackfill: "历史补传",
   Unknown: "未知"
 }
 
@@ -54,6 +55,7 @@ export function ingestionSourceTagType(source?: IngestionSource | string | null)
   if (source === "Tcp") return "info"
   if (source === "Beidou") return "warning"
   if (source === "HttpApi") return "success"
+  if (source === "HistoricalBackfill") return "warning"
   return "info"
 }
 
@@ -122,8 +124,7 @@ export const waterQualityGradeMap: Record<number, string> = {
   2: "Ⅱ类",
   3: "Ⅲ类",
   4: "Ⅳ类",
-  5: "Ⅴ类",
-  6: "劣Ⅴ类"
+  5: "劣Ⅳ类"
 }
 
 /** 水质等级字符串映射。 */
@@ -132,20 +133,17 @@ export const waterQualityGradeLabels: Record<string, string> = {
   ClassII: "Ⅱ类",
   ClassIII: "Ⅲ类",
   ClassIV: "Ⅳ类",
-  ClassV: "Ⅴ类",
-  ClassInferiorV: "劣Ⅴ类",
+  ClassV: "劣Ⅳ类",
   1: "Ⅰ类",
   2: "Ⅱ类",
   3: "Ⅲ类",
   4: "Ⅳ类",
-  5: "Ⅴ类",
-  6: "劣Ⅴ类",
+  5: "劣Ⅳ类",
   一类: "Ⅰ类",
   二类: "Ⅱ类",
   三类: "Ⅲ类",
   四类: "Ⅳ类",
-  五类: "Ⅴ类",
-  劣五类: "劣Ⅴ类"
+  劣四类: "劣Ⅳ类"
 }
 
 /** 格式化水质等级字符串。 */
@@ -161,7 +159,7 @@ export function waterQualityGradeTagType(grade?: string | null): "success" | "in
   if (formatted === "Ⅰ类" || formatted === "Ⅱ类") return "success"
   if (formatted === "Ⅲ类") return "info"
   if (formatted === "Ⅳ类") return "warning"
-  if (formatted === "Ⅴ类" || formatted === "劣Ⅴ类") return "danger"
+  if (formatted === "劣Ⅳ类") return "danger"
   return "info"
 }
 

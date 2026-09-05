@@ -11,10 +11,38 @@ import {
   getApiErrorMessage,
   getStationParameterBindings,
   setAutoReviewEnabled,
+  setParameterGroupAutoReviewEnabled,
   updateStationParameterBinding,
   updateStationParameterGroup
 } from "../apis"
 import { useProjectOptions } from "../composables/useProjectOptions"
+
+/** 计算指定参数组下的全部已绑定参数是否均已开启自动审核 */
+function isGroupAutoReviewAllEnabled(groupId: number) {
+  const list = bindingsByGroupId.value.get(groupId) || []
+  if (list.length === 0) return false
+  return list.every(b => b.isAutoReviewEnabled)
+}
+
+/** 批量切换整个参数组的自动审核开关 */
+async function toggleGroupAutoReview(group: StationParameterGroup, val: boolean) {
+  if (!selectedStation.value) return
+  const groupBindings = bindingsByGroupId.value.get(group.id) || []
+  if (groupBindings.length === 0) {
+    return ElMessage.warning("该参数组暂无已绑定的参数")
+  }
+  try {
+    const { data } = await setParameterGroupAutoReviewEnabled(selectedStation.value.id, group.id, val)
+    bindings.value.forEach((b) => {
+      if (b.stationParameterGroupId === group.id) {
+        b.isAutoReviewEnabled = val
+      }
+    })
+    ElMessage.success(`“${group.name}”已${val ? "开启" : "禁用"}自动审核（更新 ${data.updatedCount ?? groupBindings.length} 个参数）`)
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error, "组自动审核设置失败"))
+  }
+}
 
 const { stations, parameterDefinitions, stationGroups, loadStations, loadParameterDefinitions, loadStationGroups, parameterById } = useProjectOptions()
 const stationId = ref<number | null>(null)
@@ -48,6 +76,35 @@ const bindingsByGroupId = computed(() => {
   return map
 })
 
+/** 批量添加参数弹窗中，严格按 ParameterDefinition.groupName 分组的未绑定全局参数 */
+const groupedUnboundParameters = computed(() => {
+  const currentGroupId = batchBindingForm.stationParameterGroupId
+  const boundBindings = bindingsByGroupId.value.get(currentGroupId) || []
+  const boundSet = new Set(boundBindings.map(b => b.parameterDefinitionId))
+  const unbound = parameterDefinitions.value.filter(p => !boundSet.has(p.id))
+
+  const groupMap = new Map<string, typeof parameterDefinitions.value>()
+  unbound.forEach((p) => {
+    // 按全局参数定义 (ParameterDefinition) 自身的 groupName 字段进行分组
+    const groupName = p.groupName?.trim() || "未分类"
+    if (!groupMap.has(groupName)) {
+      groupMap.set(groupName, [])
+    }
+    groupMap.get(groupName)!.push(p)
+  })
+
+  const sortedGroupNames = Array.from(groupMap.keys()).sort((a, b) => {
+    if (a === "未分类") return 1
+    if (b === "未分类") return -1
+    return a.localeCompare(b, "zh-CN")
+  })
+
+  return sortedGroupNames.map(label => ({
+    label,
+    options: groupMap.get(label)!
+  }))
+})
+
 watch(stationId, async () => {
   await loadStationConfig()
 })
@@ -62,8 +119,8 @@ async function loadStationConfig() {
   loading.value = true
   try {
     const [, bindingResponse] = await Promise.all([
-      loadStationGroups(selectedStation.value.mn),
-      getStationParameterBindings(selectedStation.value.mn)
+      loadStationGroups(selectedStation.value.id),
+      getStationParameterBindings(selectedStation.value.id)
     ])
     bindings.value = bindingResponse.data ?? []
     // 默认展开所有组
@@ -86,7 +143,7 @@ function editGroup(row?: StationParameterGroup) {
 async function saveGroup() {
   if (!selectedStation.value || !groupForm.name.trim()) return ElMessage.warning("请选择站点并填写组名")
   try {
-    editingGroupId.value ? await updateStationParameterGroup(selectedStation.value.mn, editingGroupId.value, { StationId: selectedStation.value.id, ...groupForm }) : await createStationParameterGroup(selectedStation.value.mn, { StationId: selectedStation.value.id, ...groupForm })
+    editingGroupId.value ? await updateStationParameterGroup(selectedStation.value.id, editingGroupId.value, { ...groupForm }) : await createStationParameterGroup(selectedStation.value.id, { ...groupForm })
     ElMessage.success("站点参数组保存成功")
     groupDialog.value = false
     await loadStationConfig()
@@ -100,7 +157,7 @@ async function removeGroup(row: StationParameterGroup) {
   if (!selectedStation.value) return
   await ElMessageBox.confirm(`确认删除参数组“${row.name}”？`, "删除确认", { type: "warning" })
   try {
-    await deleteStationParameterGroup(selectedStation.value.mn, row.id)
+    await deleteStationParameterGroup(selectedStation.value.id, row.id)
     ElMessage.success("删除成功")
     await loadStationConfig()
   } catch (error) {
@@ -121,7 +178,7 @@ async function saveBatchBinding() {
     return ElMessage.warning("请选择至少一个参数进行绑定")
   }
   try {
-    await batchCreateStationParameterBindings(selectedStation.value.mn, { ...batchBindingForm })
+    await batchCreateStationParameterBindings(selectedStation.value.id, { ...batchBindingForm })
     ElMessage.success("批量绑定参数成功")
     batchBindingDialog.value = false
     await loadStationConfig()
@@ -154,7 +211,7 @@ async function saveBinding() {
     unitOverride: bindingForm.unitOverride || null
   }
   try {
-    await updateStationParameterBinding(selectedStation.value.mn, editingBindingId.value!, payload)
+    await updateStationParameterBinding(selectedStation.value.id, editingBindingId.value!, payload)
     ElMessage.success("参数设置更新成功")
     bindingDialog.value = false
     await loadStationConfig()
@@ -168,7 +225,7 @@ async function removeBinding(row: StationParameterBinding) {
   if (!selectedStation.value) return
   await ElMessageBox.confirm(`确认解除参数“${parameterName(row.parameterDefinitionId)}”的绑定？`, "删除确认", { type: "warning" })
   try {
-    await deleteStationParameterBinding(selectedStation.value.mn, row.id)
+    await deleteStationParameterBinding(selectedStation.value.id, row.id)
     ElMessage.success("解绑成功")
     await loadStationConfig()
   } catch (error) {
@@ -180,7 +237,7 @@ async function removeBinding(row: StationParameterBinding) {
 async function toggleAutoReview(row: StationParameterBinding, val: boolean) {
   if (!selectedStation.value) return
   try {
-    await setAutoReviewEnabled(selectedStation.value.mn, row.id, val)
+    await setAutoReviewEnabled(selectedStation.value.id, row.id, val)
     ElMessage.success(`${val ? "启用" : "禁用"}自动审核成功`)
   } catch (error) {
     row.isAutoReviewEnabled = !val // 恢复原状
@@ -227,6 +284,16 @@ onMounted(async () => {
               <span class="group-name">{{ group.name }}</span>
               <span class="group-interval">周期: {{ group.reportIntervalMinutes }}分钟</span>
               <div class="group-actions" @click.stop>
+                <div class="group-auto-review">
+                  <span class="auto-review-label">组自动审核:</span>
+                  <el-switch
+                    :model-value="isGroupAutoReviewAllEnabled(group.id)"
+                    active-text="全开"
+                    inactive-text="全关"
+                    inline-prompt
+                    @change="(val: boolean | string | number) => toggleGroupAutoReview(group, val as boolean)"
+                  />
+                </div>
                 <el-button link type="primary" :icon="Edit" @click="editGroup(group)">
                   编辑组
                 </el-button>
@@ -321,12 +388,18 @@ onMounted(async () => {
             style="width: 100%"
             placeholder="请选择需要绑定的全局参数（可多选）"
           >
-            <el-option
-              v-for="item in parameterDefinitions.filter(p => !(bindingsByGroupId.get(batchBindingForm.stationParameterGroupId) || []).some(b => b.parameterDefinitionId === p.id))"
-              :key="item.id"
-              :label="`${item.name}（${item.code}）`"
-              :value="item.id"
-            />
+            <el-option-group
+              v-for="group in groupedUnboundParameters"
+              :key="group.label"
+              :label="group.label"
+            >
+              <el-option
+                v-for="item in group.options"
+                :key="item.id"
+                :label="`${item.name}（${item.code}）`"
+                :value="item.id"
+              />
+            </el-option-group>
           </el-select>
         </el-form-item>
       </el-form>
@@ -416,6 +489,18 @@ onMounted(async () => {
     margin-left: auto;
     display: flex;
     align-items: center;
+  }
+
+  .group-auto-review {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 16px;
+
+    .auto-review-label {
+      margin-right: 6px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
   }
 }
 

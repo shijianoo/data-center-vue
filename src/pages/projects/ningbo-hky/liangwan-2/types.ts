@@ -2,6 +2,7 @@
 export * from "./apis/common/type"
 export * from "./apis/data-query/type"
 export * from "./apis/data-review/type"
+export * from "./apis/devices/type"
 export * from "./apis/parameter-rule/type"
 export * from "./apis/parameter/type"
 export * from "./apis/station/type"
