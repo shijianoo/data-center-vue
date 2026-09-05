@@ -106,6 +106,12 @@ export function getNingboHKYRoute(project: Project): RouteRecordRaw[] {
           ]
         }
       ]
+    },
+    {
+      path: "statistics",
+      name: "NingboHKYDataStatistics",
+      component: () => import("./statistics/DataStatistics.vue"),
+      meta: { title: "数据统计" }
     }
   ]
 }

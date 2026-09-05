@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import type { HistoryQuery } from "../../apis/type"
 import type { HistoryField, HistoryGroup, HistoryRow } from "../buoy/config"
-import { Download } from "@element-plus/icons-vue"
+import { Delete, Download } from "@element-plus/icons-vue"
 import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useDateRangeSelector } from "@/common/composables/useDateRangeSelector"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
 import { useUserStore } from "@/pinia/stores/user"
-import { exportFile, getHistoricalData, getLatestData } from "../../apis"
+import { deleteData, exportFile, getHistoricalData, getLatestData } from "../../apis"
 
 const props = defineProps<{
   serialNumber: string
@@ -24,6 +24,8 @@ const user = useUserStore()
 
 const loading = ref(false)
 const downloading = ref(false)
+const deleting = ref(false)
+const selectedRows = ref<HistoryRow[]>([])
 const rows = ref<HistoryRow[]>([])
 const pickingStartDate = ref<Date | null>(null)
 const requestSeq = ref(0)
@@ -195,6 +197,7 @@ async function loadActiveGroup() {
 
   const seq = ++requestSeq.value
   loading.value = true
+  selectedRows.value = []
 
   try {
     const range = await ensureDateRange(group)
@@ -313,6 +316,63 @@ async function handleDownload() {
   }
 }
 
+function handleSelectionChange(val: HistoryRow[]) {
+  selectedRows.value = val
+}
+
+async function handleDelete() {
+  if (!selectedRows.value.length) {
+    ElMessage.warning("请选择要删除的数据")
+    return
+  }
+  const group = activeGroup.value
+  if (!group || !group.tableName) {
+    ElMessage.error("未找到对应数据表信息")
+    return
+  }
+
+  const count = selectedRows.value.length
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${count} 条数据吗？删除后不可恢复！`,
+      "警告",
+      {
+        confirmButtonText: "确定删除",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+  } catch {
+    return
+  }
+
+  deleting.value = true
+  try {
+    const recordIds = selectedRows.value
+      .map(row => Number(row.record_id))
+      .filter(id => Number.isFinite(id))
+
+    if (!recordIds.length) {
+      ElMessage.error("选中的数据中无有效 RecordId")
+      return
+    }
+
+    await deleteData({
+      tableName: group.tableName,
+      recordIds
+    })
+
+    ElMessage.success("删除成功")
+    selectedRows.value = []
+    await loadActiveGroup()
+  } catch (error) {
+    console.error(`删除 ${group.label} 数据失败`, error)
+    ElMessage.error("删除失败，请重试")
+  } finally {
+    deleting.value = false
+  }
+}
+
 function getThresholdValue(row: HistoryRow, field: HistoryField) {
   return field.thresholdValue ? field.thresholdValue(row) : row[field.column]
 }
@@ -375,6 +435,16 @@ watch(
         <el-button :icon="Download" :loading="downloading || isSelecting" @click="handleDownload">
           下载
         </el-button>
+        <el-button
+          v-if="user.isPlatformUser"
+          type="danger"
+          :icon="Delete"
+          :disabled="!selectedRows.length"
+          :loading="deleting"
+          @click="handleDelete"
+        >
+          删除
+        </el-button>
       </div>
     </div>
 
@@ -388,8 +458,16 @@ watch(
     </el-tabs>
 
     <div class="table-wrapper" v-loading="loading">
-      <el-table :data="rows" stripe size="small" height="100%" empty-text="暂无数据">
-        <el-table-column width="100" v-if="user.isPlatformUser" label="RecordId" prop="record_id" fixed />
+      <el-table
+        :data="rows"
+        stripe
+        size="small"
+        height="100%"
+        empty-text="暂无数据"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column v-if="user.isPlatformUser" type="selection" width="45" fixed />
+        <el-table-column v-if="user.isPlatformUser" width="100" label="RecordId" prop="record_id" fixed />
         <el-table-column :label="aggregateMode === 'Raw' ? '采样时间' : '时间分组'" width="180" fixed>
           <template #default="{ row }">
             {{ formatDateTime(row.samp_time) }}

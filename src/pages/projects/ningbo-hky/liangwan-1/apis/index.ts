@@ -1,4 +1,4 @@
-import type { HistoryLocationQuery, HistoryQuery } from "./type"
+import type { DeleteDataRequest, HistoryLocationQuery, HistoryQuery, QualityRateRequest } from "./type"
 import axios from "axios"
 
 // 根据运行环境选择 baseURL`
@@ -71,4 +71,14 @@ export function getLatestData(tableName: string, serialNumber: string, selectCol
 // 导出数据,返回一个文件下载链接，可以使用这个链接来下载文件
 export function exportFile(query: HistoryQuery) {
   return client.post("data/export", query)
+}
+
+// 批量删除指定数据表中的记录
+export function deleteData(query: DeleteDataRequest) {
+  return client.post("delete", query)
+}
+
+// 查询设备指定时间范围内各字段的获取率和有效率
+export function getQualityRate(query: QualityRateRequest) {
+  return client.post("quality-rate", query)
 }
