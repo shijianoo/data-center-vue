@@ -1,16 +1,79 @@
 <script setup lang="ts">
 import type { Device } from "@/common/apis/devices/type"
+import { InfoFilled } from "@element-plus/icons-vue"
 import { buildDownloadExcelByRangeUrl } from "@/common/apis/data-download"
 import { selectDateRange } from "@/common/composables/useDateRangeSelector"
 import { useHistoryDataQuery } from "@/common/hooks/useHistoryDataQuery"
-import { formatNumber, parseLeakStatus, parseUploadChannel } from "@/common/utils/data-parse"
+import { formatNumber, parseUploadChannel } from "@/common/utils/data-parse"
 import { formatDateTime } from "@/common/utils/datetime"
 import { downloadFile } from "@/common/utils/download"
 import TenantBreadcrumb from "@/layouts/components/TenantHeader/TenantBreadcrumb.vue"
 
+interface LeakStatusItem {
+  bit: number
+  label: string
+  type: "danger" | "warning"
+}
+
+interface LeakBitDetail {
+  bit: number
+  name: string
+  triggered: boolean
+  type: "danger" | "warning"
+  statusText: string
+}
+
 const props = defineProps<{
   device: Device
 }>()
+
+const SOB23_LEAK_BIT_DEFINITIONS = [
+  { bit: 0, name: "顶部漏水", type: "danger" as const, activeLabel: "漏水", normalLabel: "正常" },
+  { bit: 1, name: "底部漏水", type: "danger" as const, activeLabel: "漏水", normalLabel: "正常" },
+  { bit: 2, name: "顶部检测线路断路", type: "warning" as const, activeLabel: "断路", normalLabel: "正常" },
+  { bit: 3, name: "底部检测线路断路", type: "warning" as const, activeLabel: "断路", normalLabel: "正常" },
+  { bit: 4, name: "顶部检测线路短路", type: "warning" as const, activeLabel: "短路", normalLabel: "正常" },
+  { bit: 5, name: "底部检测线路短路", type: "warning" as const, activeLabel: "短路", normalLabel: "正常" }
+]
+
+/** 按位 (Bit) 解析 SOB23 机器的漏水状态 (leak_stat) */
+function parseSob23LeakStatusItems(rawValue: number | null | undefined): LeakStatusItem[] {
+  if (rawValue == null || typeof rawValue !== "number") return []
+  const val = Math.floor(rawValue) & 0x3F
+  if (val === 0) return []
+
+  const items: LeakStatusItem[] = []
+  if (val & 1) items.push({ bit: 0, label: "顶部漏水", type: "danger" })
+  if (val & 2) items.push({ bit: 1, label: "底部漏水", type: "danger" })
+  if (val & 4) items.push({ bit: 2, label: "顶部检测线路断路", type: "warning" })
+  if (val & 8) items.push({ bit: 3, label: "底部检测线路断路", type: "warning" })
+  if (val & 16) items.push({ bit: 4, label: "顶部检测线路短路", type: "warning" })
+  if (val & 32) items.push({ bit: 5, label: "底部检测线路短路", type: "warning" })
+
+  return items
+}
+
+function parseSob23LeakStatusText(rawValue: number | null | undefined): string {
+  if (rawValue == null) return "—"
+  const items = parseSob23LeakStatusItems(rawValue)
+  if (items.length === 0) return "正常"
+  return items.map(i => i.label).join("，")
+}
+
+function getLeakBitDetails(rawValue: number | null | undefined): LeakBitDetail[] {
+  if (rawValue == null || typeof rawValue !== "number") return []
+  const val = Math.floor(rawValue) & 0x3F
+  return SOB23_LEAK_BIT_DEFINITIONS.map((def) => {
+    const isTriggered = (val & (1 << def.bit)) !== 0
+    return {
+      bit: def.bit,
+      name: def.name,
+      triggered: isTriggered,
+      type: def.type,
+      statusText: isTriggered ? def.activeLabel : def.normalLabel
+    }
+  })
+}
 
 const deviceRef = toRef(props, "device")
 const {
@@ -136,7 +199,25 @@ async function handleDownload() {
                 </div>
                 <div class="data-row">
                   <span class="label">漏水状态</span>
-                  <span class="value">{{ parseLeakStatus(row.leak_stat) }}</span>
+                  <span class="value">
+                    {{ parseSob23LeakStatusText(row.leak_stat) }}
+                    <el-tooltip v-if="row.leak_stat != null" effect="light" placement="top">
+                      <template #content>
+                        <div class="leak-panels">
+                          <div
+                            v-for="panel in getLeakBitDetails(row.leak_stat)"
+                            :key="panel.bit"
+                            :class="[panel.triggered ? (panel.type === 'danger' ? 'triggered-danger' : 'triggered-warning') : 'leak-normal']"
+                          >
+                            {{ panel.name }}: {{ panel.statusText }}
+                          </div>
+                        </div>
+                      </template>
+                      <el-icon class="info-icon">
+                        <InfoFilled />
+                      </el-icon>
+                    </el-tooltip>
+                  </span>
                 </div>
                 <div class="data-row">
                   <span class="label">相对湿度</span>
@@ -410,6 +491,7 @@ async function handleDownload() {
 
     .data-row {
       display: flex;
+      align-items: center;
       line-height: 1.3;
       margin-bottom: 2px;
       font-size: 12px;
@@ -422,6 +504,12 @@ async function handleDownload() {
         color: var(--text-sub);
         width: 85px;
         flex-shrink: 0;
+      }
+
+      .value {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
     }
   }
@@ -436,6 +524,69 @@ async function handleDownload() {
     flex-wrap: wrap;
     gap: 15px;
   }
+}
+
+.leak-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  border-radius: 3px;
+  margin-right: 4px;
+  margin-bottom: 2px;
+  font-weight: 500;
+
+  &--normal {
+    background-color: rgba(103, 194, 58, 0.12);
+    color: #67c23a;
+    border: 1px solid rgba(103, 194, 58, 0.3);
+  }
+
+  &--danger {
+    background-color: rgba(245, 108, 108, 0.12);
+    color: #f56c6c;
+    border: 1px solid rgba(245, 108, 108, 0.3);
+  }
+
+  &--warning {
+    background-color: rgba(230, 162, 60, 0.12);
+    color: #e6a23c;
+    border: 1px solid rgba(230, 162, 60, 0.3);
+  }
+}
+
+.info-icon {
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 13px;
+}
+
+.leak-panels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.triggered-danger {
+  border-radius: 2px;
+  padding: 0 4px;
+  background-color: #f56c6c;
+  color: white;
+}
+
+.triggered-warning {
+  border-radius: 2px;
+  padding: 0 4px;
+  background-color: #e6a23c;
+  color: white;
+}
+
+.leak-normal {
+  border-radius: 2px;
+  padding: 0 4px;
+  background-color: #67c23a;
+  color: white;
 }
 
 @media (max-width: 900px) {
