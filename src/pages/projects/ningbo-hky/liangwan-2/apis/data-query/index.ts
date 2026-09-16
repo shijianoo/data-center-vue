@@ -1,5 +1,5 @@
 import type { EntityId } from "../common/type"
-import type { CreateDataRateExportRequest, DataRateRequest, DataRateResult, DeleteMeasurementPointsRequest, DeleteMeasurementPointsResult, LatestMeasurementResult, MeasurementCorrectionRequest, MeasurementSeriesResult, MeasurementTableQuery, MeasurementTableResult, QualityControlDataQuery, QualityControlDataResult, StationTrajectoryResult } from "./type"
+import type { CreateDataRateExportRequest, DataRateRequest, DataRateResult, DeleteMeasurementPointsRequest, DeleteMeasurementPointsResult, LatestMeasurementResult, MeasurementCorrectionRequest, MeasurementSeriesResult, MeasurementTableQuery, MeasurementTableResult, QualityControlDataQuery, QualityControlDataRecord, StationTrajectoryResult } from "./type"
 import { ecoClient } from "../client"
 
 /** 查询时间对齐的表格数据。 */
@@ -54,5 +54,5 @@ export function deleteMeasurementPoints(data: DeleteMeasurementPointsRequest, op
 
 /** 按站点和业务时间范围返回全部质控数据 */
 export function queryQualityControlData(data: QualityControlDataQuery) {
-  return ecoClient.post<QualityControlDataResult>("/quality-control-data", data)
+  return ecoClient.post<QualityControlDataRecord[]>("/quality-control-data/query", data)
 }

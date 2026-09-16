@@ -234,6 +234,8 @@ export interface DeleteMeasurementPointsRequest {
   reason: string
   /** 是否确认 */
   confirm: boolean
+  /** 数据点物理删除口令 */
+  password: string
 }
 
 /** 批量删除数据点结果 */
@@ -254,22 +256,10 @@ export interface DeleteMeasurementPointsResult {
 export interface QualityControlDataQuery {
   /** 站点Id */
   stationId: number
-  /** 参数组主键 */
-  parameterGroupId?: number
-  /** 命令码 */
-  commandCodes: string[]
   /** 业务时间结束 */
   from: string
   /** 业务时间结束 */
   to: string
-}
-
-/** 质控数据中的动态指标列定义 */
-export interface QualityControlMetricColumn {
-  /** 指标后缀键，对应记录 Metrics 中的键 */
-  key: string
-  /** 显示名称；未知后缀默认使用 Key */
-  name: string
 }
 
 /** 质控数据查询返回的一条参数记录 */
@@ -295,17 +285,5 @@ export interface QualityControlDataRecord {
   /** 设备数据状态 */
   measurementDataFlag: string
   /** 完整的质控指标原始值 */
-  metrics: Map<string, string>
-}
-
-/** 质控数据时间范围查询结果 */
-export interface QualityControlDataResult {
-  /** 站点 ID */
-  stationId: string
-  /** 站点名称 */
-  stationName: string
-  /** 本次结果中出现的动态质控指标列，顺序已固定 */
-  metricColumns: QualityControlMetricColumn[]
-  /** 按业务时间升序排列的全部匹配记录 */
-  records: QualityControlDataRecord[]
+  metrics: Record<string, string | null>
 }

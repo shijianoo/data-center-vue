@@ -95,7 +95,12 @@ export function toDayStartIso(value: Date | string) {
 
 /** 将所选结束日期规范化为当天 23:59:59。 */
 export function toDayEndIso(value: Date | string) {
-  return dayjs(value).endOf("day").format("YYYY-MM-DDT23:59:59")
+  return dayjs(value).endOf("day").format("YYYY-MM-DDTHH:mm:ss")
+}
+
+/** 将所选末日规范化为次日 00:00:00（满足半开区间 [from, to) 的 to 参数要求）。 */
+export function toNextDayStartIso(value: Date | string) {
+  return dayjs(value).add(1, "day").startOf("day").format("YYYY-MM-DDTHH:mm:ss")
 }
 
 /** 按用户选择的具体时分秒格式化本地 ISO 时间，供维护时段等精确时间配置使用。 */

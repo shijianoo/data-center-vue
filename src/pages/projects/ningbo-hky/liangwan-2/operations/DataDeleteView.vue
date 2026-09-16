@@ -2,8 +2,6 @@
 import type { DeleteMeasurementPointsRequest, DeleteMeasurementPointsResult } from "../apis/data-query/type"
 import type { Granularity, MeasurementTableCell, MeasurementTableResult } from "../types"
 import { Delete } from "@element-plus/icons-vue"
-import { ElMessage } from "element-plus"
-import { computed, onMounted, ref, watch } from "vue"
 import { getToken } from "@/common/utils/cache/cookies"
 import { useUserStore } from "@/pinia/stores/user"
 import { deleteMeasurementPoints, getApiErrorMessage, queryMeasurements } from "../apis"
@@ -190,8 +188,8 @@ function openDeleteConfirm() {
   confirmDialogVisible.value = true
 }
 
-/** 提交批量删除点请求，提取本地访问 token (AccessToken) 作为认证头 */
-async function submitDelete() {
+/** 校验删除原因与确认复选框后，弹出物理口令输入消息框并提交删除 */
+function proceedToDelete() {
   if (!deleteReason.value.trim()) {
     return ElMessage.warning("请输入数据删除原因")
   }
@@ -199,6 +197,24 @@ async function submitDelete() {
     return ElMessage.warning("请先勾选二次确认复选框")
   }
 
+  ElMessageBox.prompt("请输入删除密码", "数据点删除", {
+    confirmButtonText: "确认删除",
+    cancelButtonText: "取消",
+    inputType: "password",
+    inputPlaceholder: "请输入删除密码",
+    inputPattern: /\S+/,
+    inputErrorMessage: "删除密码不能为空"
+  }).then(async ({ value }) => {
+    if (value) {
+      await submitDelete(value)
+    }
+  }).catch(() => {
+    // 用户取消输入
+  })
+}
+
+/** 提交批量删除点请求，提取本地访问 token (AccessToken) 作为认证头 */
+async function submitDelete(password: string) {
   deleting.value = true
   try {
     const token = getToken() || userStore.token || ""
@@ -210,6 +226,7 @@ async function submitDelete() {
     const payload: DeleteMeasurementPointsRequest = {
       pointIds: selectedPointIds.value,
       reason: deleteReason.value.trim(),
+      password: password.trim(),
       confirm: true
     }
 
@@ -385,9 +402,9 @@ onMounted(async () => {
           type="danger"
           :disabled="!deleteReason.trim() || !confirmChecked"
           :loading="deleting"
-          @click="submitDelete"
+          @click="proceedToDelete"
         >
-          确认高危删除
+          确认删除
         </el-button>
       </template>
     </el-dialog>

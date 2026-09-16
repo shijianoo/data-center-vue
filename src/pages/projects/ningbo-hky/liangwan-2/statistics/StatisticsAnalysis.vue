@@ -7,7 +7,7 @@ import { computed, onMounted, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
 import { exportDataRates, getApiErrorMessage, getDataRates } from "../apis"
 import { useProjectOptions } from "../composables/useProjectOptions"
-import { displayRate, filterVisibleParameterGroups, getDefaultDateRange, toDayEndIso, toDayStartIso } from "../utils"
+import { displayRate, filterVisibleParameterGroups, getDefaultDateRange, toDayStartIso, toNextDayStartIso } from "../utils"
 
 const { stations, stationGroups, loadStations, loadStationGroups, stationById } = useProjectOptions()
 const userStore = useUserStore()
@@ -47,7 +47,7 @@ async function search() {
       stationId: selectedStation.value.id,
       parameterGroupId: groupId.value,
       from: toDayStartIso(dateRange.value[0]),
-      to: toDayEndIso(dateRange.value[1]),
+      to: toNextDayStartIso(dateRange.value[1]),
       calculationMode: "Direct",
       excludeMaintenancePeriods: excludeMaintenancePeriods.value
     })
@@ -78,7 +78,7 @@ async function exportData() {
       stationId: selectedStation.value.id,
       parameterGroupId: Number(groupId.value),
       from: toDayStartIso(dateRange.value[0]),
-      to: toDayEndIso(dateRange.value[1]),
+      to: toNextDayStartIso(dateRange.value[1]),
       calculationMode: "Direct",
       excludeMaintenancePeriods: excludeMaintenancePeriods.value,
       fileName
