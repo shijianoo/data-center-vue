@@ -6,6 +6,7 @@ import { ElMessage } from "element-plus"
 import { computed, onMounted, ref, watch } from "vue"
 import { useUserStore } from "@/pinia/stores/user"
 import { exportDataRates, getApiErrorMessage, getDataRates } from "../apis"
+import MobileTableZoom from "../components/MobileTableZoom.vue"
 import { useProjectOptions } from "../composables/useProjectOptions"
 import { displayRate, filterVisibleParameterGroups, getDefaultDateRange, toDayStartIso, toNextDayStartIso } from "../utils"
 
@@ -137,38 +138,40 @@ onMounted(async () => {
       </el-form>
     </section>
 
-    <section class="lw2-content statistics-table">
-      <div class="lw2-page-title">
-        <h2>数据质量统计</h2>
-        <el-tag>{{ selectedStation?.name || '未选择站点' }}</el-tag>
-      </div>
-      <el-table v-loading="loading" :data="rows" height="100%" empty-text="请选择条件并开始统计">
-        <el-table-column label="参数" min-width="180" fixed>
-          <template #default="scope">
-            {{ scope.row.parameter.name }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="expectedCount" label="应收数据量" align="right" min-width="110" />
-        <el-table-column prop="receivedCount" label="实收数据量" align="right" min-width="110" />
-        <el-table-column prop="validCount" label="有效数据量" align="right" min-width="110" />
-        <el-table-column prop="missingCount" label="缺失数据量" align="right" min-width="110" />
-        <el-table-column prop="duplicateCount" label="重复数据量" align="right" min-width="110" />
-        <el-table-column label="获取率" align="center" min-width="110">
-          <template #default="scope">
-            <el-tag :type="scope.row.acquisitionRate >= 0.9 ? 'success' : 'warning'">
-              {{ displayRate(scope.row.acquisitionRate) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="有效率" align="center" min-width="110">
-          <template #default="scope">
-            <el-tag :type="scope.row.validityRate >= 0.9 ? 'success' : 'danger'">
-              {{ displayRate(scope.row.validityRate) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </section>
+    <MobileTableZoom>
+      <section class="lw2-content statistics-table">
+        <div class="lw2-page-title">
+          <h2>数据质量统计</h2>
+          <el-tag>{{ selectedStation?.name || '未选择站点' }}</el-tag>
+        </div>
+        <el-table v-loading="loading" :data="rows" height="100%" empty-text="请选择条件并开始统计">
+          <el-table-column label="参数" min-width="180" fixed>
+            <template #default="scope">
+              {{ scope.row.parameter.name }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="expectedCount" label="应收数据量" align="right" min-width="110" />
+          <el-table-column prop="receivedCount" label="实收数据量" align="right" min-width="110" />
+          <el-table-column prop="validCount" label="有效数据量" align="right" min-width="110" />
+          <el-table-column prop="missingCount" label="缺失数据量" align="right" min-width="110" />
+          <el-table-column prop="duplicateCount" label="重复数据量" align="right" min-width="110" />
+          <el-table-column label="获取率" align="center" min-width="110">
+            <template #default="scope">
+              <el-tag :type="scope.row.acquisitionRate >= 0.9 ? 'success' : 'warning'">
+                {{ displayRate(scope.row.acquisitionRate) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="有效率" align="center" min-width="110">
+            <template #default="scope">
+              <el-tag :type="scope.row.validityRate >= 0.9 ? 'success' : 'danger'">
+                {{ displayRate(scope.row.validityRate) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </section>
+    </MobileTableZoom>
   </div>
 </template>
 
@@ -204,5 +207,34 @@ onMounted(async () => {
   display: block;
   margin-top: 3px;
   color: var(--el-text-color-secondary);
+}
+
+@media (max-width: 768px) {
+  .statistics-page {
+    padding: 10px;
+    overflow-y: auto;
+  }
+  .statistics-filter {
+    :deep(.el-form-item) {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 0 !important;
+      margin-bottom: 8px !important;
+
+      .el-form-item__content {
+        min-width: 0;
+      }
+
+      .el-select {
+        width: 150px !important;
+        min-width: 120px;
+      }
+
+      .el-date-editor {
+        width: 220px !important;
+        max-width: 100%;
+      }
+    }
+  }
 }
 </style>

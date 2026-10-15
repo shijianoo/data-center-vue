@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Component } from "vue"
+import { onMounted, onUnmounted, ref } from "vue"
+import MobileTableZoom from "./MobileTableZoom.vue"
 
 /** 页面内左侧菜单项。 */
 interface MenuItem {
@@ -19,6 +21,25 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ "update:modelValue": [value: string] }>()
+
+const isMobile = ref(false)
+let mediaQuery: MediaQueryList | null = null
+
+function updateMobileState(e: MediaQueryListEvent | MediaQueryList) {
+  isMobile.value = e.matches
+}
+
+onMounted(() => {
+  if (typeof window !== "undefined") {
+    mediaQuery = window.matchMedia("(max-width: 768px)")
+    isMobile.value = mediaQuery.matches
+    mediaQuery.addEventListener("change", updateMobileState)
+  }
+})
+
+onUnmounted(() => {
+  mediaQuery?.removeEventListener("change", updateMobileState)
+})
 </script>
 
 <template>
@@ -26,6 +47,7 @@ const emit = defineEmits<{ "update:modelValue": [value: string] }>()
     <aside class="side-menu-layout__aside">
       <el-menu
         :default-active="modelValue"
+        :mode="isMobile ? 'horizontal' : 'vertical'"
         class="side-menu-layout__menu"
         @select="emit('update:modelValue', $event)"
       >
@@ -38,7 +60,9 @@ const emit = defineEmits<{ "update:modelValue": [value: string] }>()
       </el-menu>
     </aside>
     <main class="side-menu-layout__content">
-      <slot />
+      <MobileTableZoom>
+        <slot />
+      </MobileTableZoom>
     </main>
   </div>
 </template>
@@ -78,5 +102,41 @@ const emit = defineEmits<{ "update:modelValue": [value: string] }>()
   flex: 1;
   height: 100%;
   min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .side-menu-layout {
+    flex-direction: column;
+    height: calc(100vh - var(--header-h));
+    overflow: hidden;
+  }
+
+  .side-menu-layout__aside {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .side-menu-layout__menu {
+    display: flex !important;
+    border-bottom: 0 !important;
+
+    :deep(.el-menu-item) {
+      height: 44px;
+      line-height: 44px;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+  }
+
+  .side-menu-layout__content {
+    padding: 10px;
+    overflow-y: auto;
+  }
 }
 </style>

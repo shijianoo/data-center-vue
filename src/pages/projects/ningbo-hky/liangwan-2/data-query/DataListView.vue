@@ -211,7 +211,7 @@ async function loadAutoReviewResult(pointId: EntityId) {
 
 /** 直接修改有效值；提交后重新刷新数据与自动审核结果。 */
 async function submitCorrection() {
-  if (!userStore.isPlatformAdmin || !detailCell.value?.pointId) return
+  if (!userStore.isPlatformUser || !detailCell.value?.pointId) return
   if (!correctionValue.value.trim()) {
     ElMessage.warning("请输入修正后的有效值")
     return

@@ -71,8 +71,11 @@ function renderMarkers() {
 
   locatedStations.value.forEach((item) => {
     if (item.longitude == null || item.latitude == null) return
-    const element = createMarkerEl(item.station.status === "Active" ? "#2f80ed" : "#8b9bb0")
-    element.title = `${item.station.name}（${item.station.code || item.station.id}）`
+
+    const color = item.station.name.includes("岸基站") ? "#10b981" : "#3b82f6"
+    const labelText = item.station.name
+
+    const element = createMarkerEl(color, labelText)
     element.addEventListener("click", (event) => {
       event.stopPropagation()
       selectStation(item)
@@ -436,9 +439,12 @@ onUnmounted(() => {
   transform: translateX(30px);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .station-list {
-    width: 240px;
+    top: 10px;
+    left: 10px;
+    width: min(240px, calc(100vw - 20px));
+    max-height: 40vh;
   }
 }
 </style>

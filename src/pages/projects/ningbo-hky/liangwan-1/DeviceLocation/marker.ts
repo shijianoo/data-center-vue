@@ -7,9 +7,35 @@ function createMarkerSvg(color: string): string {
   </svg>`
 }
 
-export function createMarkerEl(color: string): HTMLElement {
+export function createMarkerEl(color: string, labelText?: string): HTMLElement {
   const el = document.createElement("div")
   el.className = "device-marker"
   el.innerHTML = createMarkerSvg(color)
+
+  if (labelText) {
+    const label = document.createElement("span")
+    label.className = "device-marker-label"
+    label.textContent = labelText
+
+    // 定位到图标右侧垂直居中（不占盒模型宽高）
+    label.style.position = "absolute"
+    label.style.left = "100%"
+    label.style.top = "50%"
+    label.style.transform = "translateY(-50%)"
+    label.style.marginLeft = "6px"
+
+    // 外观样式
+    label.style.whiteSpace = "nowrap"
+    label.style.fontSize = "12px"
+    label.style.color = "#1f2937"
+    label.style.backgroundColor = "rgba(255, 255, 255, 0.9)"
+    label.style.padding = "2px 6px"
+    label.style.borderRadius = "2px"
+    label.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)"
+    label.style.pointerEvents = "none" // 防止文字阻碍点击事件
+
+    el.appendChild(label)
+  }
+
   return el
 }

@@ -83,9 +83,11 @@ export function getDefaultDateRange(hours = 24): [Date, Date] {
   return [new Date(end.getTime() - hours * 60 * 60 * 1000), end]
 }
 
-/** 返回指定日期从 00:00:00 到 23:59:59 的完整一天范围。 */
-export function getWholeDayRange(value: Date | string = new Date()): [Date, Date] {
-  return [dayjs(value).startOf("day").toDate(), dayjs(value).endOf("day").toDate()]
+/** 返回从过去指定天数（默认 5 天）00:00:00 到今天 23:59:59 的完整日期范围。 */
+export function getWholeDayRange(days = 5, value: Date | string = new Date()): [Date, Date] {
+  const end = dayjs(value).endOf("day").toDate()
+  const start = dayjs(value).subtract(days, "day").startOf("day").toDate()
+  return [start, end]
 }
 
 /** 将所选开始日期规范化为当天 00:00:00。 */

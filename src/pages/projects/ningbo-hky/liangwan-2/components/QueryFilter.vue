@@ -253,4 +253,55 @@ function handleTabChange(value: import("element-plus").TabPaneName) {
   font-size: 12px;
   color: var(--el-text-color-placeholder);
 }
+
+@media (max-width: 768px) {
+  .query-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    :deep(.el-form-item) {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 0 !important;
+      margin-bottom: 8px !important;
+
+      .el-form-item__content {
+        min-width: 0;
+      }
+
+      .el-select {
+        width: 130px !important;
+        min-width: 110px;
+      }
+
+      .el-date-editor {
+        width: 220px !important;
+        max-width: 100%;
+      }
+    }
+  }
+
+  .station-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    .el-select {
+      width: 160px !important;
+      min-width: 130px;
+    }
+  }
+
+  .parameter-group-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    :deep(.el-tabs__nav-scroll) {
+      overflow-x: auto;
+    }
+  }
+}
 </style>
