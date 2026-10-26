@@ -91,7 +91,7 @@ async function handleDownload() {
   if (data) {
     const url = buildDownloadExcelByRangeUrl({
       model: deviceRef.value.modelNumber!,
-      version: 2,
+      version: 1,
       dataType: 1,
       serialNumber: deviceRef.value.serialNumber,
       uploadChannel: 0,

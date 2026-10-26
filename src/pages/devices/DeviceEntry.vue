@@ -12,6 +12,10 @@ const pageMap: Record<string, any> = {
     loader: () => import("./SOB23MGv1t1/Device.vue"),
     loadingComponent: AsyncLoading
   }),
+  SOB23MGv1t2: defineAsyncComponent({
+    loader: () => import("./SOB23MGv1t2/Device.vue"),
+    loadingComponent: AsyncLoading
+  }),
   SOB10: defineAsyncComponent({
     loader: () => import("./SOB10v1t1/Device.vue"),
     loadingComponent: AsyncLoading
