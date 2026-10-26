@@ -17,7 +17,12 @@ watch(() => userStore.activeTenant, async (tenant) => {
   if (tenant) {
     const { data } = await getTenantProjectStatsApi()
     console.log("当前租户的项目统计信息", data.map(d => d.name).join(","))
-    projectStats.value = data
+    // 如果是平台用户就显示所有已创建的项目
+    if (userStore.isPlatformUser) {
+      projectStats.value = data
+    } else {
+      projectStats.value = data.filter(p => p.isActive)
+    }
   } else {
     console.log("当前没有激活的租户")
   }
