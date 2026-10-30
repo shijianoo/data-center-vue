@@ -26,6 +26,7 @@ const initialCorrectionValue = ref("")
 const correctionSaving = ref(false)
 const autoReviewLoading = ref(false)
 const autoReviewResults = ref<any[]>([])
+const tableRef = ref()
 
 /** 仅当修改了修正有效值且不为空时，才允许提交修正 */
 const isCorrectionModified = computed(() => {
@@ -82,6 +83,7 @@ async function search() {
   try {
     const { data } = await queryMeasurements(request)
     result.value = data
+    scrollToBottom()
   } catch (error) {
     ElMessage.error(getApiErrorMessage(error, "数据查询失败"))
   } finally {
@@ -272,6 +274,15 @@ onMounted(async () => {
   const list = await loadStations()
   if (list[0]) stationId.value = list[0].id
 })
+
+function scrollToBottom() {
+  nextTick(() => {
+    const table = tableRef.value
+    if (!table) return
+
+    table.setScrollTop(Number.MAX_SAFE_INTEGER)
+  })
+}
 </script>
 
 <template>
@@ -294,7 +305,7 @@ onMounted(async () => {
     </QueryFilter>
 
     <section class="lw2-content">
-      <el-table v-loading="loading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
+      <el-table ref="tableRef" v-loading="loading" :data="result?.rows || []" height="100%" empty-text="请选择条件并查询" :cell-class-name="getCellClassName" @cell-click="handleCellClick">
         <el-table-column fixed prop="time" label="数据时间" width="160">
           <template #default="scope">
             {{ displayTime(scope.row.time) }}
